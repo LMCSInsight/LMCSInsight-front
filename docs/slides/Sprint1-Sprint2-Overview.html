@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LMCS Insight – Sprint 1 & 2 Overview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+      margin: 0;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .slide {
+      min-height: 100vh;
+      padding: 3rem 4rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      max-width: 56rem;
+      margin: 0 auto;
+    }
+    .slide h1 {
+      font-size: 2.25rem;
+      margin: 0 0 0.5rem;
+      color: #f8fafc;
+      font-weight: 700;
+    }
+    .slide h2 {
+      font-size: 1.5rem;
+      margin: 2rem 0 0.75rem;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .slide p, .slide li {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      margin: 0.5rem 0;
+      color: #cbd5e1;
+    }
+    .slide ul {
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+    }
+    .slide .sub {
+      font-size: 1rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+    .slide .badge {
+      display: inline-block;
+      background: #3b82f6;
+      color: #fff;
+      padding: 0.2rem 0.6rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .slide.title-slide {
+      text-align: center;
+    }
+    .slide.title-slide h1 {
+      font-size: 2.75rem;
+    }
+    .slide.title-slide .sub {
+      font-size: 1.25rem;
+    }
+    .two-col { display: flex; gap: 2rem; align-items: start; }
+    .two-col > div { flex: 1; }
+    code { background: #1e293b; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Title -->
+  <section class="slide title-slide">
+    <span class="badge">Sprint 1 & 2</span>
+    <h1>LMCS Insight</h1>
+    <p class="sub">Auth system & front-end pages overview</p>
+  </section>
+
+  <!-- 2. Sprint 1 – Auth -->
+  <section class="slide">
+    <span class="badge">Sprint 1</span>
+    <h1>Authentication system</h1>
+    <ul>
+      <li><strong>Login page</strong> – Email + password, error handling, optional “Google” (UI only)</li>
+      <li><strong>Auth API</strong> – <code>authApi.login()</code> → JWT + user; role-based redirect</li>
+      <li><strong>AuthContext</strong> – <code>currentUser</code>, <code>login()</code>, <code>logout()</code>, persistence in <code>localStorage</code></li>
+      <li><strong>Protected routes</strong> – Unauthenticated users redirected to <code>/auth/login</code></li>
+      <li><strong>Role-based redirect</strong> – After login: RESEARCHER → <code>/dashboard/researcher/:id</code>; DIRECTOR, ASSISTANT, ADMIN → their dashboards</li>
+      <li><strong>Forgot password</strong> – Route <code>/auth/forgot-password</code> (placeholder page)</li>
+    </ul>
+  </section>
+
+  <!-- 3. Auth flow -->
+  <section class="slide">
+    <h1>Auth flow (high level)</h1>
+    <p>User opens app → redirect to Login if not authenticated.</p>
+    <p>User submits email/password → backend returns token + user → <code>login(user, token)</code> → store in context + localStorage → redirect to <code>getDashboardPath(role, user)</code>.</p>
+    <p>Researcher: <code>/dashboard/researcher/{id}</code> (own portal). Any visit to <code>/dashboard</code> without auth → Login.</p>
+  </section>
+
+  <!-- 4. Sprint 2 – Front structure -->
+  <section class="slide">
+    <span class="badge">Sprint 2 – UI</span>
+    <h1>Front-end structure</h1>
+    <ul>
+      <li><strong>Router</strong> – Auth routes (login, forgot-password), dashboard under <code>ProtectedRoute</code></li>
+      <li><strong>Researcher portal</strong> – <code>/dashboard/researcher/:researcherId</code> with nested routes (dashboard, supervisions, students, statistics, profile)</li>
+      <li><strong>ResearcherPortalGuard</strong> – Ensures current user is the researcher for <code>:researcherId</code>; otherwise redirect to own portal or role dashboard</li>
+      <li><strong>Other roles</strong> – Director, Assistant, Admin dashboards (placeholders) under <code>RoleRoute</code></li>
+    </ul>
+  </section>
+
+  <!-- 5. Layouts -->
+  <section class="slide">
+    <h1>Layouts</h1>
+    <ul>
+      <li><strong>AuthLayout</strong> – Wraps login & forgot-password (centered card style)</li>
+      <li><strong>DashboardLayout</strong> – Wraps all dashboard routes (Ant Design Layout + sidebar for non-researcher)</li>
+      <li><strong>ResearcherPortalLayout</strong> – Fixed sidebar (logo, user card, nav: Dashboard, Supervisions, Students, Statistics, Profile; theme + language + notifications in header; logout). Main content scrolls; sidebar stays fixed.</li>
+    </ul>
+  </section>
+
+  <!-- 6. Researcher pages – implemented -->
+  <section class="slide">
+    <h1>Researcher pages (implemented)</h1>
+    <ul>
+      <li><strong>Researcher Dashboard</strong> – Stat cards (Total, In Progress, Defended, Pending Validation), Recharts (Pie: by type; Bar: by year), Recent Supervisions table (dots menu: Update / Delete), action buttons (Add New Supervision, Register Student, View All Supervisions)</li>
+      <li><strong>My Supervisions</strong> – “My Supervisions (N total)”, toolbar (search, Filters, Add New), active filters bar (chips + Clear All), table (Title, Student, Type, Status, Validation, Actions with dots → Update/Delete), pagination (items per page, Prev/Next, page numbers)</li>
+      <li><strong>Filters panel</strong> – Slide-over: Type, Status, Validation status (checkboxes), Academic year, Theme (dropdowns), Start date range; Apply Filters / Reset</li>
+    </ul>
+  </section>
+
+  <!-- 7. Researcher pages – placeholders -->
+  <section class="slide">
+    <h1>Researcher pages (placeholders)</h1>
+    <ul>
+      <li>Create Supervision (<code>/supervisions/new</code>)</li>
+      <li>Supervision Detail (<code>/supervisions/:id</code>)</li>
+      <li>Edit Supervision (<code>/supervisions/:id/edit</code>)</li>
+      <li>Student Management (<code>/students</code>)</li>
+      <li>Statistics & Reports (<code>/statistics</code>)</li>
+      <li>Profile & Settings (<code>/profile</code>)</li>
+    </ul>
+    <p class="sub">All wired in router and sidebar nav; content is placeholder text.</p>
+  </section>
+
+  <!-- 8. Tech & UX notes -->
+  <section class="slide">
+    <h1>Tech & UX (Sprint 2)</h1>
+    <ul>
+      <li>UI: React, shadcn (Base UI), Tailwind, Recharts, Lucide icons</li>
+      <li>i18n: react-i18next for sidebar and header labels</li>
+      <li>Theme: ThemeContext (light/dark) in header</li>
+      <li>Buttons: icon + text on one line (<code>whitespace-nowrap</code>, <code>inline-flex</code>)</li>
+      <li>Supervisions list: mock data; search and filters (type, status, validation, year, theme, date range) applied client-side; pagination</li>
+    </ul>
+  </section>
+
+  <!-- 9. Summary -->
+  <section class="slide title-slide">
+    <h1>Summary</h1>
+    <p class="sub">Sprint 1: Auth (login, JWT, context, protected + role-based routes).</p>
+    <p class="sub">Sprint 2: Researcher portal with fixed sidebar, dashboard with charts & table, full supervisions list with search, filters, and pagination.</p>
+  </section>
+
+</body>
+</html>

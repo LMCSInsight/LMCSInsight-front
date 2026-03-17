@@ -1,0 +1,18 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "dashboard": "Dashboard",
+    "supervisions": "Supervisions",
+    "studentManagement": "Student Management",
+    "statisticsReports": "Statistics & Reports",
+    "profileSettings": "Profile & Settings",
+    "researcher": "Researcher",
+    "theme": "Theme",
+    "language": "Language",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications",
+    "french": "French",
+    "english": "English",
+    "signOut": "Sign out"
+  }
+}

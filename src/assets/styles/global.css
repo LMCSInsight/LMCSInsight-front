@@ -74,69 +74,39 @@
     --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Dark theme: blue-tinted slate for cohesive look with researcher portal */
 .dark {
-
-    --background: oklch(0.145 0 0);
-
-    --foreground: oklch(0.985 0 0);
-
-    --card: oklch(0.205 0 0);
-
-    --card-foreground: oklch(0.985 0 0);
-
-    --popover: oklch(0.205 0 0);
-
-    --popover-foreground: oklch(0.985 0 0);
-
-    --primary: oklch(0.922 0 0);
-
-    --primary-foreground: oklch(0.205 0 0);
-
-    --secondary: oklch(0.269 0 0);
-
-    --secondary-foreground: oklch(0.985 0 0);
-
-    --muted: oklch(0.269 0 0);
-
-    --muted-foreground: oklch(0.708 0 0);
-
-    --accent: oklch(0.269 0 0);
-
-    --accent-foreground: oklch(0.985 0 0);
-
-    --destructive: oklch(0.704 0.191 22.216);
-
-    --border: oklch(1 0 0 / 10%);
-
-    --input: oklch(1 0 0 / 15%);
-
-    --ring: oklch(0.556 0 0);
-
-    --chart-1: oklch(0.809 0.105 251.813);
-
-    --chart-2: oklch(0.623 0.214 259.815);
-
-    --chart-3: oklch(0.546 0.245 262.881);
-
-    --chart-4: oklch(0.488 0.243 264.376);
-
-    --chart-5: oklch(0.424 0.199 265.638);
-
-    --sidebar: oklch(0.205 0 0);
-
-    --sidebar-foreground: oklch(0.985 0 0);
-
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-
-    --sidebar-accent: oklch(0.269 0 0);
-
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-
-    --sidebar-border: oklch(1 0 0 / 10%);
-
-    --sidebar-ring: oklch(0.556 0 0);
+    --background: oklch(0.16 0.02 260);
+    --foreground: oklch(0.95 0.01 260);
+    --card: oklch(0.20 0.02 260);
+    --card-foreground: oklch(0.95 0.01 260);
+    --popover: oklch(0.22 0.02 260);
+    --popover-foreground: oklch(0.95 0.01 260);
+    --primary: oklch(0.55 0.22 260);
+    --primary-foreground: oklch(0.99 0 0);
+    --secondary: oklch(0.26 0.02 260);
+    --secondary-foreground: oklch(0.95 0.01 260);
+    --muted: oklch(0.26 0.02 260);
+    --muted-foreground: oklch(0.65 0.02 260);
+    --accent: oklch(0.30 0.06 260);
+    --accent-foreground: oklch(0.95 0.01 260);
+    --destructive: oklch(0.55 0.22 25);
+    --border: oklch(0.32 0.02 260);
+    --input: oklch(0.32 0.02 260);
+    --ring: oklch(0.55 0.22 260);
+    --chart-1: oklch(0.65 0.2 260);
+    --chart-2: oklch(0.55 0.22 260);
+    --chart-3: oklch(0.50 0.18 260);
+    --chart-4: oklch(0.45 0.15 260);
+    --chart-5: oklch(0.40 0.12 260);
+    --sidebar: oklch(0.20 0.02 260);
+    --sidebar-foreground: oklch(0.95 0.01 260);
+    --sidebar-primary: oklch(0.55 0.22 260);
+    --sidebar-primary-foreground: oklch(0.99 0 0);
+    --sidebar-accent: oklch(0.28 0.04 260);
+    --sidebar-accent-foreground: oklch(0.95 0.01 260);
+    --sidebar-border: oklch(0.32 0.02 260);
+    --sidebar-ring: oklch(0.55 0.22 260);
 }
 
 @theme inline {
@@ -220,14 +190,43 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Researcher portal: blue theme (scoped) */
+.researcher-portal {
+  --researcher-primary: 221 83% 53%; /* blue-600 */
+  --researcher-primary-foreground: 0 0% 100%;
+  --researcher-sidebar: 214 32% 98%; /* blue-50 */
+  --researcher-sidebar-foreground: 224 71% 14%; /* blue-950 */
+  --researcher-sidebar-accent: 214 32% 91%; /* blue-100 */
+  --researcher-sidebar-border: 214 32% 91%;
+}
+
+/* Researcher portal light mode: blue primary and accents */
+html:not(.dark) .researcher-portal {
+  --primary: oklch(0.45 0.2 260);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.45 0.2 260);
+  --accent: oklch(0.92 0.04 260);
+  --accent-foreground: oklch(0.25 0.12 260);
+  --chart-1: oklch(0.55 0.22 260);
+  --chart-2: oklch(0.50 0.18 260);
+  --chart-3: oklch(0.45 0.15 260);
+  --chart-4: oklch(0.40 0.12 260);
+  --chart-5: oklch(0.35 0.10 260);
+  --sidebar-primary: oklch(0.45 0.2 260);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.92 0.04 260);
+  --sidebar-accent-foreground: oklch(0.25 0.12 260);
+  --sidebar-ring: oklch(0.45 0.2 260);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
     @apply bg-background text-foreground;
-    }
+  }
   html {
     @apply font-sans;
-    }
+  }
 }

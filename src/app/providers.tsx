@@ -5,6 +5,7 @@ import { RouterProvider } from "react-router-dom";
 import { store } from "@/app/store";
 import { queryClient } from "@/shared/lib/queryClient";
 import { AuthProvider } from "@/shared/context/AuthContext";
+import { ThemeProvider } from "@/shared/context/ThemeContext";
 import { router } from "@/app/router";
 
 interface ProvidersProps {
@@ -15,9 +16,11 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <ReduxProvider store={store}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          {children ?? <RouterProvider router={router} />}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            {children ?? <RouterProvider router={router} />}
+          </AuthProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </ReduxProvider>
   );

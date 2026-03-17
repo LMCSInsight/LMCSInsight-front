@@ -36,8 +36,8 @@ export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, logout } = useAuthContext();
-
   const role = (currentUser?.role ?? "RESEARCHER") as AppRole;
+
   const navItems = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.RESEARCHER;
 
   const getPath = (item: NavItem) =>
@@ -56,6 +56,11 @@ export function DashboardLayout() {
   function handleLogout() {
     logout();
     navigate(ROUTES.LOGIN, { replace: true });
+  }
+
+  /* Researcher routes use ResearcherPortalGuard under dashboard/researcher/:researcherId, which renders ResearcherPortalLayout. */
+  if (role === "RESEARCHER") {
+    return <Outlet />;
   }
 
   return (

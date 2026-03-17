@@ -1,0 +1,18 @@
+{
+  "common": {
+    "welcome": "Bienvenue",
+    "dashboard": "Tableau de bord",
+    "supervisions": "Encadrements",
+    "studentManagement": "Gestion des étudiants",
+    "statisticsReports": "Statistiques et rapports",
+    "profileSettings": "Profil et paramètres",
+    "researcher": "Chercheur",
+    "theme": "Thème",
+    "language": "Langue",
+    "notifications": "Notifications",
+    "noNotifications": "Aucune notification",
+    "french": "Français",
+    "english": "Anglais",
+    "signOut": "Déconnexion"
+  }
+}

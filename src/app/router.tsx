@@ -6,17 +6,24 @@ import { RoleRoute } from "@/routes/RoleRoute";
 import { useAuthContext } from "@/shared/context/AuthContext";
 import { MainLayout } from "@/layouts/MainLayout";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
+import { ResearcherPortalLayout } from "@/layouts/ResearcherPortalLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import ForgotPasswordPage from "@/features/auth/pages/ForgotPasswordPage";
 import SupervisionListPage from "@/features/supervisions/pages/SupervisionListPage";
 import SupervisionDetailPage from "@/features/supervisions/pages/SupervisionDetailPage";
+import CreateSupervisionPage from "@/features/supervisions/pages/CreateSupervisionPage";
+import EditSupervisionPage from "@/features/supervisions/pages/EditSupervisionPage";
+import StudentManagementPage from "@/features/students/pages/StudentManagementPage";
+import ProfileSettingsPage from "@/features/profile/pages/ProfileSettingsPage";
+import StatisticsReportsPage from "@/features/statistics/pages/StatisticsReportsPage";
 import ResearcherDashboard from "@/features/dashboard/pages/ResearcherDashboard";
 import DirectorDashboard from "@/features/dashboard/pages/DirectorDashboard";
 import AssistantDashboard from "@/features/dashboard/pages/AssistantDashboard";
 import AdminDashboard from "@/features/dashboard/pages/AdminDashboard";
 
-function ResearcherDashboardRoute() {
+/** Guard: ensure current user is the researcher for :researcherId, then render ResearcherPortalLayout (with Outlet). */
+function ResearcherPortalGuard() {
   const { researcherId } = useParams<{ researcherId: string }>();
   const { currentUser } = useAuthContext();
   if (!currentUser) {
@@ -25,10 +32,10 @@ function ResearcherDashboardRoute() {
   if (currentUser.role !== "RESEARCHER") {
     return <Navigate to={getDashboardPath(currentUser.role, currentUser)} replace />;
   }
-  if (researcherId !== currentUser.id) {
+  if (!researcherId || researcherId !== currentUser.id) {
     return <Navigate to={getResearcherDashboardPath(currentUser.id)} replace />;
   }
-  return <ResearcherDashboard />;
+  return <ResearcherPortalLayout />;
 }
 
 function ResearcherRedirectToOwnPortal() {
@@ -78,9 +85,19 @@ export const router = createBrowserRouter([
         path: "researcher/:researcherId",
         element: (
           <ProtectedRoute>
-            <ResearcherDashboardRoute />
+            <ResearcherPortalGuard />
           </ProtectedRoute>
         ),
+        children: [
+          { index: true, element: <ResearcherDashboard /> },
+          { path: "supervisions", element: <SupervisionListPage /> },
+          { path: "supervisions/new", element: <CreateSupervisionPage /> },
+          { path: "supervisions/:id", element: <SupervisionDetailPage /> },
+          { path: "supervisions/:id/edit", element: <EditSupervisionPage /> },
+          { path: "students", element: <StudentManagementPage /> },
+          { path: "statistics", element: <StatisticsReportsPage /> },
+          { path: "profile", element: <ProfileSettingsPage /> },
+        ],
       },
       {
         path: "director",
@@ -106,18 +123,6 @@ export const router = createBrowserRouter([
           </RoleRoute>
         ),
       },
-    ],
-  },
-  {
-    path: ROUTES.SUPERVISIONS,
-    element: (
-      <ProtectedRoute>
-        <DashboardLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      { index: true, element: <SupervisionListPage /> },
-      { path: ":id", element: <SupervisionDetailPage /> },
     ],
   },
   { path: "*", element: <Navigate to={ROUTES.HOME} replace /> },
