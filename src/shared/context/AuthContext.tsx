@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
 } from "react";
+import { flushSync } from "react-dom";
 import { APP_CONSTANTS } from "@/config/constants";
 
 export interface User {
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!currentUser;
 
   const login = useCallback((user: User, token: string) => {
-    setCurrentUser(user);
+    flushSync(() => setCurrentUser(user));
     localStorage.setItem(APP_CONSTANTS.STORAGE_KEYS.USER, JSON.stringify(user));
     localStorage.setItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN, token);
   }, []);

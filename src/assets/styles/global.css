@@ -141,7 +141,7 @@
 
 @theme inline {
 
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-sans: 'Outfit', 'Geist Variable', sans-serif;
 
     --color-sidebar-ring: var(--sidebar-ring);
 

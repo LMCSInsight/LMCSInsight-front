@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 import { env } from "@/config/env";
 import { APP_CONSTANTS } from "@/config/constants";
+import { ROUTES } from "@/config/routes";
 
 const axiosInstance = axios.create({
   baseURL: env.API_URL,
@@ -26,6 +27,7 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN);
       localStorage.removeItem(APP_CONSTANTS.STORAGE_KEYS.USER);
+      window.location.assign(ROUTES.LOGIN);
     }
     return Promise.reject(error);
   }

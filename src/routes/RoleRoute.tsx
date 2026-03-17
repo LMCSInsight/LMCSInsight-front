@@ -10,12 +10,12 @@ interface RoleRouteProps {
 
 export function RoleRoute({ children, allowedRoles }: RoleRouteProps) {
   const { currentUser, isAuthenticated } = useAuthContext();
-
+  const allowed = allowedRoles.includes(currentUser?.role ?? "");
   if (!isAuthenticated || !currentUser) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
-  if (!allowedRoles.includes(currentUser.role)) {
+  if (!allowed) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 
