@@ -1,0 +1,41 @@
+# Cursor Rule: Follow the Implementation Plan
+
+## Rule Name
+
+implementation-plan
+
+## Scope
+
+This rule applies to **all development** in the LMCS Insight repository (frontend and backend). When implementing features, refactoring, or planning work, **follow the official implementation plan**.
+
+## Implementation Plan Location
+
+**Path:** `docs/IMPLEMENTATION_PLAN.md` (at repository root)
+
+Read this file when:
+- Starting a new feature or sprint
+- Designing API endpoints or frontend pages
+- Deciding backend/frontend structure or naming
+- Planning phases or deliverables
+
+## What the Plan Defines
+
+1. **Technology stack** — React, Vite, TypeScript, Ant Design, Redux Toolkit, TanStack Query, Axios, ECharts (frontend); Node.js, Express, Prisma, PostgreSQL, JWT (backend).
+2. **Backend structure** — MVC: controllers, routes, middleware, services, utils, config; Prisma schema.
+3. **Frontend structure** — Feature-based: features (auth, supervisions, students, validation, dashboard, admin), shared (components, hooks, lib, utils, context), app, layouts, routes, config. Align with existing `frontend.mdc` rule.
+4. **User roles** — Director, Teacher/Researcher, Assistant, Admin; RBAC and role-based dashboards.
+5. **Backend phases** — B1 (setup + DB), B2 (auth), B3 (CRUD), B4 (validation workflow), B5 (search & stats), B6 (export).
+6. **Frontend phases** — F1 (setup), F2 (layout & routing), F3 (auth UI), F4 (supervision management), F5 (validation UI), F6 (dashboards & stats), F7 (admin).
+7. **Sprint timeline** — Sprint 1 (auth), Sprint 2 (supervisions CRUD + UI), Sprint 3 (validation), Sprint 4 (search & stats), Sprint 5 (export & admin).
+8. **API contracts** — Auth (register, login, refresh, logout, forgot-password), Supervisions (CRUD, search, co-supervisors), etc., as listed in the plan.
+9. **Guidelines** — Validation (Joi/Zod), error handling, security (bcrypt, JWT), tests (Jest, RTL, E2E), env vars.
+
+## Rules for AI / Developers
+
+- **Do not** invent a different backend or frontend structure; use the one in the plan (and in `frontend.mdc` for frontend).
+- **Do not** add or remove user roles; the four roles (Director, Teacher, Assistant, Admin) are fixed.
+- **Do** implement features in the order of phases/sprints when possible.
+- **Do** align API endpoints and frontend features with the tables in the plan (auth, supervisions, students, validation, statistics, export, admin).
+- **Do** respect the CDC (see `lmcs-cdc-context.mdc`) for domain terms, entities (encadrement, soutenance, PFE, Master, etc.), and security requirements.
+
+When in doubt, open `docs/IMPLEMENTATION_PLAN.md` and follow it.

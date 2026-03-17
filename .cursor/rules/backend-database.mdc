@@ -1,0 +1,32 @@
+---
+description: LMCS v3 database context for backend (tables, Chercheur vs User, supervisors, validation)
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Backend Database Context (LMCS v3)
+
+**Source of truth:** `backend/create_complete_database.sql`, `backend/complete_prisma_schema_reference.prisma`, `backend/COMPLETE_DATABASE_DOCUMENTATION.md`.
+
+## Core Tables
+
+teams, themes, **chercheurs** (PK `chercheur_id` VARCHAR(50)), users, students, supervisions, supervision_supervisors, validation_logs, audit_logs.
+
+## Chercheur vs User
+
+- **Chercheur** = academic researcher profile (ESI matricule, qualite, grade_recherche, hindex, equipe_id, mails[], urls). Independent of system login.
+- **User** = system account (auth, role, firstName, lastName). Optional link: `users.chercheur_id → chercheurs.chercheur_id`.
+
+Not all chercheurs have a User; not all users are linked to a Chercheur (e.g. admin, assistant).
+
+## Supervisors
+
+Supervisors are **chercheurs**, not users. `supervision_supervisors.supervisorId` → `chercheurs.chercheur_id`. Use `include: { supervisor: true }` for Chercheur details. Co-supervision: contributionPercent, isMainSupervisor, isExternal.
+
+## Validation Workflow
+
+`supervisions.validationStatus`: PENDING | VALIDATED | REJECTED | REVISED. Use `validatedAt`, `validationNotes`. Audit trail in `validation_logs` (validatorId → users.id).
+
+## Enums
+
+Qualite, GradeRecherche, StatutChercheur, **UserRole** (ADMIN, DIRECTOR, TEACHER, ASSISTANT), SupervisionType, SupervisionStatus, ValidationStatus.

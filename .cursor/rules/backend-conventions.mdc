@@ -1,0 +1,31 @@
+---
+description: Backend clean code and structure (Node/Express/Prisma)
+globs: backend/**/*.ts
+alwaysApply: false
+---
+
+# Backend Conventions
+
+## Structure
+
+Routes → Services → Repositories. Prisma client and repositories live in `src/db/` (prisma.ts, repositories). Controllers/routes in `src/routes/`, business logic in `src/services/`.
+
+## Prisma
+
+- Use `include` or `select` to avoid N+1 queries.
+- Supervisors are Chercheur: include `supervisor` (from supervision_supervisors), not user.
+- Prefer explicit types from `@prisma/client` or project types in `src/types/`.
+
+## Errors and Responses
+
+Use centralized error middleware; return consistent HTTP status and response shape (e.g. success/error payloads from `src/utils/response.ts`).
+
+## Auth and RBAC
+
+JWT verification in auth middleware. Four roles: ADMIN, DIRECTOR, TEACHER, ASSISTANT. Role checks in roleMiddleware where needed.
+
+## References
+
+- Implementation plan: `docs/IMPLEMENTATION_PLAN.md`
+- CDC / domain: `lmcs-cdc-context.mdc`
+- Database details: `backend-database.mdc`

@@ -1,0 +1,39 @@
+# Dependencies
+node_modules
+
+# Legacy frontend folder (app lives at root; delete folder manually if it still exists)
+frontend
+
+# Build
+dist
+build
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+.DS_Store
+
+# IDE / OS
+.idea
+.vscode
+*.swp
+*.swo
+Thumbs.db
+
+# Vite
+*.local
+
+# Test / coverage
+coverage
+.nyc_output
+*.lcov
+
+# Misc
+.cache

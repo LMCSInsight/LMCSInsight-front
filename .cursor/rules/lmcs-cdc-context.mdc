@@ -1,0 +1,278 @@
+# Cursor Rule: LMCS Project – Cahier des Charges (CDC) Context
+
+## Rule Name
+
+lmcs-cdc-context
+
+## Scope
+
+This rule applies to **the entire LMCS Insight repository** (frontend, backend, and any future modules). It encodes the **official project specification** (Cahier des Chargés, Phase II 2025-2026). All design, feature, and terminology decisions must align with this context.
+
+**Do not improvise on domain logic or user roles:** refer to this document.
+
+---
+
+# 1. PROJECT IDENTITY
+
+## 1.1 Official Title
+
+- **French:** Suivi des encadrements des chercheurs du laboratoire LMCS - ESI  
+- **English:** Tracking of supervisions of researchers at the LMCS laboratory - ESI  
+
+## 1.2 Project Number & Year
+
+- **N° Projet:** CP_PRJ02 (Projet 2CP)  
+- **Année universitaire:** 2025-2026  
+- **Phase:** Phase II (2025-2026) of a triennial project (2024-2026).
+
+## 1.3 Institution & Laboratory
+
+- **Laboratoire:** LMCS — Laboratoire des Méthodes de Conception de Systèmes  
+- **École:** ESI — École Nationale Supérieure d'Informatique  
+- **Mission:** Production and diffusion of scientific knowledge through the work of its researchers.
+
+---
+
+# 2. PROJECT BACKGROUND & MOTIVATION
+
+## 2.1 Phase I (2024-2025) – Already Done
+
+- Centralized **scientific productions database** for LMCS researchers.  
+- Phase II must **interconnect** with this existing base (interoperability).
+
+## 2.2 Phase II (2025-2026) – Current Scope
+
+- **Goal:** Extend the system to **track academic and scientific supervisions** carried out by teachers/researchers.  
+- **Current pain points:**
+  - Supervision data (PFE, Masters, Doctorates, projects, internships, etc.) are **dispersed** (Excel, Word, emails, personal archives).  
+  - Data are **not normalized** and **hard to exploit** for reliable reports.  
+  - **Consequences:**
+    - Difficult to justify pedagogical and scientific activities.  
+    - Slow production of statistics requested by direction, school, or evaluation bodies.  
+    - Time loss in data collection.  
+    - Risk of errors or omissions in reports.  
+    - Low visibility of themes actually supervised.  
+    - Difficulty linking supervisions to research axes and scientific productions.
+
+## 2.3 Strategic Need
+
+The laboratory needs a **structured, reliable, and evolutive tool** to manage all supervisions in a coherent way and to offer, in the long run, a **global view of laboratory activities** (with Phase I data).
+
+---
+
+# 3. TYPES OF SUPERVISIONS (DOMAIN ENTITIES)
+
+The system must handle **all** of the following. Each is a type of "encadrement":
+
+| Type (FR)              | Type (EN) / Short   | Description / Notes                    |
+|------------------------|---------------------|----------------------------------------|
+| Projet de Fin d'Études | PFE (engineer)      | End-of-study engineering project       |
+| Mémoire de Master      | Master             | Master's thesis                        |
+| Thèse de Doctorat      | Doctorate          | PhD thesis                             |
+| Stage académique      | SPE / Academic stage| Academic internship                    |
+| Projets de recherche   | Research project   | National and international research    |
+
+- Supervisions can be **internal to LMCS** or **external co-supervision**.  
+- Both **current** and **past** supervisions must be covered.
+
+---
+
+# 4. USER ROLES (ACTORS)
+
+Exactly **three** main profiles are specified. Implement roles and permissions accordingly.
+
+## 4.1 Direction du laboratoire (Laboratory Director)
+
+- **Responsibilities:**
+  - Consult **global statistics**.  
+  - Monitor **supervision workload**.  
+  - Prepare **annual reports** (bilans annuels).  
+- **Implied features:** Read-only dashboards, aggregated stats, export for reports, high-level views.
+
+## 4.2 Enseignants / Chercheurs (Teachers / Researchers)
+
+- **Responsibilities:**
+  - **Enter and update** their own supervisions.  
+  - **Consult** their supervision history.  
+- **Implied features:** CRUD on own supervisions, list/filter own encadrements, possibly limited stats on own data.
+
+## 4.3 Administrateur système (System Administrator)
+
+- **Responsibilities:**
+  - **User account management**.  
+  - **Validation / moderation** of data if needed.  
+  - **Functional maintenance** of the database.  
+- **Implied features:** User CRUD, optional validation workflow, backup/restore, admin-only settings.
+
+---
+
+# 5. FUNCTIONAL OBJECTIVES (DETAILED)
+
+## 5.1 Suivi des encadrements (Supervision tracking)
+
+- **Register** all types of supervisions (PFE, Master, Doctorate, stage, research project, etc.).  
+- **Associate one or several supervisors** to each work.  
+- **Manage co-supervisions** (internal and external).
+
+## 5.2 Gestion des étudiants / doctorants (Students / PhD candidates)
+
+- **Student-related data:**  
+  - Name, first name  
+  - Institution  
+  - Level (niveau)  
+  - Speciality (spécialité)  
+- **Academic year** (année universitaire).  
+- **Progress state (état d'avancement):** e.g. in progress, defended, abandoned, extension, etc.
+
+## 5.3 Suivi thématique (Thematic tracking)
+
+- **Link each supervision to:**
+  - A **research theme** (thématique de recherche).  
+  - A **team or axis** of the laboratory (équipe ou axe du laboratoire).  
+- **Keywords** describing the subject (mots-clés).
+
+## 5.4 Suivi temporel (Temporal tracking)
+
+- **Start date** (date de début).  
+- **Planned defense date** (date prévue de soutenance).  
+- **Actual defense date** (date réelle de soutenance).
+
+## 5.5 Exploitation statistique (Statistics & analytics)
+
+Analyses must be **multi-criteria**, including by:
+
+- Enseignant/chercheur (teacher/researcher)  
+- Année universitaire (academic year)  
+- Type d'encadrement (type of supervision)  
+- Thématique de recherche (research theme)  
+- État d'avancement (progress state)
+
+## 5.6 Aide au bilan du laboratoire (Support for laboratory reports)
+
+The system must support:
+
+- **Number of supervisions per teacher and per period.**  
+- **Breakdown by type** (PFE, Master, Doctorate, etc.).  
+- **Defense rate** (taux de soutenance).  
+- **Thematic distribution** of supervised work.
+
+---
+
+# 6. MINIMAL FUNCTIONAL REQUIREMENTS (MUST-HAVE)
+
+The CDC explicitly lists these as **minimal**:
+
+1. **Gestion des enseignants/chercheurs** — Management of teachers/researchers (e.g. directory, profiles).  
+2. **Gestion des étudiants encadrés** — Management of supervised students.  
+3. **Gestion des sujets d'encadrement** — Management of supervision subjects (topics, titles, descriptions).  
+4. **Affectation des encadrants** — Assignment of supervisors (one or several per supervision).  
+5. **Mise à jour de l'état d'avancement** — Updating progress state (in progress, defended, abandoned, etc.).  
+6. **Recherche multicritère** — Multicriteria search (filters on type, year, teacher, theme, state, etc.).  
+7. **Tableaux de bord et statistiques** — Dashboards and statistics.  
+8. **Export des données** — Export (PDF, Excel explicitly cited).
+
+All inputs/outputs (screens, forms, dashboards, reports) are to be defined **in collaboration with LMCS laboratory managers**; the above list is the mandatory baseline.
+
+---
+
+# 7. DOCUMENTATION REQUIREMENTS
+
+Each team must deliver:
+
+- **Documentation technique** — Architecture, database, technological choices.  
+- **Manuel utilisateur** — User manual.  
+- **Aide en ligne intégrée** — In-application online help (contextual).
+
+---
+
+# 8. ASSISTANCE & TRAINING
+
+- **Assistance au démarrage** during the test phase.  
+- **User training** on the application.  
+- **Detailed installation guide** required.  
+- Best project may be asked to provide **a training session** for staff.
+
+---
+
+# 9. ENVIRONMENT (TECHNICAL CONSTRAINTS)
+
+- **OS:** Windows 11, 64 bits.  
+- **Browsers:** Mozilla (Firefox), Chrome.  
+- **Environnement de développement / Plateforme Java / SGBD / Plugins:** To be chosen by the team (CDC leaves blanks here; the repo uses a React/TypeScript/Vite frontend and can use a backend of the team’s choice).
+
+---
+
+# 10. INTERFACE UTILISATEUR (UI REQUIREMENTS)
+
+The interface is to be defined **with the LMCS laboratory director**. It **must** include:
+
+- **Protection de l'accès** — Access control for data, functions, and administration.  
+- **Standards Windows** — UI developed according to Windows standards (familiar patterns, clarity).  
+- **Aide en ligne multilingue** — Multilingual online help.  
+- **Aide contextuelle** — Contextual help relative to each screen.  
+- **Saisie avec contrôles** — Input accompanied by controls; wherever possible, use **predefined lists** (with or without free-text entry).  
+- **Zones obligatoires** — Mandatory fields must be validated (presence check).  
+- **Messages d’anomalie** — Each anomaly must trigger a **clear on-screen message**.  
+- **Journalisation** — Data logging (audit trail) **possible on client request**, to be specified in the "Catalogue des spécifications techniques".
+
+---
+
+# 11. MODULAR DECOMPOSITION
+
+- A **module breakdown** is required.  
+- It is **the team’s responsibility** to propose and document it (no imposed structure in the CDC).
+
+---
+
+# 12. SECURITY (SYSTÈME)
+
+The system **must** ensure:
+
+1. **Authentification** — Login/password.  
+2. **Gestion des rôles et droits d'accès** — Role-based access control (RBAC).  
+3. **Modification du mot de passe** — Users must be able to change their password.  
+4. **Sauvegarde et restauration** — Database backup and restore.  
+5. **Protection des données personnelles des étudiants** — Personal data protection for students (compliance, minimal collection, access control).
+
+---
+
+# 13. PLANNING
+
+- A **detailed planning** must be provided from the **first week**.  
+- It must include: **tasks**, **deliverables**, **work split** between team members.  
+- It must be **updated regularly**.
+
+---
+
+# 14. IMPLICATIONS FOR DEVELOPMENT (AI / DEVELOPER CHECKLIST)
+
+When generating or reviewing code, ensure:
+
+- **Entities:** Teacher/Researcher, Student (encadré), Supervision (encadrement) with type (PFE, Master, Doctorate, Stage, Research project), Theme/Axis, Keywords, Academic year, Progress state, Dates (start, planned defense, actual defense), Co-supervisors (internal/external).  
+- **Roles:** Director, Teacher/Researcher, Administrator — with permissions aligned to Section 4.  
+- **Features:** Registration and update of supervisions, assignment of supervisors, student info, thematic and temporal tracking, multicriteria search, dashboards, statistics, exports (PDF, Excel), user management, optional validation/moderation.  
+- **Security:** Auth (login/password), RBAC, change password, backup/restore, student data protection.  
+- **UI:** Access control, clear validation messages, mandatory field checks, predefined lists where possible, contextual help, multilingual help capability.  
+- **Interoperability:** Prepare for or implement linkage with Phase I scientific productions database where relevant.  
+- **Naming:** Prefer French terms in domain (encadrement, soutenance, thèse, PFE, etc.) in docs and APIs where it matches the CDC; UI labels can follow product language (FR/EN).
+
+---
+
+# 15. GLOSSARY (FR ↔ EN)
+
+| Français           | English / Note                    |
+|--------------------|-----------------------------------|
+| Encadrement        | Supervision (academic/scientific) |
+| Encadrant          | Supervisor                        |
+| Soutenance         | Defense (thesis/PFE defense)     |
+| PFE                | End-of-study project (engineer)   |
+| Mémoire            | Thesis / dissertation             |
+| Thèse              | Thesis (PhD)                      |
+| Stage              | Internship                        |
+| Bilan              | Report / balance sheet            |
+| Thématique         | Theme / research theme            |
+| Axe (du labo)      | Laboratory axis / team            |
+| Année universitaire| Academic year                     |
+| État d'avancement  | Progress state / status           |
+
+This document is the **single source of truth** for the LMCS Phase II project context in this repository.

@@ -1,0 +1,483 @@
+# Cursor Rule: Frontend Architecture
+
+## Rule Name
+
+frontend-architecture
+
+## Scope
+
+This rule applies to **all frontend code in this repository**.
+
+The repository contains the frontend of the **LMCS Supervision Tracking System**, a React + TypeScript application designed to manage academic supervision activities for a research laboratory.
+
+Cursor must **strictly follow the architecture defined in this rule** when generating or modifying code.
+
+Do not break these conventions.
+
+---
+
+# 1. Tech Stack
+
+All generated code must use the following technologies.
+
+Framework
+React 18
+
+Language
+TypeScript (strict)
+
+Build Tool
+Vite
+
+UI Library
+Ant Design
+
+Routing
+React Router
+
+State Management
+Redux Toolkit
+
+Server State
+TanStack Query
+
+HTTP Client
+Axios
+
+Charts
+ECharts
+
+Forms
+React Hook Form
+
+Validation
+Zod or Yup
+
+---
+
+# 2. Project Architecture
+
+The project follows a **feature-based architecture**.
+
+Business domains must live inside `/features`.
+
+Example features:
+
+auth
+supervisions
+students
+validation
+dashboard
+admin
+
+Each feature must contain:
+
+api
+components
+pages
+hooks
+store
+types
+
+Example structure:
+
+features/supervisions/
+
+api/supervisionApi.ts
+components/SupervisionTable.tsx
+components/SupervisionForm.tsx
+pages/SupervisionListPage.tsx
+pages/SupervisionDetailPage.tsx
+hooks/useSupervisions.ts
+store/supervisionSlice.ts
+types.ts
+
+Cursor must **never place feature logic outside its feature directory**.
+
+---
+
+# 3. Global Folder Responsibilities
+
+Cursor must respect these responsibilities.
+
+## app/
+
+Contains global application setup.
+
+Files:
+
+store.ts → Redux store configuration
+router.tsx → React Router configuration
+providers.tsx → Global providers
+index.ts → App entry exports
+
+---
+
+## assets/
+
+Contains static resources.
+
+images
+icons
+styles
+
+---
+
+## config/
+
+Global configuration.
+
+env.ts → environment variables
+routes.ts → route definitions
+constants.ts → global constants
+
+---
+
+## features/
+
+Contains business domains.
+
+Each feature contains:
+
+api → HTTP calls
+components → UI components
+pages → full screens
+hooks → business logic hooks
+store → Redux slices
+types → TypeScript types
+
+---
+
+## shared/
+
+Reusable utilities and components.
+
+shared/components → reusable UI components
+shared/hooks → generic hooks
+shared/lib → library configuration
+shared/utils → helper functions
+shared/context → React Context providers
+shared/types → global types
+
+---
+
+## layouts/
+
+Application layouts.
+
+MainLayout → public layout
+DashboardLayout → authenticated layout
+AuthLayout → login/register pages
+
+---
+
+## routes/
+
+Route protection utilities.
+
+ProtectedRoute → authentication guard
+RoleRoute → role-based authorization guard
+
+---
+
+# 4. Authentication System
+
+Authentication uses **JWT tokens**.
+
+Tokens are stored in **localStorage**.
+
+Authentication state is managed by:
+
+shared/context/AuthContext.tsx
+
+AuthContext must expose:
+
+user
+isAuthenticated
+login()
+logout()
+
+All authentication access must use:
+
+useAuth()
+
+Example:
+
+```tsx
+const { user, logout } = useAuth()
+```
+
+---
+
+# 5. Role-Based Access Control
+
+The system contains four roles.
+
+Admin
+Director
+Teacher
+Assistant
+
+Routes must enforce role access.
+
+Use:
+
+routes/ProtectedRoute.tsx
+routes/RoleRoute.tsx
+
+Example:
+
+Admin pages must only render for:
+
+user.role === "admin"
+
+---
+
+# 6. Axios HTTP Client
+
+All HTTP requests must use the centralized client.
+
+Location:
+
+shared/lib/axios.ts
+
+The client must:
+
+use VITE_API_URL
+attach JWT token automatically
+handle errors globally
+
+Never create new Axios instances.
+
+---
+
+# 7. TanStack Query Usage
+
+TanStack Query must manage **server state**.
+
+Use:
+
+useQuery
+useMutation
+
+Examples:
+
+Fetching data
+
+```ts
+useQuery({
+  queryKey: ["supervisions"],
+  queryFn: getSupervisions
+})
+```
+
+Mutations
+
+```ts
+useMutation({
+  mutationFn: createSupervision
+})
+```
+
+Do not store server data in Redux.
+
+---
+
+# 8. Redux Usage
+
+Redux must only store **global client state**.
+
+Examples:
+
+authentication state
+UI preferences
+sidebar collapsed state
+
+Feature slices must live inside:
+
+features/*/store/
+
+---
+
+# 9. API Layer Rules
+
+API calls must live in feature API folders.
+
+Example:
+
+features/supervisions/api/supervisionApi.ts
+
+API files must:
+
+use the axios client
+contain HTTP requests only
+not contain UI logic
+
+Example:
+
+```ts
+export const getSupervisions = () =>
+  api.get("/supervisions")
+```
+
+---
+
+# 10. React Component Rules
+
+All components must be:
+
+functional components
+written in TypeScript
+
+Example:
+
+```tsx
+export default function SupervisionListPage() {
+  return <div>Supervision List</div>
+}
+```
+
+Avoid class components.
+
+---
+
+# 11. Hooks Rules
+
+Hooks must encapsulate business logic.
+
+Example:
+
+useAuth
+useSupervisions
+useDashboardStats
+
+Hooks may:
+
+call APIs
+use React Query
+transform API responses
+
+Hooks must not render UI.
+
+---
+
+# 12. Page Responsibilities
+
+Pages represent **full screens**.
+
+Examples:
+
+LoginPage
+DashboardPage
+SupervisionListPage
+
+Pages must:
+
+compose components
+call hooks
+remain thin
+
+Business logic belongs in hooks.
+
+---
+
+# 13. UI Design System
+
+The UI must use **Ant Design components**.
+
+Examples:
+
+Layout
+Menu
+Table
+Card
+Form
+Modal
+
+Dashboards must use **ECharts**.
+
+---
+
+# 14. Import Conventions
+
+Always use absolute imports.
+
+Example:
+
+```ts
+import { useAuth } from "@/shared/context/AuthContext"
+```
+
+The alias `@` must point to `src`.
+
+---
+
+# 15. Performance Rules
+
+Cursor must generate performant code.
+
+Guidelines:
+
+lazy-load pages
+avoid unnecessary re-renders
+use memoization when necessary
+paginate large tables
+
+---
+
+# 16. Security Rules
+
+Never expose sensitive data.
+
+Always:
+
+validate inputs
+handle API errors
+protect routes
+
+---
+
+# 17. Placeholder Policy
+
+When creating new pages or components, Cursor must first generate **minimal placeholders**.
+
+Example:
+
+```tsx
+export default function StudentListPage() {
+  return <div>Student List Page</div>
+}
+```
+
+Full logic will be added later.
+
+---
+
+# 18. Architecture Enforcement
+
+Cursor must not:
+
+change the folder structure
+mix feature logic
+duplicate shared utilities
+
+All generated code must follow this architecture.
+
+---
+
+# 19. Future Extensibility
+
+The architecture must allow adding new features easily.
+
+Possible future modules:
+
+notifications
+email alerts
+AI analysis tools
+advanced reporting
+
+New domains must be added inside `/features`.
+
+---
+
+# End of Rule
