@@ -3,6 +3,7 @@ node_modules
 
 # Legacy frontend folder (app lives at root; delete folder manually if it still exists)
 frontend
+backend
 
 # Build
 dist
