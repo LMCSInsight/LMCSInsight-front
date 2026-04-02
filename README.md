@@ -18,6 +18,33 @@ cp .env.example .env   # Optional: set VITE_API_URL (default http://localhost:50
 npm run dev            # Start dev server (default http://localhost:5173)
 ```
 
+## Temporary Dev Auth (Frontend Collaboration)
+
+Use this mode to let frontend teammates access all role portals before backend auth is fully integrated.
+
+Required env vars in `.env`:
+
+```env
+VITE_AUTH_BYPASS=true
+VITE_DEV_AUTH_ROLE=RESEARCHER
+```
+
+How it works:
+
+- With `VITE_AUTH_BYPASS=true`, the app auto-signs in using a local mock account.
+- On `/auth/login`, use one-click buttons to switch between `RESEARCHER`, `DIRECTOR`, `ASSISTANT`, and `ADMIN`.
+- Optional role override through URL query:
+	- `/auth/login?devRole=RESEARCHER`
+	- `/auth/login?devRole=DIRECTOR`
+	- `/auth/login?devRole=ASSISTANT`
+	- `/auth/login?devRole=ADMIN`
+
+Disable this mode when real auth is ready by setting:
+
+```env
+VITE_AUTH_BYPASS=false
+```
+
 ## Scripts
 
 | Script           | Description          |
