@@ -93,8 +93,8 @@ const MOCK_RECENT_SUPERVISIONS = [
 // ─── Component ─────────────────────────────────────────────────────────────
 
 export default function ResearcherDashboard() {
-  const { researcherId } = useParams<{ researcherId: string }>();
-  const basePath = researcherId ? getResearcherSupervisionsPath(researcherId) : "#";
+  const { userId } = useParams<{ userId: string }>();
+  const basePath = userId ? getResearcherSupervisionsPath(userId) : "#";
 
   function handleDeleteSupervision(id: string) {
     // Placeholder: in real app would call API and refresh list
@@ -257,8 +257,8 @@ export default function ResearcherDashboard() {
                         <DropdownMenuItem asChild>
                           <Link
                             to={
-                              researcherId
-                                ? getSupervisionEditPath(researcherId, row.id)
+                              userId
+                                ? getSupervisionEditPath(userId, row.id)
                                 : "#"
                             }
                           >
@@ -286,13 +286,13 @@ export default function ResearcherDashboard() {
       {/* Action buttons - icon and text on one line */}
       <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-6 shadow-sm">
         <Button asChild className="shrink-0 min-w-0 whitespace-nowrap">
-          <Link to={researcherId ? getResearcherSupervisionNewPath(researcherId) : "#"} className="inline-flex items-center gap-2">
+          <Link to={userId ? getResearcherSupervisionNewPath(userId) : "#"} className="inline-flex items-center gap-2">
             <Plus className="size-5 shrink-0" />
             <span>Add New Supervision</span>
           </Link>
         </Button>
         <Button variant="secondary" asChild className="shrink-0 min-w-0 whitespace-nowrap border bg-background hover:bg-muted">
-          <Link to={researcherId ? getResearcherStudentsPath(researcherId) : "#"} className="inline-flex items-center gap-2">
+          <Link to={userId ? getResearcherStudentsPath(userId) : "#"} className="inline-flex items-center gap-2">
             <UserPlus className="size-5 shrink-0" />
             <span>Register Student</span>
           </Link>

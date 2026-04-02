@@ -15,12 +15,12 @@ interface NavItem {
 const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
   ADMIN: [
     { key: "admin-dashboard", path: ROUTES.DASHBOARD_ADMIN, label: "Dashboard" },
-    { key: "admin-users", path: ROUTES.ADMIN, label: "Users" },
+    { key: "admin-users", path: ROUTES.ADMIN_USERS, label: "Users" },
   ],
   DIRECTOR: [
     { key: "director-dashboard", path: ROUTES.DASHBOARD_DIRECTOR, label: "Dashboard" },
-    { key: "supervisions", path: ROUTES.SUPERVISIONS, label: "Supervisions" },
-    { key: "validation", path: ROUTES.VALIDATION, label: "Validation queue" },
+    { key: "supervisions", path: ROUTES.DIRECTOR_SUPERVISIONS, label: "Supervisions" },
+    { key: "validation", path: ROUTES.DIRECTOR_VALIDATION, label: "Validation queue" },
   ],
   RESEARCHER: [
     { key: "researcher-dashboard", path: ROUTES.DASHBOARD_RESEARCHER, label: "My dashboard" },
@@ -28,7 +28,7 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
   ],
   ASSISTANT: [
     { key: "assistant-dashboard", path: ROUTES.DASHBOARD_ASSISTANT, label: "Dashboard" },
-    { key: "validation", path: ROUTES.VALIDATION, label: "Validation queue" },
+    { key: "validation", path: ROUTES.ASSISTANT_VALIDATION, label: "Validation queue" },
   ],
 };
 
@@ -58,7 +58,7 @@ export function DashboardLayout() {
     navigate(ROUTES.LOGIN, { replace: true });
   }
 
-  /* Researcher routes use ResearcherPortalGuard under dashboard/researcher/:researcherId, which renders ResearcherPortalLayout. */
+  /* Researcher routes are handled under /researcher/:userId/* by ResearcherPortalGuard and ResearcherPortalLayout. */
   if (role === "RESEARCHER") {
     return <Outlet />;
   }

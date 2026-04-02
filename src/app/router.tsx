@@ -14,17 +14,25 @@ import SupervisionListPage from "@/features/supervisions/pages/SupervisionListPa
 import SupervisionDetailPage from "@/features/supervisions/pages/SupervisionDetailPage";
 import CreateSupervisionPage from "@/features/supervisions/pages/CreateSupervisionPage";
 import EditSupervisionPage from "@/features/supervisions/pages/EditSupervisionPage";
-import StudentManagementPage from "@/features/students/pages/StudentManagementPage";
+import DirectorSupervisionListPage from "@/features/supervisions/pages/DirectorSupervisionListPage";
+import {
+  StudentManagementPage,
+  StudentDetailPage,
+  EditStudentPage,
+  RegisterStudentPage,
+} from "@/features/students/pages";
 import ProfileSettingsPage from "@/features/profile/pages/ProfileSettingsPage";
 import StatisticsReportsPage from "@/features/statistics/pages/StatisticsReportsPage";
+import ValidationPage from "@/features/validation/pages";
+import AdminPage from "@/features/admin/pages";
 import ResearcherDashboard from "@/features/dashboard/pages/ResearcherDashboard";
 import DirectorDashboard from "@/features/dashboard/pages/DirectorDashboard";
 import AssistantDashboard from "@/features/dashboard/pages/AssistantDashboard";
 import AdminDashboard from "@/features/dashboard/pages/AdminDashboard";
 
-/** Guard: ensure current user is the researcher for :researcherId, then render ResearcherPortalLayout (with Outlet). */
+/** Guard: ensure current user is the researcher for :userId, then render ResearcherPortalLayout (with Outlet). */
 function ResearcherPortalGuard() {
-  const { researcherId } = useParams<{ researcherId: string }>();
+  const { userId } = useParams<{ userId: string }>();
   const { currentUser } = useAuthContext();
   if (!currentUser) {
     return <Navigate to={ROUTES.LOGIN} replace />;
@@ -32,7 +40,7 @@ function ResearcherPortalGuard() {
   if (currentUser.role !== "RESEARCHER") {
     return <Navigate to={getDashboardPath(currentUser.role, currentUser)} replace />;
   }
-  if (!researcherId || researcherId !== currentUser.id) {
+  if (!userId || userId !== currentUser.id) {
     return <Navigate to={getResearcherDashboardPath(currentUser.id)} replace />;
   }
   return <ResearcherPortalLayout />;
@@ -47,6 +55,32 @@ function ResearcherRedirectToOwnPortal() {
     return <Navigate to={getDashboardPath(currentUser.role, currentUser)} replace />;
   }
   return <Navigate to={getResearcherDashboardPath(currentUser.id)} replace />;
+}
+
+function LegacyResearcherPortalRedirect() {
+  const { userId } = useParams<{ userId: string }>();
+  const params = useParams();
+  const nestedPath = params["*"];
+
+  if (!userId) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+
+  const targetSuffix = nestedPath ? `/${nestedPath}` : "/dashboard";
+  return <Navigate to={`/researcher/${userId}${targetSuffix}`} replace />;
+}
+
+function LegacyDashboardRoleRedirect() {
+  const params = useParams();
+  const role = params.role;
+  const nestedPath = params["*"];
+
+  if (!role) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+
+  const targetSuffix = nestedPath ? `/${nestedPath}` : "/dashboard";
+  return <Navigate to={`/${role}${targetSuffix}`} replace />;
 }
 
 export const router = createBrowserRouter([
@@ -82,47 +116,81 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "researcher/:researcherId",
-        element: (
-          <ProtectedRoute>
-            <ResearcherPortalGuard />
-          </ProtectedRoute>
-        ),
-        children: [
-          { index: true, element: <ResearcherDashboard /> },
-          { path: "supervisions", element: <SupervisionListPage /> },
-          { path: "supervisions/new", element: <CreateSupervisionPage /> },
-          { path: "supervisions/:id", element: <SupervisionDetailPage /> },
-          { path: "supervisions/:id/edit", element: <EditSupervisionPage /> },
-          { path: "students", element: <StudentManagementPage /> },
-          { path: "statistics", element: <StatisticsReportsPage /> },
-          { path: "profile", element: <ProfileSettingsPage /> },
-        ],
+        path: "researcher/:userId/*",
+        element: <LegacyResearcherPortalRedirect />,
       },
       {
-        path: "director",
-        element: (
-          <RoleRoute allowedRoles={["DIRECTOR"]}>
-            <DirectorDashboard />
-          </RoleRoute>
-        ),
+        path: ":role/*",
+        element: <LegacyDashboardRoleRedirect />,
       },
-      {
-        path: "assistant",
-        element: (
-          <RoleRoute allowedRoles={["ASSISTANT"]}>
-            <AssistantDashboard />
-          </RoleRoute>
-        ),
-      },
-      {
-        path: "admin",
-        element: (
-          <RoleRoute allowedRoles={["ADMIN"]}>
-            <AdminDashboard />
-          </RoleRoute>
-        ),
-      },
+    ],
+  },
+  {
+    path: "/researcher/:userId",
+    element: (
+      <ProtectedRoute>
+        <ResearcherPortalGuard />
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: "dashboard", element: <ResearcherDashboard /> },
+      { path: "supervisions", element: <SupervisionListPage /> },
+      { path: "supervisions/new", element: <CreateSupervisionPage /> },
+      { path: "supervisions/:supervisionId/edit", element: <EditSupervisionPage /> },
+      { path: "supervisions/:supervisionId", element: <SupervisionDetailPage /> },
+      { path: "students", element: <StudentManagementPage /> },
+      { path: "students/register", element: <RegisterStudentPage /> },
+      { path: "students/:studentId/edit", element: <EditStudentPage /> },
+      { path: "students/:studentId", element: <StudentDetailPage /> },
+      { path: "statistics", element: <StatisticsReportsPage /> },
+      { path: "profile", element: <ProfileSettingsPage /> },
+    ],
+  },
+  {
+    path: "/director",
+    element: (
+      <ProtectedRoute>
+        <RoleRoute allowedRoles={["DIRECTOR"]}>
+          <DashboardLayout />
+        </RoleRoute>
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: "dashboard", element: <DirectorDashboard /> },
+      { path: "supervisions", element: <DirectorSupervisionListPage /> },
+      { path: "validation", element: <ValidationPage /> },
+    ],
+  },
+  {
+    path: "/assistant",
+    element: (
+      <ProtectedRoute>
+        <RoleRoute allowedRoles={["ASSISTANT"]}>
+          <DashboardLayout />
+        </RoleRoute>
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: "dashboard", element: <AssistantDashboard /> },
+      { path: "validation", element: <ValidationPage /> },
+    ],
+  },
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute>
+        <RoleRoute allowedRoles={["ADMIN"]}>
+          <DashboardLayout />
+        </RoleRoute>
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: "dashboard", element: <AdminDashboard /> },
+      { path: "users", element: <AdminPage /> },
     ],
   },
   { path: "*", element: <Navigate to={ROUTES.HOME} replace /> },

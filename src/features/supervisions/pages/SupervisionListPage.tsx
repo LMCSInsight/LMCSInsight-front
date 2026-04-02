@@ -111,7 +111,7 @@ function formatStatus(s: string): string {
 // ─── Component ─────────────────────────────────────────────────────────────
 
 export default function SupervisionListPage() {
-  const { researcherId } = useParams<{ researcherId: string }>();
+  const { userId } = useParams<{ userId: string }>();
   const [searchQuery, setSearchQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -267,7 +267,7 @@ export default function SupervisionListPage() {
           <span>Filters</span>
         </Button>
         <Button asChild className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
-          <Link to={researcherId ? getResearcherSupervisionNewPath(researcherId) : "#"} className="inline-flex items-center gap-2">
+          <Link to={userId ? getResearcherSupervisionNewPath(userId) : "#"} className="inline-flex items-center gap-2">
             <Plus className="size-4 shrink-0" />
             <span>Add New</span>
           </Link>
@@ -339,8 +339,8 @@ export default function SupervisionListPage() {
                         <DropdownMenuItem asChild>
                           <Link
                             to={
-                              researcherId
-                                ? getSupervisionEditPath(researcherId, row.id)
+                              userId
+                                ? getSupervisionEditPath(userId, row.id)
                                 : "#"
                             }
                           >
