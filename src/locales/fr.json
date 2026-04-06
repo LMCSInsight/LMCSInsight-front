@@ -14,5 +14,136 @@
     "french": "Français",
     "english": "Anglais",
     "signOut": "Déconnexion"
+  },
+  "supervisions": {
+    "detail": {
+      "title": "Détails de l'encadrement",
+      "subtitle": "Consultez les informations relatives à cet encadrement.",
+      "loading": "Chargement des données...",
+      "error": "Erreur lors du chargement des données. Veuillez vérifier votre connexion.",
+      "na": "N/A",
+      "back": "Retour",
+      "sections": {
+        "general": "1. Informations générales :",
+        "student": "2. Etudiant :",
+        "topic": "3. Thématique",
+        "dates": "4. Dates :",
+        "supervisors": "5. Encadrants :",
+        "validation": "6. Validation"
+      },
+      "labels": {
+        "projectTitle": "Titre du projet",
+        "status": "Statut",
+        "supervisionType": "Type d'encadrement",
+        "academicYear": "Année universitaire",
+        "studentName": "Nom de l'étudiant",
+        "subject": "Sujet",
+        "theme": "Thématique",
+        "topicDescription": "Description du sujet",
+        "startDate": "Date de début",
+        "endDate": "Date de Fin",
+        "actualEndDate": "Date de Fin Réel",
+        "mainSupervisor": "Encadrant Principal",
+        "coSupervisor": "CO_Encadrant {{index}}",
+        "validationStatus": "Statut validation",
+        "notes": "Notes"
+      }
+    }
+  },
+  "profile": {
+    "tabs": {
+      "profile": "Profile",
+      "academic": "Académique",
+      "research": "Recherche",
+      "security": "Sécurité"
+    },
+    "personalInfo": {
+      "title": "Informations personnelles",
+      "subtitle": "Mettez à jour les informations de votre compte"
+    },
+    "academicInfo": {
+      "title": "Informations académiques",
+      "subtitle": "Informations académiques"
+    },
+    "researchInfo": {
+      "title": "Recherche & profils",
+      "subtitle": "Informations académiques"
+    },
+    "securityInfo": {
+      "title": "MOT DE PASSE",
+      "subtitle": "Informations académiques"
+    },
+    "fields": {
+      "fullName": "Nom du chercheur",
+      "email": "Email de contact",
+      "phone": "Téléphone"
+    },
+    "academicFields": {
+      "diploma": "Diplôme",
+      "institution": "Établissement origine",
+      "quality": "Qualité",
+      "researchGrade": "Grade recherche",
+      "team": "Équipe"
+    },
+    "researchFields": {
+      "hIndex": "H-index",
+      "googleScholar": "Profil Google du chercheur",
+      "researchGate": "ResearchGate",
+      "personalSite": "Site personnel"
+    },
+    "securityFields": {
+      "currentPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer mot de passe"
+    },
+    "placeholders": {
+      "fullName": "Dr. Ahmed Benali",
+      "email": "ahmed@univ.dz",
+      "phone": "Entrer le numéro de téléphone"
+    },
+    "academicPlaceholders": {
+      "diploma": "Doctorat en IA",
+      "institution": "ahmed@univ.dz",
+      "quality": "Sélectionner la qualité",
+      "researchGrade": "Sélectionner le grade",
+      "team": "LMCS"
+    },
+    "researchPlaceholders": {
+      "hIndex": "25",
+      "googleScholar": "Lien",
+      "researchGate": "Réseau social scientifique (lien)",
+      "personalSite": "Lien"
+    },
+    "securityPlaceholders": {
+      "currentPassword": "************",
+      "newPassword": "Lien",
+      "confirmPassword": "Réseau social scientifique (Lien)"
+    },
+    "securityNotifications": {
+      "title": "Notifications de sécurité",
+      "subtitle": "Informations académiques",
+      "loginAlert": "Alerte connexion",
+      "passwordChange": "Changement mot de passe",
+      "suspiciousActivity": "Activité suspecte"
+    },
+    "academicOptions": {
+      "quality": {
+        "teacherResearcher": "Enseignant-Chercheur",
+        "associateProfessor": "Maître de conférences",
+        "professor": "Professeur"
+      },
+      "researchGrade": {
+        "director": "Directeur de recherche",
+        "senior": "Chercheur senior",
+        "junior": "Chercheur junior"
+      }
+    },
+    "actions": {
+      "save": "Enregistrer",
+      "saveAll": "Enregistrer tout",
+      "confirmPassword": "Confirmer mot de passe",
+      "confirm": "Confirmer"
+    },
+    "tabComingSoon": "Les paramètres {{tab}} seront bientôt disponibles."
   }
 }
