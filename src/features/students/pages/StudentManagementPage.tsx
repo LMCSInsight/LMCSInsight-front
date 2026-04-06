@@ -541,7 +541,6 @@ export default function StudentManagementPage() {
                 <TableHead>Établissement</TableHead>
                 <TableHead>Niveau</TableHead>
                 <TableHead>Spécialité</TableHead>
-                <TableHead className='text-center'>Nb Encadrements</TableHead>
                 <TableHead className='w-[80px] text-right'>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -557,9 +556,6 @@ export default function StudentManagementPage() {
                   <TableCell>{row.etablissement}</TableCell>
                   <TableCell>{row.niveau}</TableCell>
                   <TableCell>{row.specialite}</TableCell>
-                  <TableCell className='text-center'>
-                    {row.nbEncadrements}
-                  </TableCell>
                   <TableCell className='text-right'>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
