@@ -1,238 +1,329 @@
-import { Typography, Row, Col, Button, ConfigProvider, Spin } from 'antd'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import {
+  Mail,
+  Building2,
+  GraduationCap,
+  BookOpen,
+  Calendar,
+  Hash,
+  ArrowLeft,
+  Pencil,
+  ListOrdered,
+  ChevronRight,
+} from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { useStudent } from '@/features/students/hooks'
+import { cn } from '@/lib/utils'
 
-const { Title, Text } = Typography
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const C = {
-  navy: '#21334E',
-  blue: '#11499A',
-  bg: '#F5F5F5',
-  white: '#FFFFFF',
-  muted: '#6b7280',
-  border: '#d9d9d9',
-  lightBlue: '#EBF1F9',
-}
-const FONT = "'Outfit', sans-serif"
-
-const sectionTitleStyle: React.CSSProperties = {
-  fontFamily: FONT,
-  fontWeight: 700,
-  fontSize: 15,
-  color: C.navy,
-  marginBottom: 14,
-  marginTop: 18,
-}
-
-const labelStyle: React.CSSProperties = {
-  fontFamily: FONT,
-  fontSize: 11,
-  color: C.muted,
-  fontWeight: 400,
-  marginBottom: 2,
-  display: 'block',
-  textTransform: 'uppercase',
-  letterSpacing: '0.04em',
+function getInitials(first?: string, last?: string): string {
+  const f = (first ?? '').trim().charAt(0).toUpperCase()
+  const l = (last ?? '').trim().charAt(0).toUpperCase()
+  return f || l ? `${f}${l}` : '?'
 }
 
-const valueStyle: React.CSSProperties = {
-  fontFamily: FONT,
-  fontSize: 13,
-  color: C.navy,
-  fontWeight: 500,
-  display: 'block',
-  padding: '6px 10px',
-  background: C.lightBlue,
-  borderRadius: 4,
-  minHeight: 32,
-  lineHeight: '20px',
+function fmt(iso?: string | null): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('fr-DZ', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
-// ─── Read-only field ──────────────────────────────────────────────────────────
-function ReadField({ label, value }: { label: string; value?: string | null }) {
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function InfoField({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string
+  value?: string | null
+  icon?: React.ElementType
+}) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <span style={labelStyle}>{label}</span>
-      <span style={valueStyle}>{value ?? '—'}</span>
+    <div className='flex flex-col gap-0.5'>
+      <span className='text-xs font-semibold text-muted-foreground'>
+        {label}
+      </span>
+      <span className='flex items-center gap-1.5 text-sm font-medium text-foreground'>
+        {Icon && <Icon className='size-3.5 text-muted-foreground shrink-0' />}
+        {value ?? '—'}
+      </span>
     </div>
   )
 }
 
-// TODO: Replace with useQuery → studentApi.getStudentById(studentId)
-const getMockStudent = () => ({
-  firstName: 'Mohammed Elamin',
-  lastName: 'Beghernaout',
-  email: 'oa_beghernaout@esi.dz',
-  institution: 'ESI',
-  level: 'Master',
-  specialty: 'SID',
-  nbSupervisions: 2,
-  createdAt: '2024-09-01',
-})
+const LEVEL_COLORS: Record<string, string> = {
+  Master:
+    'bg-blue-100/80 text-blue-900 border border-blue-200/50 dark:bg-blue-900/30 dark:text-blue-200',
+  Doctorant:
+    'bg-violet-100/80 text-violet-900 border border-violet-200/50 dark:bg-violet-900/30 dark:text-violet-200',
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StudentDetailPage() {
   const { studentId } = useParams<{ studentId: string }>()
+  const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
-
-  // TODO: Replace mock with:
-  // const { data: student, isLoading } = useQuery({
-  //   queryKey: ['student', studentId],
-  //   queryFn: () => studentApi.getStudentById(studentId!),
-  // })
-  const student = getMockStudent()
-  const isLoading = false
+  const { t } = useTranslation()
+  const { data: student, isLoading, isError } = useStudent(studentId)
 
   if (isLoading) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '60vh',
-        }}
-      >
-        <Spin size='large' />
+      <div className='mx-auto max-w-3xl space-y-4'>
+        <Card className='overflow-hidden'>
+          <div className='bg-primary/5 px-6 py-7'>
+            <div className='flex items-center gap-5'>
+              <div className='size-20 animate-pulse rounded-full bg-muted' />
+              <div className='space-y-2.5 flex-1'>
+                <div className='h-7 w-48 animate-pulse rounded-md bg-muted' />
+                <div className='h-4 w-64 animate-pulse rounded-md bg-muted' />
+              </div>
+            </div>
+          </div>
+        </Card>
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <Card className='lg:col-span-2'>
+            <CardContent className='space-y-4 pt-6'>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className='h-9 animate-pulse rounded-md bg-muted'
+                />
+              ))}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className='space-y-4 pt-6'>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className='h-9 animate-pulse rounded-md bg-muted'
+                />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
 
+  if (isError || !student) {
+    return (
+      <div className='mx-auto max-w-3xl'>
+        <Card className='border-destructive/40 bg-destructive/5'>
+          <CardContent className='flex flex-col items-center gap-3 py-12 text-center'>
+            <div className='flex size-12 items-center justify-center rounded-full bg-destructive/10'>
+              <GraduationCap className='size-6 text-destructive' />
+            </div>
+            <p className='text-sm font-medium text-destructive'>
+              {t('students.detail.notFound')}
+            </p>
+            <Button variant='outline' size='sm' onClick={() => navigate(-1)}>
+              <ArrowLeft className='mr-2 size-4' />
+              {t('students.detail.back')}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const initials = getInitials(student.firstName, student.lastName)
+  const fullName = `${student.firstName} ${student.lastName}`
+  const nbSupervisions = Array.isArray(student.supervisions)
+    ? student.supervisions.length
+    : 0
+  const levelColorClass =
+    LEVEL_COLORS[student.level ?? ''] ?? 'bg-muted text-foreground'
+  const supervisionsPath = userId
+    ? `/researcher/${userId}/supervisions?student=${student.id}`
+    : '#'
+  const editPath = userId
+    ? `/researcher/${userId}/students/${studentId}/edit`
+    : 'edit'
+  const studentsPath = userId ? `/researcher/${userId}/students` : '#'
+
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: C.blue,
-          fontFamily: FONT,
-          borderRadius: 3,
-          colorBorder: C.border,
-        },
-      }}
-    >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');`}</style>
-
-      <div style={{ background: C.bg, minHeight: '100vh', fontFamily: FONT }}>
-        <div
-          style={{
-            background: C.white,
-            padding: '24px 32px 60px 32px',
-            minHeight: '100vh',
-          }}
+    <div className='mx-auto max-w-3xl space-y-4'>
+      {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
+      <nav className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+        <Link
+          to={studentsPath}
+          className='hover:text-foreground transition-colors'
         >
-          {/* ── Header ────────────────────────────────────────────────── */}
-          <Title
-            level={3}
-            style={{
-              fontFamily: FONT,
-              fontWeight: 700,
-              fontSize: 20,
-              color: C.navy,
-              marginBottom: 2,
-            }}
-          >
-            Détails de l&apos;étudiant
-          </Title>
-          <Text style={{ fontFamily: FONT, fontSize: 12, color: C.muted }}>
-            Informations complètes de l&apos;étudiant. Lecture seule.
-          </Text>
+          {t('students.detail.breadcrumb')}
+        </Link>
+        <ChevronRight className='size-3 shrink-0' />
+        <span className='text-foreground font-medium truncate max-w-xs'>
+          {fullName}
+        </span>
+      </nav>
 
-          <div style={{ marginTop: 24 }}>
-            {/* ══ 1. Informations personnelles ══════════════════════════ */}
-            <div style={sectionTitleStyle}>1. Informations personnelles :</div>
-
-            <Row gutter={16}>
-              <Col span={11}>
-                <ReadField label='Prénom' value={student.firstName} />
-              </Col>
-              <Col span={11}>
-                <ReadField label='Nom' value={student.lastName} />
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col span={22}>
-                <ReadField label='Email' value={student.email} />
-              </Col>
-            </Row>
-
-            {/* ══ 2. Informations académiques ═══════════════════════════ */}
-            <div style={sectionTitleStyle}>2. Informations académiques :</div>
-
-            <Row gutter={16}>
-              <Col span={11}>
-                <ReadField label='Établissement' value={student.institution} />
-              </Col>
-              <Col span={11}>
-                <ReadField label='Niveau' value={student.level} />
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col span={11}>
-                <ReadField label='Spécialité' value={student.specialty} />
-              </Col>
-              <Col span={11}>
-                <ReadField
-                  label='Nb Encadrements'
-                  value={String(student.nbSupervisions)}
-                />
-              </Col>
-            </Row>
-
-            {/* ══ 3. Métadonnées ════════════════════════════════════════ */}
-            <div style={sectionTitleStyle}>3. Métadonnées :</div>
-
-            <Row gutter={16}>
-              <Col span={11}>
-                <ReadField label="Date d'ajout" value={student.createdAt} />
-              </Col>
-              <Col span={11}>
-                <ReadField label='ID' value={studentId} />
-              </Col>
-            </Row>
-          </div>
-
-          {/* ── Buttons ───────────────────────────────────────────────── */}
-          <div
-            style={{
-              marginTop: 32,
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 10,
-            }}
-          >
-            <Button
-              onClick={() => navigate(-1)}
-              style={{
-                fontFamily: FONT,
-                fontSize: 13,
-                fontWeight: 500,
-                borderColor: C.border,
-                color: C.navy,
-                borderRadius: 4,
-                height: 36,
-                paddingInline: 20,
-              }}
-            >
-              Retour
-            </Button>
-            <Button
-              type='primary'
-              onClick={() => navigate(`edit`)}
-              style={{
-                fontFamily: FONT,
-                fontSize: 13,
-                fontWeight: 600,
-                backgroundColor: C.navy,
-                borderColor: C.navy,
-                borderRadius: 4,
-                height: 36,
-                paddingInline: 20,
-              }}
-            >
-              Modifier
-            </Button>
+      {/* ── Hero banner ─────────────────────────────────────────────────── */}
+      <Card className='overflow-hidden'>
+        <div className='bg-linear-to-br from-primary/10 via-primary/5 to-transparent px-6 py-7'>
+          <div className='flex flex-wrap items-center gap-5'>
+            <div className='flex size-20 shrink-0 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground shadow-primary'>
+              {initials}
+            </div>
+            <div className='flex-1 min-w-0'>
+              <h1 className='text-2xl font-bold tracking-tight text-foreground truncate'>
+                {fullName}
+              </h1>
+              <div className='mt-2 flex flex-wrap items-center gap-2'>
+                {student.email && (
+                  <span className='inline-flex items-center gap-1 text-xs text-muted-foreground'>
+                    <Mail className='size-3' />
+                    {student.email}
+                  </span>
+                )}
+                <span className='inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-xs font-medium text-foreground'>
+                  <Building2 className='size-3' />
+                  {student.institution || '—'}
+                </span>
+                <span
+                  className={cn(
+                    'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium',
+                    levelColorClass,
+                  )}
+                >
+                  {student.level || '—'}
+                </span>
+                <Badge variant='secondary' className='gap-1 tabular'>
+                  <BookOpen className='size-3' />
+                  {nbSupervisions} {t('students.detail.supervision')}
+                  {nbSupervisions !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+            </div>
           </div>
         </div>
+      </Card>
+
+      {/* ── Asymmetric info grid — personal (wide) + academic (narrow) ──── */}
+      <div className='grid gap-4 lg:grid-cols-3'>
+        {/* Personal info — spans 2 cols */}
+        <Card className='border-l-4 border-l-primary lg:col-span-2'>
+          <CardHeader className='pb-3'>
+            <div className='flex items-center gap-2'>
+              <div className='flex size-7 items-center justify-center rounded-md bg-primary/10'>
+                <GraduationCap className='size-4 text-primary' />
+              </div>
+              <span className='text-sm font-semibold text-foreground'>
+                {t('students.detail.personalInfo')}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className='grid grid-cols-2 gap-x-6 gap-y-4'>
+              <InfoField
+                label={t('students.detail.firstName')}
+                value={student.firstName}
+              />
+              <InfoField
+                label={t('students.detail.lastName')}
+                value={student.lastName}
+              />
+              <div className='col-span-2'>
+                <div className='h-px bg-border mb-4' />
+                <InfoField
+                  label={t('common.email')}
+                  value={student.email}
+                  icon={Mail}
+                />
+              </div>
+              <InfoField
+                label={t('students.detail.addedOn')}
+                value={fmt(student.createdAt)}
+                icon={Calendar}
+              />
+              <InfoField
+                label={t('students.detail.supervisions')}
+                value={String(nbSupervisions)}
+                icon={ListOrdered}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Academic info — 1 col */}
+        <Card className='bg-muted/30 border border-border'>
+          <CardHeader className='pb-3'>
+            <div className='flex items-center gap-2'>
+              <div className='flex size-7 items-center justify-center rounded-md bg-primary/10'>
+                <BookOpen className='size-4 text-primary' />
+              </div>
+              <span className='text-sm font-semibold text-foreground'>
+                {t('students.detail.academicInfo')}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <InfoField
+              label={t('students.detail.institution')}
+              value={student.institution}
+              icon={Building2}
+            />
+            <div className='h-px bg-border' />
+            <InfoField
+              label={t('students.detail.level')}
+              value={student.level}
+            />
+            <div className='h-px bg-border' />
+            <InfoField
+              label={t('students.detail.specialty')}
+              value={student.specialty || '—'}
+            />
+            <div className='h-px bg-border' />
+            <div className='flex flex-col gap-0.5'>
+              <span className='text-xs font-semibold text-muted-foreground'>
+                ID
+              </span>
+              <span
+                className='flex items-center gap-1 text-xs font-mono text-muted-foreground truncate'
+                title={student.id}
+              >
+                <Hash className='size-3 shrink-0' />
+                {student.id}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </ConfigProvider>
+
+      {/* ── Sticky action bar ─────────────────────────────────────────────── */}
+      <div className='sticky bottom-0 -mx-6 border-t border-border bg-card/80 backdrop-blur-sm px-6 py-3'>
+        <div className='mx-auto flex max-w-3xl flex-wrap items-center gap-3'>
+          <Button
+            variant='ghost'
+            onClick={() => navigate(-1)}
+            className='gap-2'
+          >
+            <ArrowLeft className='size-4' />
+            {t('students.detail.back')}
+          </Button>
+          <div className='flex-1' />
+          <Link
+            to={supervisionsPath}
+            className={cn(buttonVariants({ variant: 'outline' }), 'gap-2')}
+          >
+            <ListOrdered className='size-4' />
+            {t('students.detail.supervisions')}
+          </Link>
+          <Link to={editPath} className={cn(buttonVariants(), 'gap-2')}>
+            <Pencil className='size-4' />
+            {t('students.detail.edit')}
+          </Link>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -26,7 +26,7 @@ export interface User {
 interface AuthContextValue {
   currentUser: User | null
   isAuthenticated: boolean
-  login: (user: User, token: string) => void
+  login: (user: User, token: string, refreshToken?: string) => void
   logout: () => void
 }
 
@@ -79,11 +79,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = env.AUTH_BYPASS ? true : !!currentUser
 
-  const login = useCallback((user: User, token: string) => {
-    flushSync(() => setCurrentUser(user))
-    localStorage.setItem(APP_CONSTANTS.STORAGE_KEYS.USER, JSON.stringify(user))
-    localStorage.setItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN, token)
-  }, [])
+  const login = useCallback(
+    (user: User, token: string, refreshToken?: string) => {
+      flushSync(() => setCurrentUser(user))
+      localStorage.setItem(
+        APP_CONSTANTS.STORAGE_KEYS.USER,
+        JSON.stringify(user),
+      )
+      localStorage.setItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN, token)
+      if (refreshToken) {
+        localStorage.setItem(
+          APP_CONSTANTS.STORAGE_KEYS.REFRESH_TOKEN,
+          refreshToken,
+        )
+      }
+    },
+    [],
+  )
 
   const logout = useCallback(() => {
     if (env.AUTH_BYPASS) {
@@ -95,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentUser(null)
     localStorage.removeItem(APP_CONSTANTS.STORAGE_KEYS.USER)
     localStorage.removeItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN)
+    localStorage.removeItem(APP_CONSTANTS.STORAGE_KEYS.REFRESH_TOKEN)
     localStorage.removeItem(DEV_ROLE_STORAGE_KEY)
   }, [])
 

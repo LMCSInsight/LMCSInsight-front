@@ -1,4 +1,6 @@
-import { Link, useParams } from "react-router-dom";
+import { useMemo } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   BarChart3,
   Clock,
@@ -10,7 +12,8 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-} from "lucide-react";
+  TrendingUp,
+} from 'lucide-react'
 import {
   PieChart,
   Pie,
@@ -22,10 +25,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-} from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from 'recharts'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -33,277 +36,653 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
+import {
+  useSupervisions,
+  useDeleteSupervision,
+} from '@/features/supervisions/hooks/useSupervisions'
+import { useAuthContext } from '@/shared/context/AuthContext'
 import {
   getResearcherSupervisionsPath,
   getResearcherSupervisionDetailPath,
   getSupervisionEditPath,
   getResearcherSupervisionNewPath,
   getResearcherStudentsPath,
-} from "@/config/routes";
+} from '@/config/routes'
 
-// ─── Mock data ─────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const MOCK_STATS = {
-  total: 25,
-  inProgress: 7,
-  defended: 18,
-  pendingValidation: 3,
-};
+const CHART_COLORS = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+]
 
-const MOCK_BY_TYPE = [
-  { name: "PFE", value: 10, pct: 40 },
-  { name: "Master", value: 8, pct: 32 },
-  { name: "PhD", value: 5, pct: 20 },
-  { name: "Internship", value: 2, pct: 8 },
-  { name: "Project", value: 0, pct: 0 },
-];
+const TYPE_LABELS: Record<string, string> = {
+  PFE: 'PFE',
+  MASTER: 'Master',
+  PHD: 'Doctorat',
+  INTERNSHIP: 'Stage',
+  PROJECT: 'Projet',
+}
 
-const CHART_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+const STATUS_LABELS: Record<string, string> = {
+  IN_PROGRESS: 'En cours',
+  DEFENDED: 'Soutenu',
+  ABANDONED: 'Abandonné',
+  EXTENSION: 'Prolongation',
+  SUSPENDED: 'Suspendu',
+}
 
-const MOCK_BY_YEAR = [
-  { year: "2021-22", count: 4 },
-  { year: "2022-23", count: 6 },
-  { year: "2023-24", count: 7 },
-  { year: "2024-25", count: 5 },
-  { year: "2025-26", count: 3 },
-];
+const STATUS_BAR_COLOR: Record<string, string> = {
+  IN_PROGRESS: 'bg-blue-500',
+  DEFENDED: 'bg-green-500',
+  ABANDONED: 'bg-red-400',
+  EXTENSION: 'bg-orange-400',
+  SUSPENDED: 'bg-gray-400',
+}
 
-const SUPERVISION_STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  PENDING: "outline",
-  IN_PROGRESS: "secondary",
-  VALIDATED: "default",
-  REJECTED: "destructive",
-};
+const STATUS_ROW_BORDER: Record<string, string> = {
+  IN_PROGRESS: 'border-l-blue-400',
+  DEFENDED: 'border-l-green-500',
+  ABANDONED: 'border-l-red-400',
+  EXTENSION: 'border-l-orange-400',
+  SUSPENDED: 'border-l-gray-400',
+}
 
-const MOCK_RECENT_SUPERVISIONS = [
-  { id: "1", title: "Deep Learning for Medical Imaging", student: "Ali K.", type: "Master", status: "PENDING" },
-  { id: "2", title: "Blockchain for Supply Chain", student: "Sara M.", type: "PFE", status: "VALIDATED" },
-  { id: "3", title: "IoT Security in Smart Cities", student: "Youcef B.", type: "Master", status: "REJECTED" },
-  { id: "4", title: "AI for Healthcare Diagnostics", student: "Amina T.", type: "PhD", status: "VALIDATED" },
-  { id: "5", title: "NLP for Arabic Dialects", student: "Mohamed K.", type: "Master", status: "IN_PROGRESS" },
-];
+const VALIDATION_BADGE: Record<
+  string,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+  PENDING: 'outline',
+  VALIDATED: 'default',
+  REJECTED: 'destructive',
+  REVISED: 'secondary',
+}
 
-// ─── Component ─────────────────────────────────────────────────────────────
+const VALIDATION_LABELS: Record<string, string> = {
+  PENDING: 'En attente',
+  VALIDATED: 'Validé',
+  REJECTED: 'Refusé',
+  REVISED: 'À réviser',
+}
+
+// ─── Featured KPI Card ────────────────────────────────────────────────────────
+
+function FeaturedKpiCard({
+  to,
+  title,
+  value,
+  sub,
+  icon: Icon,
+}: {
+  to?: string
+  title: string
+  value: number | string
+  sub?: string
+  icon: React.ElementType
+}) {
+  const inner = (
+    <Card className='h-full cursor-pointer bg-primary text-primary-foreground shadow-primary transition-all hover:shadow-primary hover:-translate-y-0.5 border-0'>
+      <CardHeader className='flex flex-row items-start justify-between pb-3'>
+        <CardTitle className='text-sm font-medium text-primary-foreground/70'>
+          {title}
+        </CardTitle>
+        <div className='flex size-8 items-center justify-center rounded-lg bg-primary-foreground/15'>
+          <Icon className='size-4 text-primary-foreground' />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className='text-4xl font-bold tabular text-primary-foreground'>
+          {value}
+        </div>
+        {sub && (
+          <p className='mt-1.5 text-xs text-primary-foreground/60'>{sub}</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+  return to ? (
+    <Link to={to} className='block h-full'>
+      {inner}
+    </Link>
+  ) : (
+    inner
+  )
+}
+
+// ─── Secondary KPI Card ───────────────────────────────────────────────────────
+
+function KpiCard({
+  to,
+  title,
+  value,
+  sub,
+  icon: Icon,
+  accent,
+}: {
+  to?: string
+  title: string
+  value: number | string
+  sub?: string
+  icon: React.ElementType
+  accent?: string
+}) {
+  const inner = (
+    <Card className='cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5'>
+      <CardHeader className='flex flex-row items-center justify-between pb-2'>
+        <CardTitle className='text-xs font-medium text-muted-foreground'>
+          {title}
+        </CardTitle>
+        <div
+          className={`flex size-7 items-center justify-center rounded-md ${
+            accent ?? 'bg-primary/10'
+          }`}
+        >
+          <Icon className='size-3.5 text-primary' />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className='text-2xl font-bold tabular text-foreground'>
+          {value}
+        </div>
+        {sub && <p className='mt-0.5 text-xs text-muted-foreground'>{sub}</p>}
+      </CardContent>
+    </Card>
+  )
+  return to ? <Link to={to}>{inner}</Link> : inner
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ResearcherDashboard() {
-  const { userId } = useParams<{ userId: string }>();
-  const basePath = userId ? getResearcherSupervisionsPath(userId) : "#";
+  const { userId } = useParams<{ userId: string }>()
+  const { currentUser } = useAuthContext()
+  const { t } = useTranslation()
 
-  function handleDeleteSupervision(id: string) {
-    // Placeholder: in real app would call API and refresh list
-    console.log("Delete supervision", id);
-  }
+  const { data: supPage, isLoading } = useSupervisions({ limit: 200 })
+  const { mutate: deleteSupervision } = useDeleteSupervision()
+
+  const supervisions = supPage?.data ?? []
+
+  // ── KPIs ──────────────────────────────────────────────────────────────────
+  const total = supervisions.length
+  const inProgress = supervisions.filter(
+    (s) => s.status === 'IN_PROGRESS',
+  ).length
+  const defended = supervisions.filter((s) => s.status === 'DEFENDED').length
+  const pending = supervisions.filter(
+    (s) => s.validationStatus === 'PENDING',
+  ).length
+  const defenseRate = total > 0 ? Math.round((defended / total) * 100) : 0
+
+  // ── Chart data ────────────────────────────────────────────────────────────
+  const byType = useMemo(() => {
+    const map: Record<string, number> = {}
+    supervisions.forEach((s) => {
+      map[s.type] = (map[s.type] ?? 0) + 1
+    })
+    return Object.entries(map).map(([k, v]) => ({
+      name: TYPE_LABELS[k] ?? k,
+      value: v,
+      pct: total > 0 ? Math.round((v / total) * 100) : 0,
+    }))
+  }, [supervisions, total])
+
+  const byYear = useMemo(() => {
+    const map: Record<string, number> = {}
+    supervisions.forEach((s) => {
+      if (s.academicYear) map[s.academicYear] = (map[s.academicYear] ?? 0) + 1
+    })
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([year, count]) => ({ year, count }))
+  }, [supervisions])
+
+  // ── Recent 5 ─────────────────────────────────────────────────────────────
+  const recent = useMemo(
+    () =>
+      [...supervisions]
+        .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+        .slice(0, 5),
+    [supervisions],
+  )
+
+  const basePath = userId ? getResearcherSupervisionsPath(userId) : '#'
+  const newPath = userId ? getResearcherSupervisionNewPath(userId) : '#'
+  const studPath = userId ? getResearcherStudentsPath(userId) : '#'
+  const today = new Date().toLocaleDateString('fr-DZ', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+  const firstName = currentUser?.name?.split(' ')[0] ?? t('common.researcher')
 
   return (
-    <div className="space-y-6">
-      {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link to={basePath}>
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Supervisions
-              </CardTitle>
-              <BarChart3 className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{MOCK_STATS.total}</div>
-              <p className="text-xs text-muted-foreground">Click to view all</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to={basePath}>
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                In Progress
-              </CardTitle>
-              <Hourglass className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{MOCK_STATS.inProgress}</div>
-              <p className="text-xs text-muted-foreground">Click to filter</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to={basePath}>
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Defended
-              </CardTitle>
-              <GraduationCap className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{MOCK_STATS.defended}</div>
-              <p className="text-xs text-muted-foreground">Click to filter</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to={basePath}>
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pending Validation
-              </CardTitle>
-              <Clock className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{MOCK_STATS.pendingValidation}</div>
-              <p className="text-xs text-muted-foreground">Click to filter</p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      {/* Charts row - Recharts */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Supervisions by Type</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={MOCK_BY_TYPE.filter((d) => d.value > 0)}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={90}
-                    label={({ name, pct }) => `${name}: ${pct}%`}
-                  >
-                    {MOCK_BY_TYPE.filter((d) => d.value > 0).map((_, index) => (
-                      <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number, name: string, props: { payload: { pct: number } }) => [`${value} (${props.payload.pct}%)`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
+    <div className='space-y-6'>
+      {/* ── Welcome hero ─────────────────────────────────────────────────── */}
+      <Card className='relative overflow-hidden border-0 bg-linear-to-br from-primary/15 via-primary/5 to-transparent'>
+        {/* Watermark rate number */}
+        {total > 0 && (
+          <div
+            className='absolute right-6 top-1/2 -translate-y-1/2 select-none text-[5rem] font-black tabular leading-none text-primary/6 pointer-events-none'
+            aria-hidden
+          >
+            {defenseRate}%
+          </div>
+        )}
+        <CardContent className='flex flex-wrap items-center justify-between gap-4 px-6 py-5'>
+          <div className='space-y-1'>
+            <div className='flex items-center gap-2'>
+              <h2 className='text-lg font-semibold text-foreground'>
+                {t('dashboard.greeting', { name: firstName })}
+              </h2>
             </div>
-            <ul className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              {MOCK_BY_TYPE.map((item, i) => (
-                <li key={item.name}>
-                  {item.name}: {item.value} ({item.pct}%)
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Supervisions by Year</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={MOCK_BY_YEAR} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="year" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Supervisions table - Actions = dots menu (Update / Delete) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Supervisions</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[60px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {MOCK_RECENT_SUPERVISIONS.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.title}</TableCell>
-                  <TableCell>{row.student}</TableCell>
-                  <TableCell>{row.type}</TableCell>
-                  <TableCell>
-                    <Badge variant={SUPERVISION_STATUS_VARIANT[row.status] ?? "outline"}>
-                      {row.status.replace("_", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="size-8 shrink-0" aria-label="Actions">
-                          <MoreVertical className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to={
-                              userId
-                                ? getSupervisionEditPath(userId, row.id)
-                                : "#"
-                            }
-                          >
-                            <Pencil className="size-4" />
-                            Update
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => handleDeleteSupervision(row.id)}
-                        >
-                          <Trash2 className="size-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            <p className='text-sm text-muted-foreground capitalize'>{today}</p>
+          </div>
+          <div className='flex flex-wrap gap-2'>
+            <Button
+              asChild
+              size='sm'
+              className='gap-2 whitespace-nowrap shadow-primary-sm'
+            >
+              <Link
+                to={newPath}
+                className='inline-flex items-center gap-2 whitespace-nowrap'
+              >
+                <Plus className='size-3.5 shrink-0' />
+                <span>{t('dashboard.quickActions.newSupervision')}</span>
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size='sm'
+              variant='outline'
+              className='gap-2 whitespace-nowrap'
+            >
+              <Link
+                to={studPath}
+                className='inline-flex items-center gap-2 whitespace-nowrap'
+              >
+                <UserPlus className='size-3.5 shrink-0' />
+                <span>{t('dashboard.quickActions.registerStudent')}</span>
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Action buttons - icon and text on one line */}
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-6 shadow-sm">
-        <Button asChild className="shrink-0 min-w-0 whitespace-nowrap">
-          <Link to={userId ? getResearcherSupervisionNewPath(userId) : "#"} className="inline-flex items-center gap-2">
-            <Plus className="size-5 shrink-0" />
-            <span>Add New Supervision</span>
-          </Link>
-        </Button>
-        <Button variant="secondary" asChild className="shrink-0 min-w-0 whitespace-nowrap border bg-background hover:bg-muted">
-          <Link to={userId ? getResearcherStudentsPath(userId) : "#"} className="inline-flex items-center gap-2">
-            <UserPlus className="size-5 shrink-0" />
-            <span>Register Student</span>
-          </Link>
-        </Button>
-        <Button variant="outline" asChild className="shrink-0 min-w-0 whitespace-nowrap">
-          <Link to={basePath} className="inline-flex items-center gap-2">
-            <List className="size-5 shrink-0" />
-            <span>View All Supervisions</span>
-          </Link>
-        </Button>
+      {/* ── KPI cards ────────────────────────────────────────────────────── */}
+      {isLoading ? (
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <Card className='row-span-1'>
+            <CardContent className='py-8'>
+              <div className='h-20 animate-pulse rounded-lg bg-muted' />
+            </CardContent>
+          </Card>
+          <div className='grid grid-cols-2 gap-4 lg:col-span-2'>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className='py-6'>
+                  <div className='h-12 animate-pulse rounded-lg bg-muted' />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className='grid gap-4 lg:grid-cols-3'>
+          {/* Featured */}
+          <FeaturedKpiCard
+            title={t('dashboard.kpi.total')}
+            value={total}
+            icon={BarChart3}
+            to={basePath}
+            sub={t('dashboard.kpi.totalSub')}
+          />
+          {/* 4 secondary in 2×2 */}
+          <div className='grid grid-cols-2 gap-4 lg:col-span-2'>
+            <KpiCard
+              title={t('dashboard.kpi.inProgress')}
+              value={inProgress}
+              icon={Hourglass}
+              to={basePath}
+              accent='bg-blue-100 dark:bg-blue-900/30'
+            />
+            <KpiCard
+              title={t('dashboard.kpi.defended')}
+              value={defended}
+              icon={GraduationCap}
+              to={basePath}
+              accent='bg-green-100 dark:bg-green-900/30'
+            />
+            <KpiCard
+              title={t('dashboard.kpi.defenseRate')}
+              value={`${defenseRate}%`}
+              icon={TrendingUp}
+              accent='bg-violet-100 dark:bg-violet-900/30'
+              sub={t('dashboard.kpi.defenseRateSub', { defended, total })}
+            />
+            <KpiCard
+              title={t('dashboard.kpi.pending')}
+              value={pending}
+              icon={Clock}
+              to={basePath}
+              accent='bg-amber-100 dark:bg-amber-900/30'
+              sub={t('dashboard.kpi.pendingSub')}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Charts — asymmetric: pie 1 col, bar 2 cols ───────────────────── */}
+      <div className='grid gap-4 lg:grid-cols-3'>
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-sm font-semibold'>
+              {t('dashboard.charts.byType')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {byType.length === 0 ? (
+              <div className='flex h-48 items-center justify-center text-sm text-muted-foreground'>
+                {t('dashboard.charts.noData')}
+              </div>
+            ) : (
+              <>
+                <div className='h-48'>
+                  <ResponsiveContainer width='100%' height='100%'>
+                    <PieChart>
+                      <Pie
+                        data={byType}
+                        dataKey='value'
+                        nameKey='name'
+                        cx='50%'
+                        cy='50%'
+                        outerRadius={70}
+                        isAnimationActive
+                        animationDuration={600}
+                        label={({ name, pct }) => `${name} ${pct}%`}
+                        labelLine={false}
+                      >
+                        {byType.map((_, i) => (
+                          <Cell
+                            key={i}
+                            fill={CHART_COLORS[i % CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v: number) => [`${v}`, '']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <ul className='mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
+                  {byType.map((d, i) => (
+                    <li key={d.name} className='flex items-center gap-1'>
+                      <span
+                        className='inline-block size-2 rounded-sm'
+                        style={{
+                          background: CHART_COLORS[i % CHART_COLORS.length],
+                        }}
+                      />
+                      {d.name}: {d.value}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className='lg:col-span-2'>
+          <CardHeader>
+            <CardTitle className='text-sm font-semibold'>
+              {t('dashboard.charts.byYear')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {byYear.length === 0 ? (
+              <div className='flex h-48 items-center justify-center text-sm text-muted-foreground'>
+                {t('dashboard.charts.noData')}
+              </div>
+            ) : (
+              <div className='h-48'>
+                <ResponsiveContainer width='100%' height='100%'>
+                  <BarChart
+                    data={byYear}
+                    margin={{ top: 4, right: 12, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray='3 3'
+                      className='stroke-muted'
+                    />
+                    <XAxis dataKey='year' tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <Tooltip />
+                    <Bar
+                      dataKey='count'
+                      name='Encadrements'
+                      fill='var(--chart-1)'
+                      radius={[4, 4, 0, 0]}
+                      isAnimationActive
+                      animationDuration={600}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      {/* ── Recent supervisions table ─────────────────────────────── */}
+      <Card>
+        <CardHeader className='flex flex-row items-center justify-between'>
+          <CardTitle className='text-sm font-semibold'>
+            {t('dashboard.recent.title')}
+          </CardTitle>
+          <Button
+            asChild
+            variant='ghost'
+            size='sm'
+            className='gap-1 whitespace-nowrap text-xs'
+          >
+            <Link
+              to={basePath}
+              className='inline-flex items-center gap-1 whitespace-nowrap'
+            >
+              <List className='size-3.5 shrink-0' />
+              <span>{t('dashboard.recent.viewAll')}</span>
+            </Link>
+          </Button>
+        </CardHeader>
+        <CardContent className='p-0'>
+          {recent.length === 0 ? (
+            <div className='flex flex-col items-center gap-3 py-12 text-center'>
+              <div className='flex size-12 items-center justify-center rounded-full bg-muted'>
+                <BarChart3 className='size-6 text-muted-foreground' />
+              </div>
+              <p className='text-sm text-muted-foreground'>
+                {t('dashboard.recent.noSupervisions')}
+              </p>
+              <Button asChild size='sm' className='whitespace-nowrap'>
+                <Link
+                  to={newPath}
+                  className='inline-flex items-center gap-2 whitespace-nowrap'
+                >
+                  <Plus className='size-4 shrink-0' />
+                  <span>{t('dashboard.recent.add')}</span>
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('dashboard.table.title')}</TableHead>
+                  <TableHead>{t('dashboard.table.student')}</TableHead>
+                  <TableHead>{t('dashboard.table.type')}</TableHead>
+                  <TableHead>{t('dashboard.table.validation')}</TableHead>
+                  <TableHead className='w-16 text-right'>
+                    {t('dashboard.table.actions')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recent.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className={cn(
+                      'hover:bg-muted/50 transition-colors border-l-2',
+                      STATUS_ROW_BORDER[row.status] ?? 'border-l-border',
+                    )}
+                  >
+                    <TableCell className='max-w-48 truncate font-medium'>
+                      {row.title}
+                    </TableCell>
+                    <TableCell className='text-muted-foreground text-sm'>
+                      {row.student
+                        ? `${row.student.lastName} ${row.student.firstName}`
+                        : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <span className='rounded-md bg-muted px-2 py-0.5 text-xs font-medium'>
+                        {TYPE_LABELS[row.type] ?? row.type}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          VALIDATION_BADGE[row.validationStatus] ?? 'outline'
+                        }
+                      >
+                        {VALIDATION_LABELS[row.validationStatus] ??
+                          row.validationStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='size-8'
+                          >
+                            <MoreVertical className='size-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to={
+                                userId
+                                  ? getResearcherSupervisionDetailPath(
+                                      userId,
+                                      row.id,
+                                    )
+                                  : '#'
+                              }
+                              className='inline-flex items-center gap-2 whitespace-nowrap'
+                            >
+                              <List className='size-4 shrink-0' />
+                              <span>Voir</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to={
+                                userId
+                                  ? getSupervisionEditPath(userId, row.id)
+                                  : '#'
+                              }
+                              className='inline-flex items-center gap-2 whitespace-nowrap'
+                            >
+                              <Pencil className='size-4 shrink-0' />
+                              <span>Modifier</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className='inline-flex items-center gap-2 whitespace-nowrap text-destructive focus:text-destructive'
+                            onClick={() => deleteSupervision(row.id)}
+                          >
+                            <Trash2 className='size-4 shrink-0' />
+                            <span>{t('common.delete')}</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Stacked status bar ───────────────────────────────────────── */}
+      {supervisions.length > 0 && (
+        <Card>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-sm font-semibold'>
+              {t('dashboard.statusBar.title')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-3'>
+            <div className='flex h-3 w-full overflow-hidden rounded-full'>
+              {Object.entries(STATUS_LABELS).map(([key]) => {
+                const count = supervisions.filter(
+                  (s) => s.status === key,
+                ).length
+                const pct = total > 0 ? (count / total) * 100 : 0
+                if (pct === 0) return null
+                return (
+                  <div
+                    key={key}
+                    style={{ width: `${pct}%` }}
+                    className={cn(
+                      'h-full first:rounded-l-full last:rounded-r-full transition-all',
+                      STATUS_BAR_COLOR[key],
+                    )}
+                    title={`${STATUS_LABELS[key]}: ${count}`}
+                  />
+                )
+              })}
+            </div>
+            <div className='flex flex-wrap gap-x-4 gap-y-1.5'>
+              {Object.entries(STATUS_LABELS).map(([key, label]) => {
+                const count = supervisions.filter(
+                  (s) => s.status === key,
+                ).length
+                if (count === 0) return null
+                return (
+                  <div
+                    key={key}
+                    className='flex items-center gap-1.5 text-xs text-muted-foreground'
+                  >
+                    <span
+                      className={cn('size-2 rounded-sm', STATUS_BAR_COLOR[key])}
+                    />
+                    <span>{label}</span>
+                    <span className='tabular font-medium text-foreground'>
+                      {count}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
-  );
+  )
 }

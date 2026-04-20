@@ -111,7 +111,7 @@
 
 @theme inline {
 
-    --font-sans: 'Outfit', 'Geist Variable', sans-serif;
+    --font-sans: 'Geist Variable', system-ui, sans-serif;
 
     --color-sidebar-ring: var(--sidebar-ring);
 
@@ -228,5 +228,37 @@ html:not(.dark) .researcher-portal {
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
+}
+
+/* ── Tabular numbers — use on any numeric data to prevent layout shift ── */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ── Grain texture overlay — breaks flat sterility ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+
+/* ── Tinted primary shadows — shadows carry the brand hue ── */
+.shadow-primary {
+  box-shadow: 0 4px 24px -4px oklch(0.45 0.2 260 / 0.20);
+}
+.shadow-primary-sm {
+  box-shadow: 0 2px 8px -2px oklch(0.45 0.2 260 / 0.15);
+}
+
+/* ── Press feedback — subtle physical click sensation ── */
+button:active:not(:disabled),
+[role="button"]:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
 }

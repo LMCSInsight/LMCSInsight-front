@@ -1,296 +1,179 @@
-# LMCS Supervision Tracking System — Implementation Plan
-
-**Project:** Suivi des encadrements des chercheurs du laboratoire LMCS - ESI (Phase II 2025-2026)  
-**Document:** Master plan to be followed for frontend and backend development.  
-**Source:** implementation_plan (1).docx + CDC (Cahier des Charges).
-
----
-
-## 1. Project Overview
-
-### 1.1 Purpose
-
-Full-stack web application to manage **academic supervisions** (PFE, Master, PhD, Internships, Research Projects) for the LMCS laboratory. It implements a **validation workflow** and **four user roles**: Director, Teacher/Researcher, Assistant (validator), Admin.
-
-### 1.2 Technology Stack
-
-| Component      | Technologies |
-|----------------|--------------|
-| **Frontend**  | React 18+, Ant Design 5+, Redux Toolkit, TanStack Query, Axios, ECharts, Vite, TypeScript |
-| **Backend**   | Node.js 20+ LTS, Express.js 4+, Prisma ORM |
-| **Database**  | PostgreSQL 15+ |
-| **Auth**      | JWT (jsonwebtoken) + bcrypt |
-| **Architecture** | MVC (backend), Feature-based (frontend), RESTful API, 3-tier |
-
-**Database (v3):** The backend uses a Chercheur-centric schema (v3). The database is created by `backend/create_complete_database.sql` and documented in `backend/COMPLETE_DATABASE_DOCUMENTATION.md`. Prisma schema is in `backend/prisma/schema.prisma`.
-
-### 1.3 Success Criteria
-
-- All four roles can log in and access role-appropriate features.
-- Teachers can create, update, and delete their supervisions.
-- Assistants can validate supervisions with feedback.
-- Directors can view global statistics and export reports (PDF/Excel).
-- System is responsive (desktop/tablet/mobile).
-- Test coverage above 70% for critical features.
-
----
-
-## 2. Backend Implementation (Node.js + Express + Prisma)
-
-### 2.1 Target Structure
-
-```
-backend/
-├── prisma/
-│   └── schema.prisma
-├── src/
-│   ├── controllers/
-│   │   ├── authController.ts
-│   │   ├── supervisionController.ts
-│   │   ├── studentController.ts
-│   │   ├── statisticsController.ts
-│   │   ├── validationController.ts
-│   │   └── adminController.ts
-│   ├── routes/
-│   │   ├── authRoutes.ts
-│   │   ├── supervisionRoutes.ts
-│   │   ├── studentRoutes.ts
-│   │   ├── statisticsRoutes.ts
-│   │   ├── validationRoutes.ts
-│   │   └── adminRoutes.ts
-│   ├── middleware/
-│   │   ├── authMiddleware.ts    # JWT verification
-│   │   ├── roleMiddleware.ts   # RBAC
-│   │   ├── validationMiddleware.ts
-│   │   └── errorHandler.ts
-│   ├── services/
-│   │   ├── emailService.ts
-│   │   ├── exportService.ts     # PDF/Excel
-│   │   └── auditService.ts
-│   ├── utils/
-│   │   ├── tokenUtils.ts
-│   │   ├── validatorUtils.ts
-│   │   └── dateUtils.ts
-│   ├── config/
-│   │   └── database.ts
-│   └── server.ts
-├── .env
-├── .env.example
-└── package.json
-```
-
-### 2.2 Backend Modules to Implement
-
-#### 2.2.1 Authentication & Authorization
-
-| Feature           | Endpoint / Detail |
-|-------------------|-------------------|
-| User registration | `POST /api/auth/register` — bcrypt (12 rounds), email uniqueness, assign role |
-| Login             | `POST /api/auth/login` — verify credentials, JWT (access 15min, refresh 7d), return user |
-| Token refresh     | `POST /api/auth/refresh` — validate refresh token, issue new access token |
-| Logout            | `POST /api/auth/logout` — invalidate refresh token |
-| Password reset    | `POST /api/auth/forgot-password` — reset token, send email |
-| RBAC              | Middleware: `requireAdmin`, `requireDirector`, `requireTeacher`, `requireAssistant` |
-
-#### 2.2.2 Supervision Management
-
-| Feature            | Endpoint / Detail |
-|--------------------|-------------------|
-| Create             | `POST /api/supervisions` — validationStatus=PENDING, link student, add supervisors |
-| List               | `GET /api/supervisions` — filter by role, pagination, sort, filters |
-| Get by ID          | `GET /api/supervisions/:id` — full details (student, supervisors, theme, validation logs) |
-| Update             | `PUT /api/supervisions/:id` — ownership check; if validated → REVISED; audit log |
-| Delete             | `DELETE /api/supervisions/:id` — teachers: own only; admins: all; audit |
-| Search             | `GET /api/supervisions/search` — keywords, type, year, status, theme, supervisor |
-| Add co-supervisor  | `POST /api/supervisions/:id/supervisors` — contribution %; validate total = 100% |
+**IMPLEMENTATION PLAN**
 
-#### 2.2.3 Other Backend Domains
+**LMCS Supervision Tracking System**
 
-- **Students:** CRUD, link to supervisions.
-- **Teams / Themes:** CRUD for lab axes and research themes.
-- **Validation:** Assistant endpoints, status transitions, validation logs, notifications.
-- **Statistics:** Aggregated stats, dashboard data.
-- **Export:** PDF (e.g. PDFKit), Excel (e.g. ExcelJS), CSV.
+Complete Development Roadmap
 
-### 2.3 Backend Development Phases
+_Frontend & Backend Implementation Guide_
 
-| Phase | Focus | Deliverables |
-|-------|--------|--------------|
-| **B1** | Project setup & database | Node project, Prisma, DB, migrations |
-| **B2** | Authentication | Register, login, JWT, refresh, password reset, RBAC middleware |
-| **B3** | Core CRUD | Supervisions, Students, Teams, Themes — CRUD + validation + auth |
-| **B4** | Validation workflow | Assistant validation, status transitions, logs, notifications |
-| **B5** | Search & statistics | Multi-criteria search, aggregated stats, dashboard APIs |
-| **B6** | Export & reports | PDF, Excel, CSV generation |
+# 1\. Project Overview
 
----
+The LMCS Supervision Tracking System is a full-stack web application designed to manage academic supervisions (PFE, Master, PhD, Internships, and Projects) for the laboratory. The system features a modern React frontend and a Node.js + Express.js backend with PostgreSQL database, implementing a complete validation workflow with four distinct user roles.
 
-## 3. Frontend Implementation (React + Vite + TypeScript)
+## 1.1 Technology Stack Summary
 
-### 3.1 Alignment with Existing Architecture
+| **Component**      | **Technologies**                                                |
+| ------------------ | --------------------------------------------------------------- |
+| **Frontend**       | React 18.3+, Ant Design 5+, Redux Toolkit, Axios, ECharts, Vite |
+| **Backend**        | Node.js 20+ LTS, Express.js 4+, Prisma ORM                      |
+| **Database**       | PostgreSQL 15+                                                  |
+| **Authentication** | JWT (jsonwebtoken) + bcrypt                                     |
+| **Architecture**   | MVC Pattern, RESTful API, 3-Tier Architecture                   |
 
-The frontend **already uses feature-based architecture** under `src/` (project root):
+# 2\. Backend Implementation (Node.js + Express + Prisma)
 
-- **src/features/** — auth, supervisions, students, validation, dashboard, admin  
-- **src/shared/** — components, hooks, lib (axios, queryClient), utils, context, types  
-- **src/app/** — store, router, providers  
-- **src/layouts/** — MainLayout, DashboardLayout, AuthLayout  
-- **src/routes/** — ProtectedRoute, RoleRoute  
-- **src/config/** — env, routes, constants  
+## 2.1 Project Structure
 
-New work must **follow this structure** (see `.cursor/rules/frontend.mdc`). The implementation plan’s “components/pages” map onto **features** and **shared** as below.
+**The backend follows MVC (Model-View-Controller) pattern:**
 
-### 3.2 Feature-to-Plan Mapping
+backend/ ├── prisma/ │ └── schema.prisma # Database schema ├── src/ │ ├── controllers/ # Request handlers │ │ ├── authController.js │ │ ├── supervisionController.js │ │ ├── studentController.js │ │ ├── statisticsController.js │ │ ├── validationController.js │ │ └── adminController.js │ ├── routes/ # API endpoints │ │ ├── authRoutes.js │ │ ├── supervisionRoutes.js │ │ ├── studentRoutes.js │ │ ├── statisticsRoutes.js │ │ ├── validationRoutes.js │ │ └── adminRoutes.js │ ├── middleware/ # Middleware functions │ │ ├── authMiddleware.js # JWT verification │ │ ├── roleMiddleware.js # RBAC checks │ │ ├── validationMiddleware.js # Input validation │ │ └── errorHandler.js # Error handling │ ├── services/ # Business logic │ │ ├── emailService.js │ │ ├── exportService.js # PDF/Excel generation │ │ └── auditService.js │ ├── utils/ # Helper functions │ │ ├── tokenUtils.js │ │ ├── validatorUtils.js │ │ └── dateUtils.js │ ├── config/ │ │ └── database.js # Prisma client │ └── server.js # Entry point ├── .env # Environment variables ├── .env.example # Template for .env └── package.json
 
-| Plan area           | Location in repo | Notes |
-|--------------------|-------------------|--------|
-| Layout             | `src/layouts/`, `src/shared/components` | Header, Sidebar, Footer, MainLayout |
-| Auth pages         | `src/features/auth/pages/` | Login, ForgotPassword; add Register if needed |
-| Dashboard (role)    | `src/features/dashboard/pages/` | TeacherDashboard, DirectorDashboard, AssistantDashboard; add AdminDashboard |
-| Supervisions       | `src/features/supervisions/` | List, Form, Detail, Search (api, components, pages, hooks, store) |
-| Students           | `src/features/students/` | List, Form (api, components, pages, store) |
-| Validation         | `src/features/validation/` | ValidationQueue, ValidationDetail (api, components, pages, hooks) |
-| Statistics         | `src/features/dashboard/` or dedicated | GlobalStatistics, PersonalStatistics, charts |
-| Admin              | `src/features/admin/` | UserManagement, TeamManagement, ThemeManagement |
+## 2.2 Core Backend Features to Implement
 
-### 3.3 Core Frontend Features to Implement
+### 2.2.1 Authentication & Authorization Module
 
-#### 3.3.1 Authentication
+| **Feature**               | **Implementation Details**                                                                                           |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| User Registration         | POST /api/auth/register - Hash password with bcrypt (12 rounds), validate email uniqueness, assign role              |
+| User Login                | POST /api/auth/login - Verify credentials, generate JWT (access token 15min, refresh token 7 days), return user data |
+| Token Refresh             | POST /api/auth/refresh - Validate refresh token, issue new access token                                              |
+| Logout                    | POST /api/auth/logout - Invalidate refresh token, clear client cookies                                               |
+| Password Reset            | POST /api/auth/forgot-password - Generate reset token, send email with link                                          |
+| Role-Based Access Control | Middleware to check user role: requireAdmin, requireDirector, requireTeacher, requireAssistant                       |
 
-- **Login:** Email/password, validation, “Remember me”, JWT in localStorage/cookies, role-based redirect.
-- **Profile:** View/edit profile, change password, display role/team, optional avatar.
-- **Password reset:** Forgot password form, reset token validation, new password + confirmation.
+### 2.2.2 Supervision Management Module
 
-#### 3.3.2 Dashboards (by role)
+| **Feature**           | **API Endpoint & Logic**                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Create Supervision    | POST /api/supervisions - Validate input, create supervision with validationStatus=PENDING, link student, add supervisors |
+| Get All Supervisions  | GET /api/supervisions - Filter by role (teachers see own, directors see all), support pagination, sorting, filtering     |
+| Get Supervision by ID | GET /api/supervisions/:id - Return full details including student, supervisors, theme, validation logs                   |
+| Update Supervision    | PUT /api/supervisions/:id - Check ownership, if validated change to REVISED, update fields, log audit                    |
+| Delete Supervision    | DELETE /api/supervisions/:id - Only own supervisions for teachers, all for admins, log audit                             |
+| Search Supervisions   | GET /api/supervisions/search - Multi-criteria search: keywords, type, year, status, theme, supervisor                    |
+| Add Co-Supervisor     | POST /api/supervisions/:id/supervisors - Add supervisor with contribution %, validate total = 100%                       |
 
-| Role      | Content |
-|-----------|--------|
-| Teacher   | My supervisions (in progress, defended, etc.), quick stats (total, by type, by year), recent activity, pending validation alerts |
-| Director  | Global stats, charts (type, year, status, theme), top supervisors, validation queue overview, export (PDF/Excel) |
-| Assistant | Pending validations count, rejected items to review, personal validation stats, recently validated |
-| Admin     | User stats, system health, recent audit logs, quick links (users, backup) |
+## 2.3 Backend Development Phases
 
-#### 3.3.3 Supervision UI
+| **Phase**   | **Tasks**                | **Deliverables**                                                                                |
+| ----------- | ------------------------ | ----------------------------------------------------------------------------------------------- |
+| **Phase 1** | Project Setup & Database | Initialize Node.js project, install dependencies, setup Prisma, create database, run migrations |
+| **Phase 2** | Authentication Module    | Complete auth system: register, login, JWT, refresh tokens, password reset, RBAC middleware     |
+| **Phase 3** | Core CRUD Operations     | Supervisions, Students, Teams, Themes - full CRUD with validation and authorization             |
+| **Phase 4** | Validation Workflow      | Assistant validation endpoints, status transitions, validation logs, notifications              |
+| **Phase 5** | Search & Statistics      | Multi-criteria search, aggregated statistics, dashboard data endpoints                          |
+| **Phase 6** | Export & Reports         | PDF generation (PDFKit), Excel export (ExcelJS), CSV export                                     |
 
-- List/table with pagination, sorting, filters.
-- Create/Edit form (student, type, theme, dates, supervisors, keywords).
-- Detail view (full supervision + validation history).
-- Multi-criteria search (keywords, type, year, status, theme, supervisor).
+# 3\. Frontend Implementation (React + Ant Design)
 
-#### 3.3.4 Validation UI (Assistant)
+## 3.1 Project Structure
 
-- Validation queue (pending list).
-- Validation detail page (validate / reject with feedback).
-- Validation history timeline.
+frontend/ ├── public/ │ └── index.html ├── src/ │ ├── components/ # Reusable UI components │ │ ├── layout/ │ │ │ ├── Header.jsx │ │ │ ├── Sidebar.jsx │ │ │ ├── Footer.jsx │ │ │ └── MainLayout.jsx │ │ ├── common/ │ │ │ ├── DataTable.jsx # Reusable table with pagination │ │ │ ├── SearchBar.jsx │ │ │ ├── FilterPanel.jsx │ │ │ ├── LoadingSpinner.jsx │ │ │ └── ErrorBoundary.jsx │ │ └── charts/ │ │ ├── PieChart.jsx │ │ ├── BarChart.jsx │ │ └── LineChart.jsx │ ├── pages/ # Page components │ │ ├── auth/ │ │ │ ├── Login.jsx │ │ │ ├── Register.jsx │ │ │ └── ForgotPassword.jsx │ │ ├── dashboard/ │ │ │ ├── TeacherDashboard.jsx │ │ │ ├── DirectorDashboard.jsx │ │ │ ├── AssistantDashboard.jsx │ │ │ └── AdminDashboard.jsx │ │ ├── supervisions/ │ │ │ ├── SupervisionList.jsx │ │ │ ├── SupervisionForm.jsx │ │ │ ├── SupervisionDetail.jsx │ │ │ └── SupervisionSearch.jsx │ │ ├── students/ │ │ │ ├── StudentList.jsx │ │ │ └── StudentForm.jsx │ │ ├── validation/ │ │ │ ├── ValidationQueue.jsx │ │ │ └── ValidationDetail.jsx │ │ ├── statistics/ │ │ │ ├── GlobalStatistics.jsx │ │ │ └── PersonalStatistics.jsx │ │ └── admin/ │ │ ├── UserManagement.jsx │ │ ├── TeamManagement.jsx │ │ └── ThemeManagement.jsx │ ├── store/ # Redux state management │ │ ├── slices/ │ │ │ ├── authSlice.js │ │ │ ├── supervisionSlice.js │ │ │ ├── studentSlice.js │ │ │ └── validationSlice.js │ │ └── store.js │ ├── services/ # API services │ │ ├── api.js # Axios instance │ │ ├── authService.js │ │ ├── supervisionService.js │ │ ├── studentService.js │ │ └── validationService.js │ ├── utils/ │ │ ├── authUtils.js │ │ ├── dateUtils.js │ │ └── validatorUtils.js │ ├── hooks/ # Custom React hooks │ │ ├── useAuth.js │ │ └── useDebounce.js │ ├── App.jsx │ └── main.jsx ├── .env ├── .env.example ├── vite.config.js └── package.json
 
-#### 3.3.5 Admin UI
+## 3.2 Core Frontend Features to Implement
 
-- User management (CRUD).
-- Team and theme management.
-- Audit log viewer, system settings if required.
+### 3.2.1 Authentication Pages
 
-### 3.4 Frontend Development Phases
+| **Page**           | **Features & Components**                                                                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Login Page         | Email/password form with validation, Remember me checkbox, JWT storage in localStorage/cookies, Role-based redirect after login, Loading states, Error handling |
+| Profile Management | View/edit personal info, Change password form, Display role and team, Avatar upload (optional)                                                                  |
+| Password Reset     | Forgot password form, Reset token validation, New password form with confirmation                                                                               |
 
-| Phase | Focus | Deliverables |
-|-------|--------|--------------|
-| **F1** | Project setup | Vite, Ant Design, Redux, TanStack Query, Axios, Router, env (already largely done) |
-| **F2** | Layout & routing | Main layout (header, sidebar, content), protected & role-based routes and nav |
-| **F3** | Auth UI | Login, register (if needed), password reset, JWT handling, auth slice, API |
-| **F4** | Supervision management | List, create/edit form, detail, search/filter, status |
-| **F5** | Validation interface | Assistant queue, validation detail, validate/reject, history |
-| **F6** | Dashboards & statistics | Role-based dashboards, ECharts, stats panels, export buttons |
-| **F7** | Admin | User CRUD, team/theme management, audit log, settings |
+### 3.2.2 Dashboard Pages (Role-Based)
 
----
+| **Role**      | **Dashboard Features**                                                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Teacher**   | My supervisions list (in progress, defended, etc.), Quick stats (total, by type, by year), Recent activity, Pending validation notifications                        |
+| **Director**  | Global statistics (all supervisions), Charts: by type, by year, by status, by theme, Top supervisors ranking, Validation queue overview, Export buttons (PDF/Excel) |
+| **Assistant** | Pending validations count, Rejected supervisions needing review, Personal validation statistics, Recently validated items                                           |
+| **Admin**     | User statistics, System health metrics, Recent audit logs, Quick actions (user management, backup)                                                                  |
 
-## 4. Implementation Guidelines
+## 3.3 Frontend Development Phases
 
-### 4.1 Backend
+| **Phase**   | **Tasks**               | **Deliverables**                                                                                          |
+| ----------- | ----------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Phase 1** | Project Setup           | Initialize React with Vite, install Ant Design, Redux Toolkit, Axios, React Router, configure environment |
+| **Phase 2** | Core Layout & Routing   | Main layout (header, sidebar, content), routing setup, protected routes, role-based navigation            |
+| **Phase 3** | Authentication UI       | Login, register, password reset pages, JWT handling, Redux auth slice, API integration                    |
+| **Phase 4** | Supervision Management  | Supervision list/table, create/edit forms, detail view, search/filter functionality, status management    |
+| **Phase 5** | Validation Interface    | Assistant validation queue, validation detail page, validate/reject actions, validation history timeline  |
+| **Phase 6** | Dashboards & Statistics | Role-based dashboards, interactive charts (ECharts), statistics panels, export buttons                    |
+| **Phase 7** | Admin Features          | User management (CRUD), team/theme management, audit log viewer, system settings                          |
 
-- **Validation:** Joi or Zod for request body.
-- **Errors:** Centralized error middleware, consistent response shape.
-- **Security:** bcrypt 12 rounds, JWT on protected routes, consider CSRF.
-- **DB:** Type-safe Prisma, pagination, transactions for related writes.
-- **API:** Swagger/OpenAPI for endpoints and examples.
-- **Tests:** Jest (unit), Supertest (integration), target 70%+ coverage.
+# 4\. Implementation Guidelines & Best Practices
 
-### 4.2 Frontend
+## 4.1 Backend Best Practices
 
-- **Components:** Reusable, consistent with feature-based structure; TypeScript.
-- **State:** Redux for global (auth/user); local state for UI.
-- **API:** Centralized in feature `api/` and shared lib; loading/error handling; cancellation where useful.
-- **Forms:** React Hook Form; validation (e.g. Zod/Yup).
-- **UI:** Ant Design responsive grid; test mobile/tablet/desktop.
-- **Performance:** Lazy routes, memoization, avoid unnecessary re-renders.
+- **Input Validation:** Use Joi or Zod for all request body validation before processing
+- **Error Handling:** Centralized error handler middleware, consistent error response format
+- **Security:** Always hash passwords with bcrypt (12 rounds), validate JWT on protected routes, implement CSRF protection
+- **Database Queries:** Use Prisma's type-safe queries, implement pagination for large datasets, use transactions for related operations
+- **API Documentation:** Document all endpoints with Swagger/OpenAPI, include request/response examples
+- **Testing:** Write unit tests with Jest, integration tests with Supertest, aim for 70%+ coverage
 
-### 4.3 Testing
+## 4.2 Frontend Best Practices
 
-| Type        | Tools              | Scope |
-|------------|--------------------|--------|
-| Backend unit | Jest             | Controllers, services, utils, middleware |
-| Backend API  | Jest + Supertest | Endpoints, DB operations |
-| Frontend unit | Jest + RTL      | Components, hooks, utils, slices |
-| E2E         | Playwright or Cypress | Login, create supervision, validate |
+- **Component Design:** Create reusable components, follow atomic design principles, use prop-types or TypeScript
+- **State Management:** Use Redux for global state (auth, user), local state for component-specific data
+- **API Calls:** Centralize in service files, handle loading/error states, implement request cancellation
+- **Forms:** Use React Hook Form for performance, implement client-side validation with Yup
+- **Responsive Design:** Use Ant Design's responsive grid, test on mobile/tablet/desktop
+- **Performance:** Lazy load routes, memoize expensive computations, optimize re-renders
 
----
+# 5\. Testing Strategy
 
-## 5. Environment & Deployment
+| **Test Type**       | **Tools**                    | **What to Test**                                         |
+| ------------------- | ---------------------------- | -------------------------------------------------------- |
+| Backend Unit Tests  | Jest                         | Controllers, services, utils, middleware                 |
+| Backend Integration | Jest + Supertest             | API endpoints, database operations                       |
+| Frontend Unit Tests | Jest + React Testing Library | Components, hooks, utils, Redux slices                   |
+| E2E Tests           | Playwright or Cypress        | Critical user flows: login, create supervision, validate |
 
-### 5.1 Backend (.env)
+# 6\. Deployment Configuration
 
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/lmcs_supervisions"
-JWT_SECRET="your-super-secret-key-change-in-production"
-JWT_REFRESH_SECRET="your-refresh-secret-key"
-JWT_EXPIRES_IN="15m"
-JWT_REFRESH_EXPIRES_IN="7d"
-PORT=5000
-NODE_ENV="development"
-CORS_ORIGIN="http://localhost:5173"
-```
+## 6.1 Environment Variables
 
-### 5.2 Frontend (.env)
+**Backend (.env):**
 
-```env
-VITE_API_URL="http://localhost:5000/api"
-VITE_APP_NAME="LMCS Supervision Tracker"
-```
+DATABASE_URL="postgresql://user:password@localhost:5432/lmcs_supervisions" JWT_SECRET="your-super-secret-key-change-this-in-production" JWT_REFRESH_SECRET="your-refresh-secret-key" JWT_EXPIRES_IN="15m" JWT_REFRESH_EXPIRES_IN="7d" PORT=5000 NODE_ENV="development" CORS_ORIGIN="<http://localhost:5173>"
 
-### 5.3 Docker (optional)
+**Frontend (.env):**
 
-- `docker-compose.yml` for PostgreSQL, backend, and this app (project root).
-- Volumes for DB persistence; env-based configuration.
+VITE_API_URL="<http://localhost:5000/api>" VITE_APP_NAME="LMCS Supervision Tracker"
 
----
+## 6.2 Docker Configuration (Optional)
 
-## 6. Development Timeline (Sprints)
+Create docker-compose.yml for easy deployment with PostgreSQL, backend, and frontend containers. Includes volume mounting for database persistence and environment variable configuration.
 
-| Sprint | Backend | Frontend | Deliverable |
-|--------|---------|----------|-------------|
-| **Sprint 1** | Setup + DB + Auth | Setup + Layout + Auth UI | Working login (all roles) |
-| **Sprint 2** | CRUD Supervisions & Students | Supervision management UI | Create/view supervisions |
-| **Sprint 3** | Validation workflow APIs | Validation interface | Assistant can validate |
-| **Sprint 4** | Search & statistics APIs | Dashboards & charts | Full analytics |
-| **Sprint 5** | Export & admin APIs | Admin panel & polish | Complete system |
+# 7\. Development Timeline
 
----
+| **Sprint** | **Backend**                  | **Frontend**              | **Deliverable**          |
+| ---------- | ---------------------------- | ------------------------- | ------------------------ |
+| Sprint 1   | Setup + Database + Auth      | Setup + Layout + Auth UI  | Working login system     |
+| Sprint 2   | CRUD Supervisions & Students | Supervision Management UI | Create/View supervisions |
+| Sprint 3   | Validation Workflow          | Validation Interface      | Assistant can validate   |
+| Sprint 4   | Search & Statistics APIs     | Dashboards & Charts       | Full analytics system    |
+| Sprint 5   | Export & Admin Features      | Admin Panel & Polish      | Complete system          |
 
-## 7. Immediate Next Steps
+# 8\. Conclusion & Next Steps
 
-1. Set up dev environment (Node.js 20+, PostgreSQL 15+, editor).
-2. Create/confirm Git repo and branching strategy.
-3. Initialize **backend** (Express, Prisma, structure above).
-4. Confirm the app base (existing Vite/React app at project root) and align with this plan.
-5. Create DB and run Prisma migrations.
-6. **Sprint 1:** Implement auth (backend + frontend).
-7. Daily standups and weekly plan reviews.
+This implementation plan provides a complete roadmap for developing the LMCS Supervision Tracking System. The project is organized into clear phases with specific deliverables for both frontend and backend teams.
 
----
+**Immediate Next Steps:**
 
-## 8. Document References
+- Set up development environment (Node.js, PostgreSQL, VS Code)
+- Create GitHub repository and setup version control
+- Initialize backend and frontend projects
+- Create database using SQL scripts provided
+- Begin Sprint 1: Authentication module
+- Schedule daily standups and weekly reviews
 
-- **CDC (Cahier des Charges):** `.cursor/rules/lmcs-cdc-context.mdc` — domain, roles, security, UI, glossary.
-- **Frontend architecture:** `.cursor/rules/frontend.mdc` — feature-based structure, tech stack, conventions.
-- **This plan:** `docs/IMPLEMENTATION_PLAN.md` — master implementation roadmap.
+**Success Criteria:**
 
-All development must stay consistent with the CDC and the existing frontend architecture while following this implementation plan.
+- All user roles can login and access role-appropriate features
+- Teachers can create, update, and delete their supervisions
+- Assistants can validate supervisions with feedback
+- Directors can view global statistics and export reports
+- System is responsive and works on desktop/tablet/mobile
+- All critical features have test coverage above 70%

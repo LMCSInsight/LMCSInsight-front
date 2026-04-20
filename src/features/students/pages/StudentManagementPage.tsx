@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Search,
   SlidersHorizontal,
@@ -12,9 +13,10 @@ import {
   ChevronLeft,
   ChevronRight,
   BookOpen,
+  GraduationCap,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -31,304 +33,44 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { useStudents, useDeleteStudent } from '@/features/students/hooks'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Filter constants ─────────────────────────────────────────────────────────
 
 const ETABLISSEMENTS = ['ESI', 'Extérieur'] as const
 const NIVEAUX = ['Master', 'Doctorant'] as const
 const SPECIALITES = ['SIL', 'SID', 'SIT', 'SIQ'] as const
-const NB_ENCADREMENTS = ['Un seul', 'Plusieurs'] as const
 
 type Etablissement = (typeof ETABLISSEMENTS)[number]
 type Niveau = (typeof NIVEAUX)[number]
 type Specialite = (typeof SPECIALITES)[number]
-type NbEncadrement = (typeof NB_ENCADREMENTS)[number]
 
-interface StudentRow {
-  id: string
-  nom: string
-  prenom: string
-  email: string
-  etablissement: Etablissement
-  niveau: Niveau
-  specialite: Specialite
-  nbEncadrements: number
+const LEVEL_BADGE: Record<string, string> = {
+  Doctorant:
+    'bg-violet-100/80 text-violet-900 border border-violet-200/50 dark:bg-violet-900/30 dark:text-violet-200',
+  Master:
+    'bg-blue-100/80 text-blue-900 border border-blue-200/50 dark:bg-blue-900/30 dark:text-blue-200',
 }
-
-// ─── Mock data (25 students) ──────────────────────────────────────────────────
-
-const MOCK_STUDENTS: StudentRow[] = [
-  {
-    id: '1',
-    nom: 'Khelifi',
-    prenom: 'Ali',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '2',
-    nom: 'Meziani',
-    prenom: 'Sara',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '3',
-    nom: 'Benali',
-    prenom: 'Youcef',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '4',
-    nom: 'Taleb',
-    prenom: 'Amina',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Doctorant',
-    specialite: 'SIQ',
-    nbEncadrements: 3,
-  },
-  {
-    id: '5',
-    nom: 'Khelifi',
-    prenom: 'Mohamed',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '6',
-    nom: 'Lahmar',
-    prenom: 'Fatima',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '7',
-    nom: 'Bouzid',
-    prenom: 'Karim',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SIT',
-    nbEncadrements: 1,
-  },
-  {
-    id: '8',
-    nom: 'Cherif',
-    prenom: 'Nadia',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '9',
-    nom: 'Mokhtar',
-    prenom: 'Hamza',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'Extérieur',
-    niveau: 'Master',
-    specialite: 'SIL',
-    nbEncadrements: 1,
-  },
-  {
-    id: '10',
-    nom: 'Arous',
-    prenom: 'Sami',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Doctorant',
-    specialite: 'SIQ',
-    nbEncadrements: 4,
-  },
-  {
-    id: '11',
-    nom: 'Amrani',
-    prenom: 'Leila',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '12',
-    nom: 'Djemai',
-    prenom: 'Omar',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'Extérieur',
-    niveau: 'Master',
-    specialite: 'SIL',
-    nbEncadrements: 1,
-  },
-  {
-    id: '13',
-    nom: 'Bensaad',
-    prenom: 'Yasmine',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Doctorant',
-    specialite: 'SIT',
-    nbEncadrements: 3,
-  },
-  {
-    id: '14',
-    nom: 'Mansouri',
-    prenom: 'Rafik',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '15',
-    nom: 'Ferhat',
-    prenom: 'Ines',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '16',
-    nom: 'Kaddour',
-    prenom: 'Anis',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'Extérieur',
-    niveau: 'Master',
-    specialite: 'SIL',
-    nbEncadrements: 1,
-  },
-  {
-    id: '17',
-    nom: 'Hamdi',
-    prenom: 'Salma',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '18',
-    nom: 'Chouiter',
-    prenom: 'Nabil',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Doctorant',
-    specialite: 'SIQ',
-    nbEncadrements: 4,
-  },
-  {
-    id: '19',
-    nom: 'Meziane',
-    prenom: 'Dalia',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'Extérieur',
-    niveau: 'Master',
-    specialite: 'SIT',
-    nbEncadrements: 1,
-  },
-  {
-    id: '20',
-    nom: 'Khelifi',
-    prenom: 'Walid',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '21',
-    nom: 'Belkadi',
-    prenom: 'Samira',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-  {
-    id: '22',
-    nom: 'Boussaha',
-    prenom: 'Tarek',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'Extérieur',
-    niveau: 'Master',
-    specialite: 'SIL',
-    nbEncadrements: 1,
-  },
-  {
-    id: '23',
-    nom: 'Slimani',
-    prenom: 'Houda',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Doctorant',
-    specialite: 'SIQ',
-    nbEncadrements: 3,
-  },
-  {
-    id: '24',
-    nom: 'Ziani',
-    prenom: 'Ibrahim',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'Extérieur',
-    niveau: 'Master',
-    specialite: 'SIT',
-    nbEncadrements: 1,
-  },
-  {
-    id: '25',
-    nom: 'Benali',
-    prenom: 'Farida',
-    email: 'oa_khelifi@esi.dz',
-    etablissement: 'ESI',
-    niveau: 'Master',
-    specialite: 'SID',
-    nbEncadrements: 2,
-  },
-]
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StudentManagementPage() {
   const { userId } = useParams<{ userId: string }>()
+  const navigate = useNavigate()
+  const { t } = useTranslation()
 
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(1)
-  const [perPage, setPerPage] = useState(10)
+  const [perPage] = useState(10)
 
-  // Filter state
   const [etablissementFilter, setEtablissementFilter] = useState<
     Etablissement[]
   >([])
   const [niveauFilter, setNiveauFilter] = useState<Niveau[]>([])
   const [specialiteFilter, setSpecialiteFilter] = useState<Specialite[]>([])
-  const [nbEncadrementFilter, setNbEncadrementFilter] = useState<
-    NbEncadrement[]
-  >([])
 
   const toggleEtablissement = (v: Etablissement) =>
     setEtablissementFilter((p) =>
@@ -342,16 +84,31 @@ export default function StudentManagementPage() {
     setSpecialiteFilter((p) =>
       p.includes(v) ? p.filter((x) => x !== v) : [...p, v],
     )
-  const toggleNbEncadrement = (v: NbEncadrement) =>
-    setNbEncadrementFilter((p) =>
-      p.includes(v) ? p.filter((x) => x !== v) : [...p, v],
-    )
+
+  const serverFilters = {
+    search: searchQuery.trim() || undefined,
+    institution:
+      etablissementFilter.length === 1 ? etablissementFilter[0] : undefined,
+    level: niveauFilter.length === 1 ? niveauFilter[0] : undefined,
+    page,
+    limit: perPage,
+  }
+
+  const { data: pageResult, isLoading, isError } = useStudents(serverFilters)
+  const { mutate: deleteStudent } = useDeleteStudent()
+
+  const rows = (pageResult?.data ?? []).filter((r) => {
+    if (specialiteFilter.length === 0) return true
+    return specialiteFilter.includes(r.specialty as Specialite)
+  })
+
+  const total = pageResult?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / perPage))
 
   const hasActiveFilters =
     etablissementFilter.length > 0 ||
     niveauFilter.length > 0 ||
-    specialiteFilter.length > 0 ||
-    nbEncadrementFilter.length > 0
+    specialiteFilter.length > 0
 
   const activeFilterLabels: { key: string; label: string }[] = []
   etablissementFilter.forEach((v) =>
@@ -363,9 +120,6 @@ export default function StudentManagementPage() {
   specialiteFilter.forEach((v) =>
     activeFilterLabels.push({ key: `spe-${v}`, label: `Spécialité: ${v}` }),
   )
-  nbEncadrementFilter.forEach((v) =>
-    activeFilterLabels.push({ key: `nb-${v}`, label: `Encadrements: ${v}` }),
-  )
 
   const removeFilter = (key: string) => {
     if (key.startsWith('etab-'))
@@ -374,102 +128,55 @@ export default function StudentManagementPage() {
       setNiveauFilter((p) => p.filter((x) => `niv-${x}` !== key))
     else if (key.startsWith('spe-'))
       setSpecialiteFilter((p) => p.filter((x) => `spe-${x}` !== key))
-    else if (key.startsWith('nb-'))
-      setNbEncadrementFilter((p) => p.filter((x) => `nb-${x}` !== key))
   }
 
   const clearAllFilters = () => {
     setEtablissementFilter([])
     setNiveauFilter([])
     setSpecialiteFilter([])
-    setNbEncadrementFilter([])
     setPage(1)
   }
 
-  const applyFiltersFromPanel = () => {
-    setFiltersOpen(false)
-    setPage(1)
+  const handleDelete = (id: string) => {
+    setDeleteTarget(id)
   }
 
-  const resetPanelFilters = () => {
-    setEtablissementFilter([])
-    setNiveauFilter([])
-    setSpecialiteFilter([])
-    setNbEncadrementFilter([])
-    setPage(1)
-    setFiltersOpen(false)
+  const confirmDelete = () => {
+    if (deleteTarget) deleteStudent(deleteTarget)
+    setDeleteTarget(null)
   }
 
-  // ─── Filtering logic ───────────────────────────────────────────────────────
-
-  const filtered = useMemo(() => {
-    let list = MOCK_STUDENTS
-    const q = searchQuery.trim().toLowerCase()
-    if (q) {
-      list = list.filter(
-        (r) =>
-          r.nom.toLowerCase().includes(q) ||
-          r.prenom.toLowerCase().includes(q) ||
-          r.email.toLowerCase().includes(q) ||
-          r.specialite.toLowerCase().includes(q) ||
-          r.etablissement.toLowerCase().includes(q),
-      )
-    }
-    if (etablissementFilter.length > 0)
-      list = list.filter((r) => etablissementFilter.includes(r.etablissement))
-    if (niveauFilter.length > 0)
-      list = list.filter((r) => niveauFilter.includes(r.niveau))
-    if (specialiteFilter.length > 0)
-      list = list.filter((r) => specialiteFilter.includes(r.specialite))
-    if (nbEncadrementFilter.length > 0) {
-      list = list.filter((r) => {
-        if (nbEncadrementFilter.includes('Un seul') && r.nbEncadrements === 1)
-          return true
-        if (nbEncadrementFilter.includes('Plusieurs') && r.nbEncadrements > 1)
-          return true
-        return false
-      })
-    }
-    return list
-  }, [
-    searchQuery,
-    etablissementFilter,
-    niveauFilter,
-    specialiteFilter,
-    nbEncadrementFilter,
-  ])
-
-  const totalFiltered = filtered.length
-  const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage))
-  const currentPage = Math.min(page, totalPages)
-
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * perPage
-    return filtered.slice(start, start + perPage)
-  }, [filtered, currentPage, perPage])
-
-  function handleDelete(id: string) {
-    // TODO: useMutation → studentApi.deleteStudent(id)
-    console.log('Delete student', id)
-  }
-
-  // ─── Render ────────────────────────────────────────────────────────────────
+  const detailPath = (id: string) =>
+    userId ? `/researcher/${userId}/students/${id}` : '#'
+  const editPath = (id: string) =>
+    userId ? `/researcher/${userId}/students/${id}/edit` : '#'
+  const registerPath = userId ? `/researcher/${userId}/students/register` : '#'
 
   return (
     <div className='space-y-4'>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div>
-        <h1 className='text-2xl font-semibold tracking-tight'>
-          Mes Etudiant ({totalFiltered} total)
-        </h1>
+      {/* Header */}
+      <div className='flex flex-wrap items-center gap-3'>
+        <div className='flex-1'>
+          <h1 className='text-2xl font-semibold tracking-tight'>
+            {t('students.list.title')}
+          </h1>
+          <p className='text-sm text-muted-foreground'>
+            {t('students.list.subtitle')}
+          </p>
+        </div>
+        {total > 0 && (
+          <span className='tabular inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary'>
+            {t('students.list.count', { count: total })}
+          </span>
+        )}
       </div>
 
-      {/* ── Toolbar ────────────────────────────────────────────────────────── */}
+      {/* Toolbar */}
       <div className='flex flex-wrap items-center gap-3'>
         <div className='relative flex-1 min-w-[200px] max-w-md'>
           <Search className='absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder="Recherche par titre, mots-clés, nom de l'étudiant..."
+            placeholder={t('students.list.search')}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value)
@@ -484,28 +191,31 @@ export default function StudentManagementPage() {
           className='inline-flex shrink-0 items-center gap-2 whitespace-nowrap'
         >
           <SlidersHorizontal className='size-4 shrink-0' />
-          <span>Filtrer</span>
+          <span>{t('common.filter')}</span>
+          {hasActiveFilters && (
+            <span className='ml-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold size-4 flex items-center justify-center'>
+              {activeFilterLabels.length}
+            </span>
+          )}
         </Button>
-        <Button
-          asChild
-          className='inline-flex shrink-0 items-center gap-2 whitespace-nowrap'
+        <Link
+          to={registerPath}
+          className={cn(
+            buttonVariants(),
+            'inline-flex shrink-0 items-center gap-2 whitespace-nowrap',
+          )}
         >
-          <Link
-            to={userId ? `/researcher/${userId}/students/register` : '#'}
-            className='inline-flex items-center gap-2'
-          >
-            <Plus className='size-4 shrink-0' />
-            <span>Ajouter un nouveau</span>
-          </Link>
-        </Button>
+          <Plus className='size-4 shrink-0' />
+          <span>{t('students.list.register')}</span>
+        </Link>
       </div>
 
-      {/* ── Active Filters ──────────────────────────────────────────────────── */}
+      {/* Active Filters */}
       {hasActiveFilters && (
         <Card>
           <CardContent className='flex flex-wrap items-center gap-2 py-3'>
             <span className='text-sm text-muted-foreground'>
-              Filtres actifs :
+              {t('common.activeFilters')}
             </span>
             {activeFilterLabels.map(({ key, label }) => (
               <span
@@ -517,155 +227,228 @@ export default function StudentManagementPage() {
                   type='button'
                   onClick={() => removeFilter(key)}
                   className='rounded p-0.5 hover:bg-muted'
-                  aria-label={`Supprimer ${label}`}
+                  aria-label={`${t('common.remove')} ${label}`}
                 >
                   <X className='size-3.5' />
                 </button>
               </span>
             ))}
             <Button variant='ghost' size='sm' onClick={clearAllFilters}>
-              Tout effacer
+              {t('common.clearAll')}
             </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* ── Table ──────────────────────────────────────────────────────────── */}
+      {/* Table */}
       <Card>
         <div className='overflow-x-auto'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom et Prénom</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Établissement</TableHead>
-                <TableHead>Niveau</TableHead>
-                <TableHead>Spécialité</TableHead>
-                <TableHead className='w-[80px] text-right'>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginated.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className='font-medium'>
-                    {row.nom} {row.prenom}
-                  </TableCell>
-                  <TableCell className='text-muted-foreground'>
-                    {row.email}
-                  </TableCell>
-                  <TableCell>{row.etablissement}</TableCell>
-                  <TableCell>{row.niveau}</TableCell>
-                  <TableCell>{row.specialite}</TableCell>
-                  <TableCell className='text-right'>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='size-8'
-                          aria-label='Actions'
-                        >
-                          <MoreVertical className='size-4' />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to={
-                              userId
-                                ? `/researcher/${userId}/students/${row.id}`
-                                : '#'
-                            }
-                            className='flex items-center gap-2'
+          {isLoading ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className='w-10' />
+                  <TableHead>{t('students.columns.name')}</TableHead>
+                  <TableHead>{t('students.columns.email')}</TableHead>
+                  <TableHead>{t('students.columns.institution')}</TableHead>
+                  <TableHead>{t('students.columns.level')}</TableHead>
+                  <TableHead>{t('students.columns.specialty')}</TableHead>
+                  <TableHead className='w-[80px] text-right'>
+                    {t('students.columns.actions')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className='size-8 animate-pulse rounded-full bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 w-36 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 w-40 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 w-20 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-5 w-16 animate-pulse rounded-md bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 w-12 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      <div className='ml-auto h-8 w-8 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : isError ? (
+            <div className='py-10 text-center text-sm text-destructive'>
+              {t('students.list.loadError')}
+            </div>
+          ) : rows.length === 0 ? (
+            <div className='flex flex-col items-center gap-3 py-16 text-center'>
+              <div className='flex size-14 items-center justify-center rounded-full bg-muted'>
+                <GraduationCap className='size-7 text-muted-foreground' />
+              </div>
+              <p className='text-sm font-medium text-foreground'>
+                {t('students.list.noStudents')}
+              </p>
+              <p className='text-xs text-muted-foreground'>
+                {hasActiveFilters
+                  ? t('students.list.noStudentsFiltered')
+                  : t('students.list.noStudentsEmpty')}
+              </p>
+              {!hasActiveFilters && (
+                <Link
+                  to={registerPath}
+                  className={cn(buttonVariants({ size: 'sm' }), 'gap-2')}
+                >
+                  <Plus className='size-4' />
+                  {t('students.list.register')}
+                </Link>
+              )}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className='w-10' />
+                  <TableHead className='min-w-[180px]'>
+                    {t('students.columns.name')}
+                  </TableHead>
+                  <TableHead className='hidden sm:table-cell'>
+                    {t('students.columns.email')}
+                  </TableHead>
+                  <TableHead>{t('students.columns.institution')}</TableHead>
+                  <TableHead>{t('students.columns.level')}</TableHead>
+                  <TableHead>{t('students.columns.specialty')}</TableHead>
+                  <TableHead className='w-[80px] text-right'>
+                    {t('students.columns.actions')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className='cursor-pointer hover:bg-muted/50 transition-colors'
+                    onClick={() => navigate(detailPath(row.id))}
+                  >
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <div className='flex size-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground'>
+                        {row.firstName.charAt(0).toUpperCase()}
+                        {row.lastName.charAt(0).toUpperCase()}
+                      </div>
+                    </TableCell>
+                    <TableCell className='font-medium'>
+                      {row.lastName} {row.firstName}
+                    </TableCell>
+                    <TableCell className='hidden sm:table-cell text-muted-foreground text-sm'>
+                      {row.email}
+                    </TableCell>
+                    <TableCell className='text-sm'>{row.institution}</TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium',
+                          LEVEL_BADGE[row.level ?? ''] ??
+                            'bg-muted text-foreground',
+                        )}
+                      >
+                        {row.level}
+                      </span>
+                    </TableCell>
+                    <TableCell className='text-sm text-muted-foreground'>
+                      {row.specialty ?? '—'}
+                    </TableCell>
+                    <TableCell
+                      className='text-right'
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='size-8'
+                            aria-label='Actions'
+                          >
+                            <MoreVertical className='size-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          <DropdownMenuItem
+                            onClick={() => navigate(detailPath(row.id))}
                           >
                             <Eye className='size-4' />
-                            Voir détails
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to={
-                              userId
-                                ? `/researcher/${userId}/students/${row.id}/edit`
-                                : '#'
-                            }
-                            className='flex items-center gap-2'
+                            {t('students.actions.viewDetails')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => navigate(editPath(row.id))}
                           >
                             <Pencil className='size-4' />
-                            Modifier
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className='flex items-center gap-2 text-destructive focus:text-destructive'
-                          onClick={() => handleDelete(row.id)}
-                        >
-                          <Trash2 className='size-4' />
-                          Supprimer
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to={
-                              userId
-                                ? `/researcher/${userId}/supervisions?student=${row.id}`
-                                : '#'
+                            {t('common.edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant='destructive'
+                            onClick={() => handleDelete(row.id)}
+                          >
+                            <Trash2 className='size-4' />
+                            {t('common.delete')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              navigate(
+                                userId
+                                  ? `/researcher/${userId}/supervisions?student=${row.id}`
+                                  : '#',
+                              )
                             }
-                            className='flex items-center gap-2'
                           >
                             <BookOpen className='size-4' />
-                            Voir Encadrement
-                          </Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                            {t('students.actions.supervisions')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
       </Card>
 
-      {/* ── Pagination ─────────────────────────────────────────────────────── */}
+      {/* Pagination */}
       <Card>
         <CardContent className='flex flex-wrap items-center justify-between gap-4 py-3'>
-          <div className='flex items-center gap-2'>
-            <span className='text-sm text-muted-foreground'>
-              Éléments par page :
-            </span>
-            <select
-              value={perPage}
-              onChange={(e) => {
-                setPerPage(Number(e.target.value))
-                setPage(1)
-              }}
-              className='rounded-md border bg-background px-2 py-1.5 text-sm'
-            >
-              {[5, 10, 25, 50].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </div>
+          <span className='tabular text-sm text-muted-foreground'>
+            {t('students.list.total', { count: total })}
+          </span>
           <div className='flex items-center gap-1'>
             <Button
               variant='outline'
               size='sm'
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage <= 1}
-              className='whitespace-nowrap shrink-0 inline-flex items-center gap-1'
+              disabled={page <= 1}
+              className='whitespace-nowrap shrink-0 gap-1'
             >
               <ChevronLeft className='size-4 shrink-0' />
-              <span>avant</span>
+              <span>{t('common.previous')}</span>
             </Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
               <Button
                 key={p}
-                variant={p === currentPage ? 'secondary' : 'ghost'}
+                variant={p === page ? 'secondary' : 'ghost'}
                 size='sm'
-                className='min-w-8'
-                onClick={() => p !== currentPage && setPage(p)}
-                disabled={p === currentPage}
+                className='min-w-8 tabular'
+                onClick={() => p !== page && setPage(p)}
+                disabled={p === page}
               >
                 {p}
               </Button>
@@ -674,20 +457,20 @@ export default function StudentManagementPage() {
               variant='outline'
               size='sm'
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage >= totalPages}
-              className='whitespace-nowrap shrink-0 inline-flex items-center gap-1'
+              disabled={page >= totalPages}
+              className='whitespace-nowrap shrink-0 gap-1'
             >
-              <span>suivant</span>
+              <span>{t('common.next')}</span>
               <ChevronRight className='size-4 shrink-0' />
             </Button>
           </div>
-          <span className='text-sm text-muted-foreground'>
-            ({currentPage} sur {totalPages})
+          <span className='tabular text-sm text-muted-foreground'>
+            ({page} / {totalPages})
           </span>
         </CardContent>
       </Card>
 
-      {/* ── Filters slide-over panel ────────────────────────────────────────── */}
+      {/* Filters panel */}
       <div
         className={cn(
           'fixed inset-y-0 right-0 z-50 w-full max-w-sm border-l bg-card shadow-lg transition-transform duration-200 ease-out',
@@ -696,24 +479,30 @@ export default function StudentManagementPage() {
         style={{ visibility: filtersOpen ? 'visible' : 'hidden' }}
       >
         <div className='flex h-full flex-col'>
-          {/* Panel header */}
-          <div className='flex items-center justify-between border-b px-4 py-3'>
-            <h2 className='font-semibold'>Filters</h2>
+          <div className='flex items-center justify-between border-b bg-primary/5 px-4 py-3'>
+            <h2 className='font-semibold'>
+              {t('common.filter')}
+              {hasActiveFilters && (
+                <span className='ml-1.5 text-xs font-normal text-muted-foreground'>
+                  ({activeFilterLabels.length})
+                </span>
+              )}
+            </h2>
             <Button
               variant='ghost'
               size='icon'
               onClick={() => setFiltersOpen(false)}
-              aria-label='Fermer'
+              aria-label={t('common.close')}
             >
               <X className='size-4' />
             </Button>
           </div>
 
-          {/* Panel body */}
           <div className='flex-1 overflow-y-auto p-4 space-y-6'>
-            {/* Établissement */}
             <div>
-              <div className='mb-2 text-sm font-medium'>Établissement</div>
+              <div className='mb-2 text-sm font-medium'>
+                {t('students.columns.institution')}
+              </div>
               <div className='space-y-2'>
                 {ETABLISSEMENTS.map((v) => (
                   <label
@@ -724,7 +513,7 @@ export default function StudentManagementPage() {
                       type='checkbox'
                       checked={etablissementFilter.includes(v)}
                       onChange={() => toggleEtablissement(v)}
-                      className='rounded border-input'
+                      className='rounded border-input accent-primary'
                     />
                     <span className='text-sm'>{v}</span>
                   </label>
@@ -732,9 +521,10 @@ export default function StudentManagementPage() {
               </div>
             </div>
 
-            {/* Niveau */}
             <div>
-              <div className='mb-2 text-sm font-medium'>Niveau</div>
+              <div className='mb-2 text-sm font-medium'>
+                {t('students.columns.level')}
+              </div>
               <div className='space-y-2'>
                 {NIVEAUX.map((v) => (
                   <label
@@ -745,7 +535,7 @@ export default function StudentManagementPage() {
                       type='checkbox'
                       checked={niveauFilter.includes(v)}
                       onChange={() => toggleNiveau(v)}
-                      className='rounded border-input'
+                      className='rounded border-input accent-primary'
                     />
                     <span className='text-sm'>{v}</span>
                   </label>
@@ -753,9 +543,10 @@ export default function StudentManagementPage() {
               </div>
             </div>
 
-            {/* Spécialité */}
             <div>
-              <div className='mb-2 text-sm font-medium'>Spécialité</div>
+              <div className='mb-2 text-sm font-medium'>
+                {t('students.columns.specialty')}
+              </div>
               <div className='space-y-2'>
                 {SPECIALITES.map((v) => (
                   <label
@@ -766,28 +557,7 @@ export default function StudentManagementPage() {
                       type='checkbox'
                       checked={specialiteFilter.includes(v)}
                       onChange={() => toggleSpecialite(v)}
-                      className='rounded border-input'
-                    />
-                    <span className='text-sm'>{v}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Nb Encadrements */}
-            <div>
-              <div className='mb-2 text-sm font-medium'>Nb Encadrements</div>
-              <div className='space-y-2'>
-                {NB_ENCADREMENTS.map((v) => (
-                  <label
-                    key={v}
-                    className='flex items-center gap-2 cursor-pointer'
-                  >
-                    <input
-                      type='checkbox'
-                      checked={nbEncadrementFilter.includes(v)}
-                      onChange={() => toggleNbEncadrement(v)}
-                      className='rounded border-input'
+                      className='rounded border-input accent-primary'
                     />
                     <span className='text-sm'>{v}</span>
                   </label>
@@ -796,34 +566,48 @@ export default function StudentManagementPage() {
             </div>
           </div>
 
-          {/* Panel footer */}
           <div className='flex gap-2 border-t p-4'>
             <Button
-              onClick={applyFiltersFromPanel}
-              className='flex-1 shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-2'
+              onClick={() => {
+                setFiltersOpen(false)
+                setPage(1)
+              }}
+              className='flex-1'
             >
-              Apply Filters
+              {t('common.apply')}
             </Button>
             <Button
               variant='outline'
-              onClick={resetPanelFilters}
-              className='shrink-0 whitespace-nowrap'
+              onClick={() => {
+                clearAllFilters()
+                setFiltersOpen(false)
+              }}
             >
-              Reset
+              {t('common.reset')}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Backdrop */}
       {filtersOpen && (
         <button
           type='button'
           className='fixed inset-0 z-40 bg-black/20'
-          aria-label='Fermer les filtres'
+          aria-label={t('common.close')}
           onClick={() => setFiltersOpen(false)}
         />
       )}
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={t('confirmDelete.students.title')}
+        description={t('confirmDelete.students.description')}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

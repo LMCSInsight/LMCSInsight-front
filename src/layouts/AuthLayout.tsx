@@ -1,30 +1,25 @@
-import { Outlet } from "react-router-dom";
-
-const GRADIENT_STYLE = {
-  background: "linear-gradient(135deg, #0C3356 0%, #1A70BC 100%)",
-};
+import { Outlet } from 'react-router-dom'
 
 export function AuthLayout() {
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-white">
-      {/* Left column: logo + form (Outlet) – 50% */}
-      <div className="flex-1 flex flex-col w-full lg:w-1/2 px-6 sm:px-12 pt-10 pb-12 lg:pt-[134px] lg:pl-[76px] lg:pr-16">
-        {/* ESI logo placeholder – replace src with public/logo-esi.png when asset is available */}
-        <div className="mb-12">
+    <div className='min-h-screen flex flex-col lg:flex-row bg-background'>
+      {/* Left column: form */}
+      <div className='flex-1 flex flex-col w-full lg:w-1/2 px-6 sm:px-12 pt-10 pb-12 lg:pt-28 lg:pl-20 lg:pr-16'>
+        <div className='mb-12'>
           <img
-            src="/logo-esi.png"
-            alt="ESI"
-            className="h-[72px] w-[173px] object-contain object-left"
+            src='/logo-esi.png'
+            alt='ESI'
+            className='h-16 w-auto object-contain object-left'
             onError={(e) => {
-              const target = e.currentTarget;
-              target.style.display = "none";
-              const fallback = target.nextElementSibling;
-              if (fallback) (fallback as HTMLElement).style.display = "block";
+              const target = e.currentTarget
+              target.style.display = 'none'
+              const fallback = target.nextElementSibling
+              if (fallback) (fallback as HTMLElement).style.display = 'flex'
             }}
           />
           <div
-            className="h-[72px] w-[173px] bg-[#182B45] rounded flex items-center justify-center text-white font-semibold text-lg"
-            style={{ display: "none" }}
+            className='h-16 w-40 bg-foreground rounded-lg items-center justify-center text-background font-semibold text-lg'
+            style={{ display: 'none' }}
             aria-hidden
           >
             ESI
@@ -33,32 +28,51 @@ export function AuthLayout() {
         <Outlet />
       </div>
 
-      {/* Right column: gradient panel + illustration + tagline – 50% (hidden on small viewports) */}
-      <div
-        className="hidden lg:flex lg:w-1/2 min-h-[50vh] lg:min-h-screen flex-col items-center justify-center px-8 py-12 text-white shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
-        style={GRADIENT_STYLE}
-      >
-        {/* Illustration placeholder – replace src with public/login-illustration.png when asset is available */}
+      {/* Right column: brand panel */}
+      <div className='hidden lg:flex lg:w-1/2 min-h-screen flex-col items-center justify-center px-12 py-16 bg-foreground text-background relative overflow-hidden'>
+        {/* Decorative radial glow */}
+        <div
+          className='absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_oklch(0.45_0.2_260_/_0.35)_0%,_transparent_60%)]'
+          aria-hidden
+        />
+        <div
+          className='absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_oklch(0.45_0.2_260_/_0.2)_0%,_transparent_60%)]'
+          aria-hidden
+        />
+
+        {/* Illustration */}
         <img
-          src="/login-illustration.png"
-          alt=""
-          className="w-[280px] h-[280px] xl:w-[368px] xl:h-[368px] object-contain mb-8"
+          src='/login-illustration.png'
+          alt=''
+          className='relative z-10 w-72 h-72 xl:w-96 xl:h-96 object-contain mb-10'
           onError={(e) => {
-            const target = e.currentTarget;
-            target.style.display = "none";
-            const fallback = target.nextElementSibling;
-            if (fallback) (fallback as HTMLElement).style.display = "flex";
+            const target = e.currentTarget
+            target.style.display = 'none'
+            const fallback = target.nextElementSibling
+            if (fallback) (fallback as HTMLElement).style.display = 'flex'
           }}
         />
         <div
-          className="w-[280px] h-[280px] xl:w-[368px] xl:h-[368px] rounded-lg bg-white/10 flex items-center justify-center mb-8"
-          style={{ display: "none" }}
+          className='relative z-10 w-72 h-72 xl:w-96 xl:h-96 rounded-2xl bg-background/8 items-center justify-center mb-10 border border-background/10'
+          style={{ display: 'none' }}
           aria-hidden
-        />
-        <p className="text-center text-xl xl:text-2xl font-bold max-w-[656px] leading-snug">
-          Gestion centralisée des encadrants de l&apos;ESI
-        </p>
+        >
+          <img
+            src='/lmcs.png'
+            alt='LMCS'
+            className='h-32 w-auto object-contain opacity-60'
+          />
+        </div>
+
+        <div className='relative z-10 text-center max-w-sm space-y-3'>
+          <p className='text-2xl font-bold leading-snug text-balance'>
+            Portail de gestion des encadrements
+          </p>
+          <p className='text-sm text-background/60 text-balance'>
+            Laboratoire des Méthodes de Conception de Systèmes — ESI Alger
+          </p>
+        </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,13 +1,17 @@
-import { useState, type ComponentType } from 'react'
+import { useState, useMemo, type ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CircleUserRound, DollarSign, Shield, Settings2 } from 'lucide-react'
+import { CircleUserRound, University, Shield, Settings2 } from 'lucide-react'
 import { useAuthContext } from '@/shared/context/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 type SettingsTab = 'profile' | 'academic' | 'research' | 'security'
+
+const SELECT_CLASS =
+  'h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
 
 export default function ProfileSettingsPage() {
   const { t } = useTranslation()
@@ -44,13 +48,51 @@ export default function ProfileSettingsPage() {
     suspiciousActivity: true,
   })
 
+  // Track saved snapshots to detect unsaved changes
+  const [savedProfileForm] = useState(profileForm)
+  const [savedAcademicForm] = useState(academicForm)
+  const [savedResearchForm] = useState(researchForm)
+
+  const isDirty = useMemo(() => {
+    if (activeTab === 'profile') {
+      return Object.keys(profileForm).some(
+        (k) =>
+          profileForm[k as keyof typeof profileForm] !==
+          savedProfileForm[k as keyof typeof savedProfileForm],
+      )
+    }
+    if (activeTab === 'academic') {
+      return Object.keys(academicForm).some(
+        (k) =>
+          academicForm[k as keyof typeof academicForm] !==
+          savedAcademicForm[k as keyof typeof savedAcademicForm],
+      )
+    }
+    if (activeTab === 'research') {
+      return Object.keys(researchForm).some(
+        (k) =>
+          researchForm[k as keyof typeof researchForm] !==
+          savedResearchForm[k as keyof typeof savedResearchForm],
+      )
+    }
+    return false
+  }, [
+    activeTab,
+    profileForm,
+    academicForm,
+    researchForm,
+    savedProfileForm,
+    savedAcademicForm,
+    savedResearchForm,
+  ])
+
   const tabs: {
     key: SettingsTab
     icon: ComponentType<{ className?: string }>
     labelKey: string
   }[] = [
     { key: 'profile', icon: CircleUserRound, labelKey: 'profile.tabs.profile' },
-    { key: 'academic', icon: DollarSign, labelKey: 'profile.tabs.academic' },
+    { key: 'academic', icon: University, labelKey: 'profile.tabs.academic' },
     { key: 'research', icon: Shield, labelKey: 'profile.tabs.research' },
     { key: 'security', icon: Settings2, labelKey: 'profile.tabs.security' },
   ]
@@ -88,7 +130,6 @@ export default function ProfileSettingsPage() {
   }
 
   function handleSaveSection() {
-    // TODO: connect to profile update API when backend endpoint is available.
     if (activeTab === 'profile') {
       console.log('Save profile section', profileForm)
       return
@@ -107,7 +148,6 @@ export default function ProfileSettingsPage() {
   }
 
   function handleSaveAll() {
-    // TODO: aggregate tabs and submit all settings in one request.
     console.log('Save all settings', {
       profileForm,
       academicForm,
@@ -118,33 +158,31 @@ export default function ProfileSettingsPage() {
 
   return (
     <div className='min-h-[calc(100vh-9rem)] space-y-4'>
-      <div className='rounded-xl border border-border bg-card/70 p-3'>
-        <div className='grid grid-cols-2 gap-2 sm:grid-cols-4'>
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            const selected = activeTab === tab.key
-
-            return (
-              <button
-                key={tab.key}
-                type='button'
-                onClick={() => setActiveTab(tab.key)}
-                className={[
-                  'inline-flex h-8 items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium transition-colors',
-                  selected
-                    ? 'border-primary/25 bg-primary/15 text-foreground'
-                    : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
-                ].join(' ')}
-              >
-                <Icon className='size-3.5' />
-                <span>{t(tab.labelKey)}</span>
-              </button>
-            )
-          })}
-        </div>
+      {/* ── Underline tab bar ─────────────────────────────────────────────── */}
+      <div className='flex gap-0 border-b border-border'>
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          const selected = activeTab === tab.key
+          return (
+            <button
+              key={tab.key}
+              type='button'
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                'relative inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors',
+                selected
+                  ? 'text-primary after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:rounded-t after:bg-primary'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Icon className='size-3.5' />
+              <span>{t(tab.labelKey)}</span>
+            </button>
+          )
+        })}
       </div>
 
-      <Card className='shadow-none'>
+      <Card className='hover:shadow-sm transition-shadow'>
         <CardContent className='space-y-4 px-5 py-4'>
           <div className='space-y-1 border-b border-border pb-3'>
             <h2 className='text-sm font-semibold text-foreground'>
@@ -181,7 +219,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <div className='space-y-1.5'>
                 <Label htmlFor='email' className='text-xs text-foreground'>
                   {t('profile.fields.email')}
@@ -195,7 +232,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <div className='space-y-1.5'>
                 <Label htmlFor='phone' className='text-xs text-foreground'>
                   {t('profile.fields.phone')}
@@ -209,7 +245,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <Button onClick={handleSaveSection} className='mt-2' size='sm'>
                 {t('profile.actions.save')}
               </Button>
@@ -230,7 +265,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <div className='space-y-1.5'>
                 <Label
                   htmlFor='institution'
@@ -248,7 +282,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <div className='space-y-1.5'>
                 <Label htmlFor='quality' className='text-xs text-foreground'>
                   {t('profile.academicFields.quality')}
@@ -261,7 +294,7 @@ export default function ProfileSettingsPage() {
                   }
                   title={t('profile.academicFields.quality')}
                   aria-label={t('profile.academicFields.quality')}
-                  className='h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
+                  className={SELECT_CLASS}
                 >
                   <option value=''>
                     {t('profile.academicPlaceholders.quality')}
@@ -277,7 +310,6 @@ export default function ProfileSettingsPage() {
                   </option>
                 </select>
               </div>
-
               <div className='space-y-1.5'>
                 <Label
                   htmlFor='researchGrade'
@@ -293,7 +325,7 @@ export default function ProfileSettingsPage() {
                   }
                   title={t('profile.academicFields.researchGrade')}
                   aria-label={t('profile.academicFields.researchGrade')}
-                  className='h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
+                  className={SELECT_CLASS}
                 >
                   <option value=''>
                     {t('profile.academicPlaceholders.researchGrade')}
@@ -309,7 +341,6 @@ export default function ProfileSettingsPage() {
                   </option>
                 </select>
               </div>
-
               <div className='space-y-1.5'>
                 <Label htmlFor='team' className='text-xs text-foreground'>
                   {t('profile.academicFields.team')}
@@ -322,7 +353,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <Button onClick={handleSaveSection} className='mt-2' size='sm'>
                 {t('profile.actions.save')}
               </Button>
@@ -345,7 +375,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <div className='space-y-1.5'>
                 <Label
                   htmlFor='googleScholar'
@@ -364,7 +393,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <div className='space-y-1.5'>
                 <Label
                   htmlFor='researchGate'
@@ -383,7 +411,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <div className='space-y-1.5'>
                 <Label
                   htmlFor='personalSite'
@@ -402,7 +429,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <Button onClick={handleSaveSection} className='mt-2' size='sm'>
                 {t('profile.actions.save')}
               </Button>
@@ -429,7 +455,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <div className='space-y-1.5'>
                 <Label
                   htmlFor='newPassword'
@@ -448,7 +473,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <div className='space-y-1.5'>
                 <Label
                   htmlFor='confirmPassword'
@@ -469,7 +493,6 @@ export default function ProfileSettingsPage() {
                   className='h-9'
                 />
               </div>
-
               <Button onClick={handleSaveSection} className='mt-2' size='sm'>
                 {t('profile.actions.confirmPassword')}
               </Button>
@@ -485,7 +508,7 @@ export default function ProfileSettingsPage() {
       </Card>
 
       {activeTab === 'security' && (
-        <Card className='shadow-none'>
+        <Card className='hover:shadow-sm transition-shadow'>
           <CardContent className='space-y-4 px-5 py-4'>
             <div className='space-y-1 border-b border-border pb-3'>
               <h2 className='text-sm font-semibold text-foreground'>
@@ -495,7 +518,6 @@ export default function ProfileSettingsPage() {
                 {t('profile.securityNotifications.subtitle')}
               </p>
             </div>
-
             <div className='space-y-3'>
               <label className='flex items-center justify-between gap-3 text-sm text-foreground'>
                 <span>{t('profile.securityNotifications.loginAlert')}</span>
@@ -506,10 +528,9 @@ export default function ProfileSettingsPage() {
                     updateSecurityField('loginAlert', e.target.checked)
                   }
                   aria-label={t('profile.securityNotifications.loginAlert')}
-                  className='size-4 accent-[#1f3556]'
+                  className='size-4 accent-primary'
                 />
               </label>
-
               <label className='flex items-center justify-between gap-3 text-sm text-foreground'>
                 <span>{t('profile.securityNotifications.passwordChange')}</span>
                 <input
@@ -519,10 +540,9 @@ export default function ProfileSettingsPage() {
                     updateSecurityField('passwordChange', e.target.checked)
                   }
                   aria-label={t('profile.securityNotifications.passwordChange')}
-                  className='size-4 accent-[#1f3556]'
+                  className='size-4 accent-primary'
                 />
               </label>
-
               <label className='flex items-center justify-between gap-3 text-sm text-foreground'>
                 <span>
                   {t('profile.securityNotifications.suspiciousActivity')}
@@ -536,16 +556,26 @@ export default function ProfileSettingsPage() {
                   aria-label={t(
                     'profile.securityNotifications.suspiciousActivity',
                   )}
-                  className='size-4 accent-[#1f3556]'
+                  className='size-4 accent-primary'
                 />
               </label>
             </div>
-
             <Button onClick={handleSaveSection} size='sm'>
               {t('profile.actions.confirm')}
             </Button>
           </CardContent>
         </Card>
+      )}
+
+      {/* ── Unsaved changes ribbon ────────────────────────────────────────── */}
+      {isDirty && (
+        <div className='fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-primary text-sm'>
+          <span className='size-2 rounded-full bg-amber-400 animate-pulse' />
+          Modifications non enregistrées
+          <Button size='sm' onClick={handleSaveSection}>
+            Enregistrer
+          </Button>
+        </div>
       )}
 
       <div className='fixed bottom-5 right-6 z-20'>

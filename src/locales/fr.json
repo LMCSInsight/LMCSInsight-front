@@ -7,13 +7,133 @@
     "statisticsReports": "Statistiques et rapports",
     "profileSettings": "Profil et paramètres",
     "researcher": "Chercheur",
+    "assistant": "Assistant",
     "theme": "Thème",
     "language": "Langue",
     "notifications": "Notifications",
     "noNotifications": "Aucune notification",
     "french": "Français",
     "english": "Anglais",
-    "signOut": "Déconnexion"
+    "signOut": "Déconnexion",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "add": "Ajouter",
+    "back": "Retour",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "remove": "Supprimer",
+    "previous": "Préc.",
+    "next": "Suiv.",
+    "loading": "Chargement…",
+    "error": "Une erreur est survenue",
+    "noData": "Aucune donnée",
+    "required": "Champ requis",
+    "saving": "Enregistrement…",
+    "activeFilters": "Filtres actifs :",
+    "clearAll": "Tout effacer",
+    "optional": "optionnel",
+    "select": "Sélectionner…",
+    "email": "Email"
+  },
+  "confirmDelete": {
+    "supervisions": {
+      "title": "Supprimer l'encadrement",
+      "description": "Cette action est irréversible. L'encadrement sera définitivement supprimé."
+    },
+    "students": {
+      "title": "Supprimer l'étudiant",
+      "description": "Cette action est irréversible. L'étudiant sera définitivement supprimé."
+    }
+  },
+  "auth": {
+    "signIn": "Connexion",
+    "signingIn": "Connexion en cours…",
+    "subtitle": "Entrez vos identifiants pour accéder au portail.",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "orContinueWith": "ou continuer avec",
+    "googleSignIn": "Connexion avec Google @esi.dz",
+    "devMode": "Mode développement",
+    "errors": {
+      "invalidCredentials": "Email ou mot de passe incorrect.",
+      "serverError": "Une erreur est survenue. Veuillez réessayer."
+    }
+  },
+  "students": {
+    "list": {
+      "title": "Mes étudiants",
+      "subtitle": "Gérez vos étudiants encadrés.",
+      "register": "Inscrire un étudiant",
+      "count": "{{count}} étudiant",
+      "count_plural": "{{count}} étudiants",
+      "search": "Recherche par nom, email, établissement…",
+      "noStudents": "Aucun étudiant trouvé",
+      "noStudentsFiltered": "Essayez de modifier ou réinitialiser vos filtres.",
+      "noStudentsEmpty": "Commencez par inscrire un étudiant.",
+      "loadError": "Erreur lors du chargement des étudiants.",
+      "total": "{{count}} étudiant(s) au total"
+    },
+    "columns": {
+      "name": "Nom et prénom",
+      "email": "Email",
+      "institution": "Établissement",
+      "level": "Niveau",
+      "specialty": "Spécialité",
+      "actions": "Actions"
+    },
+    "actions": {
+      "viewDetails": "Voir détails",
+      "supervisions": "Encadrements"
+    },
+    "detail": {
+      "personalInfo": "Informations personnelles",
+      "academicInfo": "Académique",
+      "breadcrumb": "Étudiants",
+      "supervisions": "Encadrements",
+      "supervision": "encadrement",
+      "addedOn": "Date d'ajout",
+      "institution": "Établissement",
+      "level": "Niveau",
+      "specialty": "Spécialité",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "notFound": "Impossible de charger les données de l'étudiant.",
+      "back": "Retour",
+      "edit": "Modifier"
+    },
+    "register": {
+      "title": "Ajouter un étudiant",
+      "subtitle": "Remplissez les informations pour enregistrer un nouvel étudiant.",
+      "section1": "1. Informations personnelles",
+      "section2": "2. Informations académiques",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "institution": "Établissement",
+      "level": "Niveau",
+      "specialty": "Spécialité",
+      "specialtyOptional": "Spécialité (optionnel)",
+      "submit": "Ajouter l'étudiant",
+      "success": "Étudiant ajouté avec succès !",
+      "error": "Erreur lors de la création"
+    },
+    "edit": {
+      "title": "Modifier un étudiant",
+      "subtitle": "Mode édition",
+      "changesCount_one": "{{count}} champ modifié",
+      "changesCount_other": "{{count}} champs modifiés",
+      "noChanges": "Aucune modification",
+      "submit": "Enregistrer les modifications",
+      "success": "Étudiant modifié avec succès !",
+      "error": "Erreur lors de la modification"
+    }
   },
   "supervisions": {
     "detail": {
@@ -23,6 +143,9 @@
       "error": "Erreur lors du chargement des données. Veuillez vérifier votre connexion.",
       "na": "N/A",
       "back": "Retour",
+      "notFound": "Impossible de charger cet encadrement.",
+      "edit": "Modifier",
+      "breadcrumb": "Encadrements",
       "sections": {
         "general": "1. Informations générales :",
         "student": "2. Etudiant :",
@@ -46,8 +169,116 @@
         "mainSupervisor": "Encadrant Principal",
         "coSupervisor": "CO_Encadrant {{index}}",
         "validationStatus": "Statut validation",
-        "notes": "Notes"
+        "notes": "Notes",
+        "noKeywords": "Aucun mot-clé",
+        "noDescription": "Aucune description",
+        "noSupervisors": "Aucun encadrant assigné",
+        "noValidationNotes": "Aucune note de validation",
+        "noStudent": "Étudiant non renseigné",
+        "elapsed": "{{pct}}% écoulé",
+        "description": "Description",
+        "researchTheme": "Thème de recherche",
+        "keywords": "Mots-clés",
+        "calendar": "Calendrier",
+        "start": "Début",
+        "expectedEnd": "Fin prévue",
+        "actualEnd": "Fin réelle",
+        "supervisors": "Encadrants",
+        "validation": "Validation",
+        "validatedOn": "Validé le",
+        "createdOn": "Créé le",
+        "updatedOn": "Mis à jour le",
+        "main": "Principal",
+        "coSup": "CO-Encadrant",
+        "external": "Externe",
+        "student": "Étudiant"
       }
+    },
+    "list": {
+      "title": "Mes Encadrements",
+      "subtitle": "Gérez et suivez tous vos encadrements.",
+      "new": "Nouvel encadrement",
+      "search": "Rechercher par titre, mots-clés, étudiant...",
+      "count": "{{count}} encadrement",
+      "count_plural": "{{count}} encadrements",
+      "noResults": "Aucun encadrement trouvé",
+      "noResultsFiltered": "Essayez de modifier ou réinitialiser vos filtres.",
+      "noResultsEmpty": "Commencez par créer un encadrement.",
+      "loadError": "Erreur lors du chargement des encadrements.",
+      "total": "{{count}} encadrement(s) au total"
+    },
+    "columns": {
+      "title": "Titre",
+      "student": "Étudiant",
+      "type": "Type",
+      "status": "Statut",
+      "validation": "Validation",
+      "actions": "Actions"
+    },
+    "filters": {
+      "type": "Type",
+      "status": "Statut",
+      "validation": "Validation",
+      "academicYear": "Année universitaire",
+      "all": "Toutes"
+    },
+    "status": {
+      "IN_PROGRESS": "En cours",
+      "DEFENDED": "Soutenu",
+      "ABANDONED": "Abandonné",
+      "EXTENSION": "Prolongation",
+      "SUSPENDED": "Suspendu"
+    },
+    "type": {
+      "PFE": "PFE",
+      "MASTER": "Master",
+      "PHD": "Doctorat",
+      "INTERNSHIP": "Stage",
+      "PROJECT": "Projet"
+    },
+    "validation": {
+      "PENDING": "En attente",
+      "VALIDATED": "Validé",
+      "REJECTED": "Refusé",
+      "REVISED": "Révisé"
+    }
+  },
+  "dashboard": {
+    "greeting": "Bonjour, {{name}}",
+    "kpi": {
+      "total": "Total encadrements",
+      "totalSub": "encadrements enregistrés",
+      "inProgress": "En cours",
+      "defended": "Soutenus",
+      "defenseRate": "Taux de soutenance",
+      "defenseRateSub": "{{defended}} sur {{total}}",
+      "pending": "En attente",
+      "pendingSub": "validation"
+    },
+    "charts": {
+      "byType": "Par type",
+      "byYear": "Évolution par année universitaire",
+      "noData": "Aucune donnée"
+    },
+    "recent": {
+      "title": "Encadrements récents",
+      "viewAll": "Voir tout",
+      "add": "Ajouter un encadrement",
+      "noSupervisions": "Aucun encadrement pour le moment."
+    },
+    "statusBar": {
+      "title": "Répartition par statut"
+    },
+    "quickActions": {
+      "newSupervision": "Nouvel encadrement",
+      "registerStudent": "Inscrire étudiant"
+    },
+    "table": {
+      "title": "Titre",
+      "student": "Étudiant",
+      "type": "Type",
+      "validation": "Validation",
+      "actions": "Actions"
     }
   },
   "profile": {
@@ -116,8 +347,8 @@
     },
     "securityPlaceholders": {
       "currentPassword": "************",
-      "newPassword": "Lien",
-      "confirmPassword": "Réseau social scientifique (Lien)"
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe"
     },
     "securityNotifications": {
       "title": "Notifications de sécurité",
@@ -144,6 +375,122 @@
       "confirmPassword": "Confirmer mot de passe",
       "confirm": "Confirmer"
     },
+    "unsavedChanges": "Modifications non enregistrées",
     "tabComingSoon": "Les paramètres {{tab}} seront bientôt disponibles."
+  },
+  "assistant": {
+    "validationQueue": "File de validation",
+    "historyTitle": "Historique",
+    "status": {
+      "pending": "En attente",
+      "validated": "Validé",
+      "rejected": "Rejeté",
+      "revised": "À réviser"
+    },
+    "dashboard": {
+      "title": "Vue d'ensemble",
+      "subtitle": "Votre activité de validation en un coup d'œil.",
+      "pendingLabel": "En attente de revue",
+      "pendingCta": "Ouvrir la file",
+      "goToQueue": "Ouvrir la file",
+      "welcomeTitle": "Bonjour, {{name}}",
+      "validatedTodayLabel": "Validés aujourd'hui",
+      "rejectedWeekLabel": "Rejetés cette semaine",
+      "revisedWeekLabel": "Révisés cette semaine",
+      "urgencyTitle": "Supervisions en attente les plus anciennes",
+      "recentActivityTitle": "Décisions récentes",
+      "typeBreakdownTitle": "En attente par type",
+      "kpi": {
+        "pending": "Validations en attente",
+        "validatedToday": "Validées aujourd'hui",
+        "rejectedWeek": "Rejetées cette semaine",
+        "revisedWeek": "Révisées cette semaine",
+        "totalProcessed": "Total traité"
+      },
+      "charts": {
+        "byStatus": "Répartition par statut",
+        "byYear": "Activité par année académique"
+      }
+    },
+    "queue": {
+      "subtitle": "{{count}} éléments",
+      "empty": "Aucune supervision trouvée.",
+      "searchPlaceholder": "Rechercher par titre ou étudiant…",
+      "backToQueue": "Retour à la file",
+      "tabs": {
+        "all": "Tous"
+      },
+      "columns": {
+        "title": "Titre",
+        "student": "Étudiant",
+        "type": "Type",
+        "year": "Année",
+        "status": "Statut",
+        "age": "Attente",
+        "supervisor": "Directeur"
+      },
+      "filters": {
+        "type": "Type",
+        "year": "Année académique",
+        "active": "Filtres actifs"
+      },
+      "miniStats": "{{pending}} en attente · {{revised}} révisés · {{validated}} validés"
+    },
+    "detail": {
+      "submitted": "soumis le",
+      "mainSupervisor": "Directeur principal",
+      "coSupervisor": "Co-directeur",
+      "flaggedIssues": "Problèmes signalés lors de la dernière revue"
+    },
+    "decision": {
+      "validate": "Valider",
+      "validateTitle": "Confirmer la validation",
+      "reject": "Rejeter",
+      "rejectTitle": "Rejeter la supervision",
+      "revise": "Demander une révision",
+      "reviseTitle": "Demander une révision",
+      "subtitle": "Votre décision sera enregistrée et visible par le chercheur.",
+      "commentsLabel": "Commentaires",
+      "commentsPlaceholder": "Ajoutez des notes pour le chercheur…",
+      "issuesLabel": "Problèmes détectés",
+      "issueInputPlaceholder": "Décrivez un problème et appuyez sur Entrée…"
+    },
+    "actionBar": {
+      "alreadyReviewed": "Cette supervision a déjà été examinée."
+    },
+    "timeline": {
+      "title": "Journal de validation",
+      "empty": "Aucun historique de validation pour l'instant.",
+      "unknown": "Supervision inconnue"
+    },
+    "checklist": {
+      "title": "Champs vérifiés",
+      "fields": {
+        "title": "Titre",
+        "type": "Type",
+        "academicYear": "Année académique",
+        "student": "Étudiant assigné",
+        "supervisors": "Encadrants assignés",
+        "description": "Description complète",
+        "keywords": "Mots-clés présents",
+        "dates": "Dates cohérentes"
+      }
+    },
+    "historySubtitle": "{{count}} décisions enregistrées",
+    "history": {
+      "empty": "Aucune décision enregistrée pour l'instant.",
+      "dateFrom": "Du",
+      "dateTo": "Au",
+      "activityChart": "Activité de validation (30 jours)",
+      "columns": {
+        "date": "Date",
+        "title": "Supervision",
+        "status": "Décision",
+        "comments": "Commentaires"
+      }
+    },
+    "supervisions": {
+      "subtitle": "{{count}} supervisions"
+    }
   }
 }

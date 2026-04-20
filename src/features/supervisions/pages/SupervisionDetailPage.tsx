@@ -1,489 +1,630 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { useTranslation } from 'react-i18next'
-import { Typography, Row, Col, Space, Button, ConfigProvider, Spin } from 'antd'
+import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import {
+  ArrowLeft,
+  Pencil,
+  Calendar,
+  Tag,
+  Users,
+  Star,
+  UserCheck,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  RefreshCw,
+  GraduationCap,
+  BookOpen,
+  Hash,
+  ChevronRight,
+} from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { useSupervision } from '@/features/supervisions/hooks/useSupervisions'
 
-const { Title, Text } = Typography
+// ─── Label / color maps ──────────────────────────────────────────────────────
 
-// ─── Visual Identity ──────────────────────────────────────────────────────────
-const THEME_COLORS = {
-  navy: 'var(--foreground)',
-  blue: 'var(--primary)',
-  lightBlue: 'var(--border)',
-  bg: 'var(--muted)',
-  white: 'var(--card)',
-  muted: 'var(--muted-foreground)',
-  border: 'var(--border)',
+const STATUS_LABELS: Record<string, string> = {
+  IN_PROGRESS: 'En cours',
+  DEFENDED: 'Soutenu',
+  ABANDONED: 'Abandonné',
+  EXTENSION: 'Prolongation',
+  SUSPENDED: 'Suspendu',
+}
+const TYPE_LABELS: Record<string, string> = {
+  PFE: 'PFE',
+  MASTER: 'Master',
+  PHD: 'Doctorat',
+  INTERNSHIP: 'Stage (SPE)',
+  PROJECT: 'Projet de recherche',
+}
+const VALIDATION_LABELS: Record<string, string> = {
+  PENDING: 'En attente',
+  VALIDATED: 'Validé',
+  REJECTED: 'Refusé',
+  REVISED: 'À réviser',
 }
 
-const FONT = "'Outfit', sans-serif"
-
-// ─── Shared styles ────────────────────────────────────────────────────────────
-function buildStyles(colors: typeof THEME_COLORS): {
-  sectionTitleStyle: CSSProperties
-  labelStyle: CSSProperties
-  valueStyle: CSSProperties
-} {
-  return {
-    sectionTitleStyle: {
-      fontFamily: FONT,
-      fontWeight: 700,
-      fontSize: 15,
-      color: colors.navy,
-      marginBottom: 10,
-      marginTop: 18,
-    },
-    labelStyle: {
-      fontFamily: FONT,
-      fontSize: 12,
-      color: colors.muted,
-      fontWeight: 500,
-      marginBottom: 4,
-      display: 'block',
-    },
-    valueStyle: {
-      fontFamily: FONT,
-      fontSize: 14,
-      color: colors.navy,
-      fontWeight: 500,
-      minHeight: 32,
-      padding: '4px 0',
-      borderBottom: `1px solid ${colors.lightBlue}`,
-    },
-  }
+// Status hero card accent (left-border + bg tint)
+const STATUS_ACCENT: Record<
+  string,
+  { border: string; bg: string; dark: string }
+> = {
+  IN_PROGRESS: {
+    border: 'border-l-blue-500',
+    bg: 'bg-blue-50/60',
+    dark: 'dark:bg-blue-950/20',
+  },
+  DEFENDED: {
+    border: 'border-l-green-500',
+    bg: 'bg-green-50/60',
+    dark: 'dark:bg-green-950/20',
+  },
+  ABANDONED: {
+    border: 'border-l-red-400',
+    bg: 'bg-red-50/60',
+    dark: 'dark:bg-red-950/20',
+  },
+  EXTENSION: {
+    border: 'border-l-orange-400',
+    bg: 'bg-orange-50/60',
+    dark: 'dark:bg-orange-950/20',
+  },
+  SUSPENDED: {
+    border: 'border-l-gray-400',
+    bg: 'bg-gray-50/60',
+    dark: 'dark:bg-gray-950/20',
+  },
 }
 
-// ─── Simple label + data display wrapper ──────────────────────────────────────
-function ReadOnlyField({
-  label,
-  value,
-  naLabel,
-  labelStyle,
-  valueStyle,
-}: {
-  label: string
-  value?: string | null | ReactNode
-  naLabel: string
-  labelStyle: CSSProperties
-  valueStyle: CSSProperties
-}) {
+const STATUS_BADGE_STYLE: Record<string, string> = {
+  IN_PROGRESS:
+    'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+  DEFENDED:
+    'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+  ABANDONED: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+  EXTENSION:
+    'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
+  SUSPENDED: 'bg-gray-100 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300',
+}
+
+const VALIDATION_ICON: Record<string, React.ElementType> = {
+  PENDING: Clock,
+  VALIDATED: CheckCircle2,
+  REJECTED: XCircle,
+  REVISED: RefreshCw,
+}
+const VALIDATION_BADGE_STYLE: Record<string, string> = {
+  PENDING:
+    'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+  VALIDATED:
+    'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+  REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+  REVISED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function fmt(iso?: string | null): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('fr-DZ', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function getInitials(name?: string): string {
+  if (!name) return '?'
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('')
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <span style={labelStyle}>{label}</span>
-      <div style={valueStyle}>
-        {value ? value : <span style={{ color: '#ccc' }}>{naLabel}</span>}
+    <div className='flex flex-col gap-0.5'>
+      <span className='text-xs font-semibold text-muted-foreground'>
+        {label}
+      </span>
+      <span className='text-sm font-medium text-foreground'>
+        {value ?? '—'}
+      </span>
+    </div>
+  )
+}
+
+// ─── Loading skeleton ─────────────────────────────────────────────────────────
+
+function SkeletonPage() {
+  return (
+    <div className='mx-auto max-w-4xl space-y-4'>
+      <div className='h-36 animate-pulse rounded-2xl bg-muted' />
+      <div className='grid gap-4 sm:grid-cols-2'>
+        <div className='h-40 animate-pulse rounded-xl bg-muted' />
+        <div className='h-40 animate-pulse rounded-xl bg-muted' />
+      </div>
+      <div className='h-28 animate-pulse rounded-xl bg-muted' />
+      <div className='grid grid-cols-3 gap-4'>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className='h-24 animate-pulse rounded-xl bg-muted' />
+        ))}
       </div>
     </div>
   )
 }
 
-// ─── Mock data ─────────────────────────────────────────────────────────────
-const MOCK_SUPERVISION = {
-  id: '1',
-  titreProjet: 'Deep Learning for Medical Imaging',
-  etudiant: 'Ali Khelifi',
-  typeEncadrement: 'Master',
-  statut: 'en_cours',
-  statutValidation: 'en_attente',
-  anneeUniversitaire: '2025-2026',
-  thematique: 'Machine Learning',
-  dateDebut: '2024-09-01',
-  sujet: "Intelligence Artificielle pour l'Imagerie Médicale",
-  descriptionSujet:
-    "Développement d'un système de deep learning pour l'analyse automatique d'images médicales",
-  dateFin: '2025-06-30',
-  dateFinReel: '',
-  encadrant: 'Dr. Meziane Abdelkader',
-  coEncadrants: ['Pr. Bensalem Rachid'],
-  notes: 'À valider',
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function SupervisionDetailsPage() {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-  const colors = THEME_COLORS
-  const { sectionTitleStyle, labelStyle, valueStyle } = buildStyles(colors)
-  // Assuming your route is something like /supervisions/:id
-  const { id } = useParams<{ id: string }>()
 
-  // ─── Data Fetching ──────────────────────────────────────────────────────────
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['supervision', id],
-    queryFn: async () => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      // Return the single mock supervision data
-      return MOCK_SUPERVISION
-    },
-    enabled: !!id,
-  })
+export default function SupervisionDetailPage() {
+  const navigate = useNavigate()
+  const { id, supervisionId, userId } = useParams<{
+    id?: string
+    supervisionId?: string
+    userId?: string
+  }>()
+  const resolvedId = supervisionId ?? id
+
+  const { data, isLoading, isError } = useSupervision(resolvedId)
+
+  // ── Hooks must be declared before any early return ────────────────────────
+  const [barsVisible, setBarsVisible] = useState(false)
+  useEffect(() => {
+    if (!data) return
+    const t = setTimeout(() => setBarsVisible(true), 200)
+    return () => clearTimeout(t)
+  }, [data])
+
+  if (isLoading) return <SkeletonPage />
+
+  if (isError || !data) {
+    return (
+      <div className='mx-auto max-w-4xl'>
+        <Card className='border-destructive/40 bg-destructive/5'>
+          <CardContent className='flex flex-col items-center gap-3 py-14 text-center'>
+            <div className='flex size-12 items-center justify-center rounded-full bg-destructive/10'>
+              <BookOpen className='size-6 text-destructive' />
+            </div>
+            <p className='text-sm font-medium text-destructive'>
+              Impossible de charger cet encadrement.
+            </p>
+            <Button variant='outline' size='sm' onClick={() => navigate(-1)}>
+              <ArrowLeft className='mr-2 size-4' />
+              Retour
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const accent = STATUS_ACCENT[data.status] ?? STATUS_ACCENT.SUSPENDED
+  const editPath =
+    userId && resolvedId
+      ? `/researcher/${userId}/supervisions/${resolvedId}/edit`
+      : 'edit'
+  const basePath = userId ? `/researcher/${userId}/supervisions` : '#'
+  const ValidationIcon = VALIDATION_ICON[data.validationStatus] ?? Clock
+
+  // Timeline progress calculation
+  const startMs = data.startDate ? new Date(data.startDate).getTime() : null
+  const endMs = data.expectedEndDate
+    ? new Date(data.expectedEndDate).getTime()
+    : null
+  const nowMs = Date.now()
+  const progressPct =
+    startMs && endMs && endMs > startMs
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            Math.round(((nowMs - startMs) / (endMs - startMs)) * 100),
+          ),
+        )
+      : null
 
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: colors.blue,
-          fontFamily: FONT,
-          borderRadius: 3,
-          colorBorder: colors.border,
-        },
-      }}
-    >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');`}</style>
+    <div className='mx-auto max-w-4xl space-y-4'>
+      {/* ── Breadcrumb ───────────────────────────────────────────────── */}
+      <nav className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+        <Link to={basePath} className='hover:text-foreground transition-colors'>
+          Encadrements
+        </Link>
+        <ChevronRight className='size-3 shrink-0' />
+        <span className='text-foreground font-medium truncate max-w-xs'>
+          {data.title}
+        </span>
+      </nav>
 
-      {/* Outer page */}
-      <div
-        style={{ background: colors.bg, minHeight: '100vh', fontFamily: FONT }}
+      {/* ── Status hero card ──────────────────────────────────────────── */}
+      <Card
+        className={`overflow-hidden border-l-4 ${accent.border} ${accent.bg} ${accent.dark}`}
       >
-        {/* White content area */}
-        <div
-          style={{
-            background: colors.white,
-            marginLeft: 0,
-            padding: '24px 32px 60px 32px',
-            minHeight: '100vh',
-          }}
-        >
-          {/* ── Header ──────────────────────────────────────────────────── */}
-          <Title
-            level={3}
-            style={{
-              fontFamily: FONT,
-              fontWeight: 700,
-              fontSize: 20,
-              color: colors.navy,
-              marginBottom: 2,
-            }}
-          >
-            {t('supervisions.detail.title', {
-              defaultValue: "Détails de l'encadrement",
-            })}
-          </Title>
-          <Text style={{ fontFamily: FONT, fontSize: 12, color: colors.muted }}>
-            {t('supervisions.detail.subtitle', {
-              defaultValue:
-                'Consultez les informations relatives à cet encadrement.',
-            })}
-          </Text>
-
-          {/* ── Loading / Error States ──────────────────────────────────── */}
-          {isLoading ? (
-            <div style={{ textAlign: 'center', padding: '50px 0' }}>
-              <Spin size='large' />
-              <div style={{ marginTop: 10, color: colors.muted }}>
-                {t('supervisions.detail.loading', {
-                  defaultValue: 'Chargement des données...',
-                })}
+        <CardContent className='px-6 py-6'>
+          <div className='flex flex-wrap items-start justify-between gap-4'>
+            <div className='flex-1 min-w-0 space-y-3'>
+              <h1 className='text-2xl font-bold leading-tight tracking-tight text-foreground'>
+                {data.title}
+              </h1>
+              <div className='flex flex-wrap items-center gap-2'>
+                <span
+                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                    STATUS_BADGE_STYLE[data.status] ??
+                    'bg-muted text-foreground'
+                  }`}
+                >
+                  {STATUS_LABELS[data.status] ?? data.status}
+                </span>
+                <Badge variant='outline' className='text-xs'>
+                  {TYPE_LABELS[data.type] ?? data.type}
+                </Badge>
+                {data.academicYear && (
+                  <Badge variant='secondary' className='text-xs'>
+                    {data.academicYear}
+                  </Badge>
+                )}
               </div>
             </div>
-          ) : isError ? (
+            {/* Validation pill */}
             <div
-              style={{ textAlign: 'center', padding: '50px 0', color: 'red' }}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold shrink-0 ${
+                VALIDATION_BADGE_STYLE[data.validationStatus] ??
+                'bg-muted text-foreground'
+              }`}
             >
-              {t('supervisions.detail.error', {
-                defaultValue:
-                  'Erreur lors du chargement des données. Veuillez vérifier votre connexion.',
-              })}
+              <ValidationIcon className='size-3.5' />
+              {VALIDATION_LABELS[data.validationStatus] ??
+                data.validationStatus}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Bento grid: student + validation ─────────────────────────── */}
+      <div className='grid gap-4 sm:grid-cols-2'>
+        {/* Student card */}
+        <Card className='border-l-4 border-l-primary'>
+          <CardHeader className='pb-3'>
+            <div className='flex items-center gap-2'>
+              <div className='flex size-7 items-center justify-center rounded-md bg-primary/10'>
+                <GraduationCap className='size-4 text-primary' />
+              </div>
+              <span className='text-sm font-semibold text-foreground'>
+                Étudiant
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {data.student ? (
+              <div className='space-y-3'>
+                <div className='flex items-center gap-3'>
+                  <div className='flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground'>
+                    {getInitials(
+                      `${data.student.firstName} ${data.student.lastName}`,
+                    )}
+                  </div>
+                  <div>
+                    <p className='text-sm font-semibold text-foreground'>
+                      {data.student.lastName} {data.student.firstName}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      {data.student.level}
+                    </p>
+                  </div>
+                </div>
+                <div className='h-px bg-border' />
+                <div className='grid grid-cols-1 gap-3'>
+                  <InfoRow
+                    label='Établissement'
+                    value={data.student.institution}
+                  />
+                  <InfoRow label='Email' value={data.student.email} />
+                </div>
+              </div>
+            ) : (
+              <p className='text-sm text-muted-foreground italic'>
+                Étudiant non renseigné
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Validation card */}
+        <Card
+          className={`border-l-4 ${
+            data.validationStatus === 'VALIDATED'
+              ? 'border-l-green-500'
+              : data.validationStatus === 'REJECTED'
+                ? 'border-l-red-400'
+                : data.validationStatus === 'REVISED'
+                  ? 'border-l-blue-400'
+                  : 'border-l-amber-400'
+          }`}
+        >
+          <CardHeader className='pb-3'>
+            <div className='flex items-center gap-2'>
+              <div className='flex size-7 items-center justify-center rounded-md bg-primary/10'>
+                <CheckCircle2 className='size-4 text-primary' />
+              </div>
+              <span className='text-sm font-semibold text-foreground'>
+                Validation
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-3'>
+            <div
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                VALIDATION_BADGE_STYLE[data.validationStatus] ??
+                'bg-muted text-foreground'
+              }`}
+            >
+              <ValidationIcon className='size-3' />
+              {VALIDATION_LABELS[data.validationStatus] ??
+                data.validationStatus}
+            </div>
+            {data.validatedAt && (
+              <InfoRow label='Validé le' value={fmt(data.validatedAt)} />
+            )}
+            {data.validationNotes && (
+              <div className='flex flex-col gap-0.5'>
+                <span className='text-xs font-semibold text-muted-foreground'>
+                  Notes
+                </span>
+                <p className='text-sm text-foreground leading-relaxed'>
+                  {data.validationNotes}
+                </p>
+              </div>
+            )}
+            {!data.validatedAt && !data.validationNotes && (
+              <p className='text-xs text-muted-foreground italic'>
+                Aucune note de validation
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Thématique card ───────────────────────────────────────────── */}
+      <Card className='border-l-4 border-l-primary'>
+        <CardHeader className='pb-3'>
+          <div className='flex items-center gap-2'>
+            <div className='flex size-7 items-center justify-center rounded-md bg-primary/10'>
+              <Tag className='size-4 text-primary' />
+            </div>
+            <span className='text-sm font-semibold text-foreground'>
+              Thématique
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          {/* Keywords */}
+          {data.keywords?.length > 0 ? (
+            <div className='flex flex-wrap gap-1.5'>
+              {data.keywords.map((k) => (
+                <span
+                  key={k}
+                  className='inline-flex items-center rounded-md border-l-2 border-l-primary/40 border border-primary/15 bg-primary/8 px-2.5 py-0.5 text-xs font-medium text-primary'
+                >
+                  {k}
+                </span>
+              ))}
             </div>
           ) : (
-            /* ── Data Display ─────────────────────────────────────────────── */
-            <div style={{ marginTop: 20 }}>
-              {/* ══ 1. Informations générales ══════════════════════════════ */}
-              <div style={sectionTitleStyle}>
-                {t('supervisions.detail.sections.general', {
-                  defaultValue: '1. Informations générales :',
-                })}
+            <p className='text-xs text-muted-foreground italic'>
+              Aucun mot-clé
+            </p>
+          )}
+          {/* Description */}
+          {data.description && (
+            <>
+              <div className='h-px bg-border' />
+              <div className='flex flex-col gap-1'>
+                <span className='text-xs font-semibold text-muted-foreground'>
+                  Description
+                </span>
+                <p className='text-sm leading-relaxed text-foreground'>
+                  {data.description}
+                </p>
               </div>
-              <Row gutter={16}>
-                <Col span={11}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.projectTitle', {
-                      defaultValue: 'Titre du projet',
-                    })}
-                    value={MOCK_SUPERVISION.titreProjet}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-                <Col span={9}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.status', {
-                      defaultValue: 'Statut',
-                    })}
-                    value={MOCK_SUPERVISION.statut}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={9}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.supervisionType', {
-                      defaultValue: "Type d'encadrement",
-                    })}
-                    value={MOCK_SUPERVISION.typeEncadrement}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-                <Col span={11}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.academicYear', {
-                      defaultValue: 'Année universitaire',
-                    })}
-                    value={MOCK_SUPERVISION.anneeUniversitaire}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-              </Row>
+            </>
+          )}
+          {/* Theme */}
+          {data.theme && (
+            <>
+              <div className='h-px bg-border' />
+              <InfoRow label='Thème de recherche' value={data.theme.name} />
+            </>
+          )}
+        </CardContent>
+      </Card>
 
-              {/* ══ 2. Étudiant ════════════════════════════════════════════ */}
-              <div style={sectionTitleStyle}>
-                {t('supervisions.detail.sections.student', {
-                  defaultValue: '2. Etudiant :',
-                })}
+      {/* ── Dates — timeline bar ─────────────────────────────────────── */}
+      <Card>
+        <CardHeader className='pb-3'>
+          <div className='flex items-center gap-2'>
+            <div className='flex size-7 items-center justify-center rounded-md bg-primary/10'>
+              <Calendar className='size-4 text-primary' />
+            </div>
+            <span className='text-sm font-semibold text-foreground'>
+              Calendrier
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          {/* Timeline bar */}
+          {progressPct !== null && (
+            <div className='space-y-1.5'>
+              <div className='h-2 w-full overflow-hidden rounded-full bg-muted'>
+                <div
+                  className='h-full rounded-full bg-primary transition-[width] duration-700 ease-out'
+                  style={{ width: barsVisible ? `${progressPct}%` : '0%' }}
+                />
               </div>
-              <Row gutter={16}>
-                <Col span={20}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.studentName', {
-                      defaultValue: "Nom de l'étudiant",
-                    })}
-                    value={MOCK_SUPERVISION.etudiant}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-              </Row>
-
-              {/* ══ 3. Thématique ══════════════════════════════════════════ */}
-              <div style={{ ...sectionTitleStyle, fontWeight: 600 }}>
-                {t('supervisions.detail.sections.topic', {
-                  defaultValue: '3. Thématique',
-                })}
-              </div>
-              <Row gutter={16}>
-                <Col span={11}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.subject', {
-                      defaultValue: 'Sujet',
-                    })}
-                    value={MOCK_SUPERVISION.sujet}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-                <Col span={13}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.theme', {
-                      defaultValue: 'Thématique',
-                    })}
-                    value={MOCK_SUPERVISION.thematique}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={24}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.topicDescription', {
-                      defaultValue: 'Description du sujet',
-                    })}
-                    value={MOCK_SUPERVISION.descriptionSujet}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-              </Row>
-
-              {/* ══ 4. Dates ═══════════════════════════════════════════════ */}
-              <div style={sectionTitleStyle}>
-                {t('supervisions.detail.sections.dates', {
-                  defaultValue: '4. Dates :',
-                })}
-              </div>
-              <Row gutter={16}>
-                <Col span={11}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.startDate', {
-                      defaultValue: 'Date de début',
-                    })}
-                    value={MOCK_SUPERVISION.dateDebut}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-                <Col span={11}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.endDate', {
-                      defaultValue: 'Date de Fin',
-                    })}
-                    value={MOCK_SUPERVISION.dateFin}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={11}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.actualEndDate', {
-                      defaultValue: 'Date de Fin Réel',
-                    })}
-                    value={MOCK_SUPERVISION.dateFinReel}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-              </Row>
-
-              {/* ══ 5. Encadrant ═══════════════════════════════════════════ */}
-              <div style={sectionTitleStyle}>
-                {t('supervisions.detail.sections.supervisors', {
-                  defaultValue: '5. Encadrants :',
-                })}
-              </div>
-              <Row gutter={16}>
-                <Col span={11}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.mainSupervisor', {
-                      defaultValue: 'Encadrant Principal',
-                    })}
-                    value={MOCK_SUPERVISION.encadrant}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-              </Row>
-
-              {/* If the backend returns an array of co-encadrants, display them */}
-              {data?.coEncadrants &&
-                data.coEncadrants.length > 0 &&
-                data.coEncadrants.map((co: string, idx: number) => (
-                  <Row gutter={16} key={idx}>
-                    <Col span={11}>
-                      <ReadOnlyField
-                        label={t('supervisions.detail.labels.coSupervisor', {
-                          defaultValue: 'CO_Encadrant {{index}}',
-                          index: idx + 1,
-                        })}
-                        value={co}
-                        naLabel={t('supervisions.detail.na', {
-                          defaultValue: 'N/A',
-                        })}
-                        labelStyle={labelStyle}
-                        valueStyle={valueStyle}
-                      />
-                    </Col>
-                  </Row>
-                ))}
-
-              {/* ══ 6. Validation ══════════════════════════════════════════ */}
-              <div style={{ ...sectionTitleStyle, fontWeight: 600 }}>
-                {t('supervisions.detail.sections.validation', {
-                  defaultValue: '6. Validation',
-                })}
-              </div>
-              <Row gutter={16}>
-                <Col span={11}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.validationStatus', {
-                      defaultValue: 'Statut validation',
-                    })}
-                    value={MOCK_SUPERVISION.statutValidation}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-                <Col span={11}>
-                  <ReadOnlyField
-                    label={t('supervisions.detail.labels.notes', {
-                      defaultValue: 'Notes',
-                    })}
-                    value={MOCK_SUPERVISION.notes}
-                    naLabel={t('supervisions.detail.na', {
-                      defaultValue: 'N/A',
-                    })}
-                    labelStyle={labelStyle}
-                    valueStyle={valueStyle}
-                  />
-                </Col>
-              </Row>
-
-              {/* ── Action Buttons ─────────────────────────────────────────── */}
-              <div
-                style={{
-                  marginTop: 40,
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                }}
-              >
-                <Space size={10}>
-                  <Button
-                    onClick={() => navigate(-1)}
-                    style={{
-                      fontFamily: FONT,
-                      fontSize: 13,
-                      fontWeight: 500,
-                      borderColor: colors.border,
-                      color: colors.navy,
-                      borderRadius: 4,
-                      height: 36,
-                      paddingInline: 20,
-                    }}
-                  >
-                    {t('supervisions.detail.back', { defaultValue: 'Retour' })}
-                  </Button>
-                </Space>
+              <div className='flex justify-between text-xs text-muted-foreground'>
+                <span>{fmt(data.startDate)}</span>
+                <span className='tabular font-medium text-foreground'>
+                  {progressPct}% écoulé
+                </span>
+                <span>{fmt(data.expectedEndDate)}</span>
               </div>
             </div>
           )}
-        </div>
+          <div className='grid grid-cols-3 gap-4'>
+            <div className='flex flex-col gap-0.5'>
+              <span className='text-xs font-semibold text-muted-foreground'>
+                Début
+              </span>
+              <span className='text-sm font-medium text-foreground'>
+                {fmt(data.startDate)}
+              </span>
+            </div>
+            <div className='flex flex-col gap-0.5'>
+              <span className='text-xs font-semibold text-muted-foreground'>
+                Fin prévue
+              </span>
+              <span className='text-sm font-medium text-foreground'>
+                {fmt(data.expectedEndDate)}
+              </span>
+            </div>
+            <div className='flex flex-col gap-0.5'>
+              <span className='text-xs font-semibold text-muted-foreground'>
+                Fin réelle
+              </span>
+              <span className='text-sm font-medium text-foreground'>
+                {fmt(data.actualEndDate)}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Encadrants ────────────────────────────────────────────────── */}
+      <Card className='border-l-4 border-l-primary'>
+        <CardHeader className='pb-3'>
+          <div className='flex items-center gap-2'>
+            <div className='flex size-7 items-center justify-center rounded-md bg-primary/10'>
+              <UserCheck className='size-4 text-primary' />
+            </div>
+            <span className='text-sm font-semibold text-foreground'>
+              Encadrants
+            </span>
+            <Badge variant='secondary' className='ml-auto text-xs'>
+              {data.supervisors.length}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {data.supervisors.length === 0 ? (
+            <p className='text-sm text-muted-foreground italic'>
+              Aucun encadrant assigné
+            </p>
+          ) : (
+            <div className='space-y-3'>
+              {data.supervisors.map((s, idx) => (
+                <div
+                  key={s.id ?? idx}
+                  className='flex items-center gap-4 rounded-xl border border-border bg-muted/30 p-4'
+                >
+                  {/* Avatar / role icon */}
+                  <div
+                    className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
+                      s.isMainSupervisor
+                        ? 'bg-amber-100 dark:bg-amber-900/40'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    {s.isMainSupervisor ? (
+                      <Star className='size-5 text-amber-600 dark:text-amber-400' />
+                    ) : (
+                      <Users className='size-5 text-muted-foreground' />
+                    )}
+                  </div>
+                  {/* Name + badges */}
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-sm font-semibold text-foreground truncate'>
+                      {s.supervisor.nom_complet}
+                    </p>
+                    <div className='mt-1 flex flex-wrap gap-1'>
+                      <Badge
+                        variant={s.isMainSupervisor ? 'default' : 'secondary'}
+                        className='h-4 px-1.5 text-[10px]'
+                      >
+                        {s.isMainSupervisor ? 'Principal' : 'CO-Encadrant'}
+                      </Badge>
+                      {s.isExternal && (
+                        <Badge
+                          variant='outline'
+                          className='h-4 px-1.5 text-[10px]'
+                        >
+                          Externe
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  {/* Contribution bar */}
+                  {s.contributionPercent != null && (
+                    <div className='flex flex-col items-end gap-1 shrink-0'>
+                      <span className='tabular text-xs font-semibold text-foreground'>
+                        {s.contributionPercent}%
+                      </span>
+                      <div className='h-1.5 w-20 overflow-hidden rounded-full bg-muted'>
+                        <div
+                          className='h-full rounded-full bg-primary transition-[width] duration-700 delay-300 ease-out'
+                          style={{
+                            width: barsVisible
+                              ? `${s.contributionPercent}%`
+                              : '0%',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Metadata ─────────────────────────────────────────────────── */}
+      <Card>
+        <CardContent className='grid grid-cols-2 gap-4 pt-4 sm:grid-cols-3'>
+          <InfoRow label='Créé le' value={fmt(data.createdAt)} />
+          <InfoRow label='Mis à jour le' value={fmt(data.updatedAt)} />
+          <div className='flex flex-col gap-0.5 sm:col-span-1 col-span-2'>
+            <span className='text-xs font-semibold text-muted-foreground'>
+              ID
+            </span>
+            <span
+              className='flex items-center gap-1 text-xs font-mono text-muted-foreground truncate'
+              title={data.id}
+            >
+              <Hash className='size-3 shrink-0' />
+              {data.id}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Action bar ───────────────────────────────────────────────── */}
+      <div className='flex flex-wrap items-center gap-3 pt-1'>
+        <Button variant='ghost' onClick={() => navigate(-1)} className='gap-2'>
+          <ArrowLeft className='size-4' />
+          Retour
+        </Button>
+        <div className='flex-1' />
+        <Button variant='outline' asChild className='gap-2'>
+          <Link to={editPath}>
+            <Pencil className='size-4' />
+            Modifier
+          </Link>
+        </Button>
       </div>
-    </ConfigProvider>
+    </div>
   )
 }
