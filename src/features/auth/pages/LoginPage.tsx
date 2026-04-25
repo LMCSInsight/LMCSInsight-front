@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
 import { useAuthContext } from '@/shared/context/AuthContext'
 import { authApi } from '@/features/auth/api/authApi'
+import { extractMatriculeFromAccessToken } from '@/features/auth/extractMatricule'
 import { mapBackendUserToDisplayUser } from '@/features/auth/types'
 import { DEV_ACCOUNTS } from '@/features/auth/devAccounts'
 import { getDashboardPath } from '@/config/routes'
 import { ROUTES } from '@/config/routes'
+import { APP_CONSTANTS } from '@/config/constants'
 import { env } from '@/config/env'
 import type { AppRole } from '@/config/routes'
 import { Input } from '@/components/ui/input'
@@ -38,7 +40,21 @@ export default function LoginPage() {
       const res = await authApi.login({ email, password })
       const payload = res.data
       const { accessToken, refreshToken, user } = payload
-      const displayUser = mapBackendUserToDisplayUser(user)
+      localStorage.setItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN, accessToken)
+      let displayUser = mapBackendUserToDisplayUser(user)
+      try {
+        const meRes = await authApi.me()
+        displayUser = {
+          ...displayUser,
+          ...mapBackendUserToDisplayUser(meRes.data.user),
+        }
+      } catch {
+        /* optional: enrich matricule from /v1/auth/me when login payload omits it */
+      }
+      if (!displayUser.matricule) {
+        const fromJwt = extractMatriculeFromAccessToken(accessToken)
+        if (fromJwt) displayUser = { ...displayUser, matricule: fromJwt }
+      }
       const path = getDashboardPath(user.role, user)
       login(displayUser, accessToken, refreshToken)
       navigate(path, { replace: true })

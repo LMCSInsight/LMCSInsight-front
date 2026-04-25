@@ -17,7 +17,7 @@ export function ValidationActionBar({ onAction, disabled, status }: Props) {
     return (
       <div className='sticky bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur-sm px-6 py-3'>
         <p className='text-sm text-muted-foreground text-center'>
-          {t('assistant.actionBar.alreadyReviewed')}
+          {t('researcher.reviews.actionBar.alreadyReviewed')}
         </p>
       </div>
     )
@@ -36,7 +36,7 @@ export function ValidationActionBar({ onAction, disabled, status }: Props) {
           )}
         >
           <XCircle className='size-4' strokeWidth={1.5} />
-          {t('assistant.decision.reject')}
+          {t('researcher.reviews.decision.reject')}
         </button>
         <button
           type='button'
@@ -48,7 +48,7 @@ export function ValidationActionBar({ onAction, disabled, status }: Props) {
           )}
         >
           <RefreshCw className='size-4' strokeWidth={1.5} />
-          {t('assistant.decision.revise')}
+          {t('researcher.reviews.decision.revise')}
         </button>
         <button
           type='button'
@@ -60,7 +60,7 @@ export function ValidationActionBar({ onAction, disabled, status }: Props) {
           )}
         >
           <CheckCircle className='size-4' strokeWidth={1.5} />
-          {t('assistant.decision.validate')}
+          {t('researcher.reviews.decision.validate')}
         </button>
       </div>
     </div>

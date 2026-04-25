@@ -18,15 +18,15 @@ interface Props {
 }
 
 const TITLE_KEYS: Record<DecisionType, string> = {
-  validate: 'assistant.decision.validateTitle',
-  reject: 'assistant.decision.rejectTitle',
-  revise: 'assistant.decision.reviseTitle',
+  validate: 'researcher.reviews.decision.validateTitle',
+  reject: 'researcher.reviews.decision.rejectTitle',
+  revise: 'researcher.reviews.decision.reviseTitle',
 }
 
 const CONFIRM_KEYS: Record<DecisionType, string> = {
-  validate: 'assistant.decision.validate',
-  reject: 'assistant.decision.reject',
-  revise: 'assistant.decision.revise',
+  validate: 'researcher.reviews.decision.validate',
+  reject: 'researcher.reviews.decision.reject',
+  revise: 'researcher.reviews.decision.revise',
 }
 
 const CONFIRM_STYLES: Record<DecisionType, string> = {
@@ -93,20 +93,20 @@ export function ValidationDecisionModal({
           {t(TITLE_KEYS[decision])}
         </h2>
         <p className='mb-5 text-sm text-muted-foreground'>
-          {t('assistant.decision.subtitle')}
+          {t('researcher.reviews.decision.subtitle')}
         </p>
 
         <div className='flex flex-col gap-4'>
           {/* Comments */}
           <div className='flex flex-col gap-1.5'>
             <Label className='text-sm font-medium text-foreground'>
-              {t('assistant.decision.commentsLabel')}
+              {t('researcher.reviews.decision.commentsLabel')}
               {needsIssues && <span className='ml-1 text-destructive'>*</span>}
             </Label>
             <Textarea
               value={comments}
               onChange={(e) => setComments(e.target.value)}
-              placeholder={t('assistant.decision.commentsPlaceholder')}
+              placeholder={t('researcher.reviews.decision.commentsPlaceholder')}
               rows={3}
               disabled={loading}
               className='resize-none'
@@ -117,7 +117,7 @@ export function ValidationDecisionModal({
           {needsIssues && (
             <div className='flex flex-col gap-1.5'>
               <Label className='text-sm font-medium text-foreground'>
-                {t('assistant.decision.issuesLabel')}
+                {t('researcher.reviews.decision.issuesLabel')}
                 <span className='ml-1 text-destructive'>*</span>
               </Label>
               <IssuesEditor

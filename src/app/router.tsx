@@ -1,6 +1,12 @@
 import { createBrowserRouter, Navigate, useParams } from 'react-router-dom'
 import { ROUTES } from '@/config/routes'
-import { getDashboardPath, getResearcherDashboardPath } from '@/config/routes'
+import {
+  getDashboardPath,
+  getResearcherDashboardPath,
+  getAssistantSupervisionNewPath,
+  getAssistantSupervisionDetailPath,
+} from '@/config/routes'
+import AssistantActivityPage from '@/features/assistant-portal/pages/AssistantActivityPage'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { RoleRoute } from '@/routes/RoleRoute'
 import { useAuthContext } from '@/shared/context/AuthContext'
@@ -21,6 +27,10 @@ import {
   EditStudentPage,
   RegisterStudentPage,
 } from '@/features/students/pages'
+import ThemeManagementPage from '@/features/themes/pages/ThemeManagementPage'
+import ThemeRegisterPage from '@/features/themes/pages/ThemeRegisterPage'
+import ThemeDetailPage from '@/features/themes/pages/ThemeDetailPage'
+import ThemeEditPage from '@/features/themes/pages/ThemeEditPage'
 import ProfileSettingsPage from '@/features/profile/pages/ProfileSettingsPage'
 import StatisticsReportsPage from '@/features/statistics/pages/StatisticsReportsPage'
 import AdminPage from '@/features/admin/pages'
@@ -92,6 +102,21 @@ function LegacyDashboardRoleRedirect() {
   return <Navigate to={`/${role}${targetSuffix}`} replace />
 }
 
+/** Supervision creation is assistant-only; old researcher URLs redirect. */
+function AssistantCreateSupervisionRedirect() {
+  return <Navigate to={getAssistantSupervisionNewPath()} replace />
+}
+
+function AssistantValidationToSupervisionRedirect() {
+  const { supervisionId } = useParams<{ supervisionId: string }>()
+  if (!supervisionId) {
+    return <Navigate to={ROUTES.ASSISTANT_ACTIVITY} replace />
+  }
+  return (
+    <Navigate to={getAssistantSupervisionDetailPath(supervisionId)} replace />
+  )
+}
+
 export const router = createBrowserRouter([
   {
     path: ROUTES.HOME,
@@ -145,19 +170,24 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to='dashboard' replace /> },
       { path: 'dashboard', element: <ResearcherDashboard /> },
       { path: 'supervisions', element: <SupervisionListPage /> },
-      { path: 'supervisions/new', element: <CreateSupervisionPage /> },
+      {
+        path: 'supervisions/new',
+        element: <AssistantCreateSupervisionRedirect />,
+      },
       {
         path: 'supervisions/:supervisionId/edit',
-        element: <EditSupervisionPage />,
+        element: <AssistantCreateSupervisionRedirect />,
       },
       {
         path: 'supervisions/:supervisionId',
         element: <SupervisionDetailPage />,
       },
-      { path: 'students', element: <StudentManagementPage /> },
-      { path: 'students/register', element: <RegisterStudentPage /> },
-      { path: 'students/:studentId/edit', element: <EditStudentPage /> },
-      { path: 'students/:studentId', element: <StudentDetailPage /> },
+      { path: 'reviews', element: <ValidationQueuePage /> },
+      {
+        path: 'reviews/:supervisionId',
+        element: <ValidationDetailPage />,
+      },
+      { path: 'history', element: <ValidationHistoryPage /> },
       { path: 'statistics', element: <StatisticsReportsPage /> },
       { path: 'profile', element: <ProfileSettingsPage /> },
     ],
@@ -190,9 +220,33 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to='dashboard' replace /> },
       { path: 'dashboard', element: <AssistantDashboard /> },
-      { path: 'validation', element: <ValidationQueuePage /> },
-      { path: 'validation/:supervisionId', element: <ValidationDetailPage /> },
+      { path: 'activity', element: <AssistantActivityPage /> },
+      {
+        path: 'validation',
+        element: <Navigate to={ROUTES.ASSISTANT_ACTIVITY} replace />,
+      },
+      {
+        path: 'validation/:supervisionId',
+        element: <AssistantValidationToSupervisionRedirect />,
+      },
       { path: 'supervisions', element: <AssistantSupervisionListPage /> },
+      { path: 'supervisions/new', element: <CreateSupervisionPage /> },
+      {
+        path: 'supervisions/:supervisionId/edit',
+        element: <EditSupervisionPage />,
+      },
+      {
+        path: 'supervisions/:supervisionId',
+        element: <SupervisionDetailPage />,
+      },
+      { path: 'students', element: <StudentManagementPage /> },
+      { path: 'students/register', element: <RegisterStudentPage /> },
+      { path: 'students/:studentId/edit', element: <EditStudentPage /> },
+      { path: 'students/:studentId', element: <StudentDetailPage /> },
+      { path: 'themes', element: <ThemeManagementPage /> },
+      { path: 'themes/new', element: <ThemeRegisterPage /> },
+      { path: 'themes/:themeId/edit', element: <ThemeEditPage /> },
+      { path: 'themes/:themeId', element: <ThemeDetailPage /> },
       { path: 'history', element: <ValidationHistoryPage /> },
       { path: 'profile', element: <AssistantProfilePage /> },
     ],

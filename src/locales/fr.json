@@ -4,6 +4,7 @@
     "dashboard": "Tableau de bord",
     "supervisions": "Encadrements",
     "studentManagement": "Gestion des étudiants",
+    "themeManagement": "Gestion des thèmes",
     "statisticsReports": "Statistiques et rapports",
     "profileSettings": "Profil et paramètres",
     "researcher": "Chercheur",
@@ -135,6 +136,57 @@
       "error": "Erreur lors de la modification"
     }
   },
+  "themes": {
+    "pageTitle": "Thématiques",
+    "list": {
+      "title": "Thématiques de recherche",
+      "subtitle": "Créez et gérez les thèmes utilisés pour les encadrements.",
+      "add": "Ajouter un thème",
+      "search": "Rechercher par nom ou description…",
+      "count": "{{count}} thème",
+      "count_plural": "{{count}} thèmes",
+      "empty": "Aucun thème. Ajoutez un thème pour l'utiliser dans les encadrements.",
+      "error": "Erreur lors du chargement des thèmes."
+    },
+    "columns": {
+      "name": "Nom",
+      "description": "Description",
+      "team": "Équipe",
+      "actions": "Actions"
+    },
+    "fields": {
+      "name": "Nom du thème",
+      "namePlaceholder": "ex. Intelligence artificielle",
+      "description": "Description"
+    },
+    "validation": {
+      "nameRequired": "Veuillez saisir un nom de thème."
+    },
+    "register": {
+      "badge": "Nouveau thème",
+      "title": "Ajouter un thème",
+      "subtitle": "Définissez une thématique de recherche pour les encadrements.",
+      "submit": "Créer le thème",
+      "success": "Thème créé avec succès.",
+      "error": "Impossible de créer le thème."
+    },
+    "detail": {
+      "notFound": "Thème introuvable.",
+      "backList": "Retour à la liste",
+      "sectionDescription": "Description",
+      "noDescription": "Aucune description.",
+      "created": "Création",
+      "updated": "Dernière modification"
+    },
+    "edit": {
+      "title": "Modifier le thème",
+      "save": "Enregistrer",
+      "success": "Thème mis à jour.",
+      "error": "Impossible de mettre à jour le thème."
+    },
+    "deleteTitle": "Supprimer le thème",
+    "deleteDescription": "Les encadrements qui utilisaient ce thème n'y seront plus liés. Cette action est irréversible."
+  },
   "supervisions": {
     "detail": {
       "title": "Détails de l'encadrement",
@@ -167,7 +219,7 @@
         "endDate": "Date de Fin",
         "actualEndDate": "Date de Fin Réel",
         "mainSupervisor": "Encadrant Principal",
-        "coSupervisor": "CO_Encadrant {{index}}",
+        "coSupervisor": "CO-Encadrant {{index}}",
         "validationStatus": "Statut validation",
         "notes": "Notes",
         "noKeywords": "Aucun mot-clé",
@@ -215,6 +267,12 @@
       "validation": "Validation",
       "actions": "Actions"
     },
+    "form": {
+      "themeLabel": "Thématique de recherche",
+      "themeSearch": "Rechercher un thème par nom…",
+      "themeRequired": "Sélectionnez une thématique de recherche",
+      "noThemeMatch": "Aucun thème pour"
+    },
     "filters": {
       "type": "Type",
       "status": "Statut",
@@ -243,6 +301,33 @@
       "REVISED": "Révisé"
     }
   },
+  "researcher": {
+    "reviews": {
+      "nav": "Mes relectures",
+      "breadcrumb": "Mes relectures",
+      "backToList": "Retour aux relectures",
+      "openDetail": "Ouvrir la relecture",
+      "historyTitle": "Historique de mes décisions",
+      "historySubtitle": "{{count}} entrée(s) enregistrée(s) en tant que tuteur principal",
+      "pendingQueueHero": "en attente de votre relecture (tuteur principal)",
+      "decision": {
+        "validateTitle": "Confirmer l'approbation",
+        "rejectTitle": "Refuser cet encadrement",
+        "reviseTitle": "Demander des modifications",
+        "validate": "Approuver",
+        "reject": "Refuser",
+        "revise": "Demander une révision",
+        "subtitle": "La décision est enregistrée. Toutes les assistantes et assistants du laboratoire sont notifié·e·s et peuvent consulter le journal.",
+        "commentsLabel": "Commentaires",
+        "commentsPlaceholder": "Ajoutez des notes pour l'équipe et pour l'archive (obligatoire pour un refus ou une demande de révision)…",
+        "issuesLabel": "Points à corriger",
+        "issueInputPlaceholder": "Décrivez un point puis validez avec Entrée…"
+      },
+      "actionBar": {
+        "alreadyReviewed": "Une décision a déjà été enregistrée pour cet encadrement."
+      }
+    }
+  },
   "dashboard": {
     "greeting": "Bonjour, {{name}}",
     "kpi": {
@@ -253,7 +338,9 @@
       "defenseRate": "Taux de soutenance",
       "defenseRateSub": "{{defended}} sur {{total}}",
       "pending": "En attente",
-      "pendingSub": "validation"
+      "pendingSub": "validation",
+      "pendingReviews": "En attente de votre relecture",
+      "pendingReviewsSub": "PENDING dans votre file"
     },
     "charts": {
       "byType": "Par type",
@@ -266,11 +353,20 @@
       "add": "Ajouter un encadrement",
       "noSupervisions": "Aucun encadrement pour le moment."
     },
+    "recentDecisions": {
+      "title": "Dernières décisions enregistrées",
+      "viewAll": "Historique complet",
+      "empty": "Aucune décision de validation enregistrée pour le moment.",
+      "colTitle": "Encadrement",
+      "colDecision": "Décision",
+      "colDate": "Date"
+    },
     "statusBar": {
       "title": "Répartition par statut"
     },
     "quickActions": {
       "newSupervision": "Nouvel encadrement",
+      "myReviews": "Mes relectures",
       "registerStudent": "Inscrire étudiant"
     },
     "table": {
@@ -379,7 +475,14 @@
     "tabComingSoon": "Les paramètres {{tab}} seront bientôt disponibles."
   },
   "assistant": {
-    "validationQueue": "File de validation",
+    "activityQueue": "Activité",
+    "activity": {
+      "pageTitle": "Activité",
+      "pageEyebrow": "Organisation",
+      "hint": "Liste en consultation : ouvrez une ligne pour l’encadrement. Le tuteur principal valide ou demande des changements dans son portail."
+    },
+    "historyPageTitle": "Historique des décisions",
+    "validationQueue": "Suivi des demandes",
     "historyTitle": "Historique",
     "status": {
       "pending": "En attente",
@@ -389,10 +492,10 @@
     },
     "dashboard": {
       "title": "Vue d'ensemble",
-      "subtitle": "Votre activité de validation en un coup d'œil.",
-      "pendingLabel": "En attente de revue",
-      "pendingCta": "Ouvrir la file",
-      "goToQueue": "Ouvrir la file",
+      "subtitle": "Suivi des encadrements et des décisions du tuteur principal pour votre équipe.",
+      "pendingLabel": "en attente du tuteur principal",
+      "pendingCta": "Voir l'activité",
+      "goToQueue": "Voir l'activité",
       "welcomeTitle": "Bonjour, {{name}}",
       "validatedTodayLabel": "Validés aujourd'hui",
       "rejectedWeekLabel": "Rejetés cette semaine",
@@ -401,7 +504,7 @@
       "recentActivityTitle": "Décisions récentes",
       "typeBreakdownTitle": "En attente par type",
       "kpi": {
-        "pending": "Validations en attente",
+        "pending": "En attente du tuteur principal",
         "validatedToday": "Validées aujourd'hui",
         "rejectedWeek": "Rejetées cette semaine",
         "revisedWeek": "Révisées cette semaine",
@@ -416,7 +519,7 @@
       "subtitle": "{{count}} éléments",
       "empty": "Aucune supervision trouvée.",
       "searchPlaceholder": "Rechercher par titre ou étudiant…",
-      "backToQueue": "Retour à la file",
+      "backToActivity": "Retour à l'activité",
       "tabs": {
         "all": "Tous"
       },
@@ -427,7 +530,7 @@
         "year": "Année",
         "status": "Statut",
         "age": "Attente",
-        "supervisor": "Directeur"
+        "supervisor": "Encadrant"
       },
       "filters": {
         "type": "Type",
@@ -438,8 +541,8 @@
     },
     "detail": {
       "submitted": "soumis le",
-      "mainSupervisor": "Directeur principal",
-      "coSupervisor": "Co-directeur",
+      "mainSupervisor": "Encadrant principal",
+      "coSupervisor": "Co-encadrant",
       "flaggedIssues": "Problèmes signalés lors de la dernière revue"
     },
     "decision": {
@@ -477,6 +580,7 @@
       }
     },
     "historySubtitle": "{{count}} décisions enregistrées",
+    "historyOrgSubtitle": "Vue globale de l’organisation (tous les encadrements de l’équipe).",
     "history": {
       "empty": "Aucune décision enregistrée pour l'instant.",
       "dateFrom": "Du",
@@ -490,7 +594,12 @@
       }
     },
     "supervisions": {
-      "subtitle": "{{count}} supervisions"
+      "new": "Nouvel encadrement",
+      "subtitle": "{{count}} supervisions",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer cet encadrement ?",
+      "deleteDescription": "Cette action est irréversible. Seuls les encadrements déjà validés ne peuvent pas être supprimés.",
+      "deleteError": "Suppression impossible (fiche verrouillée ou erreur serveur)."
     }
   }
 }

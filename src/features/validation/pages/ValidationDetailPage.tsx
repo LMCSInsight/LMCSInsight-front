@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
@@ -25,7 +25,7 @@ import {
   type DecisionType,
 } from '@/features/validation/components/ValidationDecisionModal'
 import { AgeBadge } from '@/features/validation/components/ValidationQueueTable'
-import { ROUTES } from '@/config/routes'
+import { ROUTES, getResearcherReviewsPath } from '@/config/routes'
 import { Tag } from '@/components/ui/tag'
 import { cn } from '@/lib/utils'
 import type {
@@ -83,9 +83,15 @@ function getInitials(name: string): string {
 const TOTAL_FIELDS = 8
 
 export default function ValidationDetailPage() {
-  const { supervisionId } = useParams<{ supervisionId: string }>()
+  const { supervisionId, userId: routeUserId } = useParams<{
+    supervisionId: string
+    userId?: string
+  }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation()
+  const isResearcherReview =
+    Boolean(routeUserId) && location.pathname.includes('/reviews/')
 
   const {
     data: supervision,
@@ -131,7 +137,11 @@ export default function ValidationDetailPage() {
     }
     setModalOpen(false)
     setActiveDecision(null)
-    navigate(ROUTES.ASSISTANT_VALIDATION)
+    if (isResearcherReview && routeUserId) {
+      navigate(getResearcherReviewsPath(routeUserId))
+    } else {
+      navigate(ROUTES.ASSISTANT_ACTIVITY)
+    }
   }
 
   /* ── Loading ──────────────────────────────────────────────────────────── */
@@ -175,7 +185,9 @@ export default function ValidationDetailPage() {
             {t('supervisions.detail.notFound')}
           </p>
           <p className='mt-1 text-sm text-muted-foreground'>
-            {t('assistant.queue.backToQueue')}
+            {isResearcherReview
+              ? t('researcher.reviews.backToList')
+              : t('assistant.queue.backToActivity')}
           </p>
         </div>
         <button
@@ -194,9 +206,8 @@ export default function ValidationDetailPage() {
   const studentName = supervision.student
     ? `${supervision.student.firstName} ${supervision.student.lastName}`
     : '—'
-  const isPendingOrRevised =
-    supervision.validationStatus === 'PENDING' ||
-    supervision.validationStatus === 'REVISED'
+  const showResearcherChecklist =
+    isResearcherReview && supervision.validationStatus === 'PENDING'
 
   const flaggedIssues =
     timelineEntries.length > 0 && timelineEntries[0].issues
@@ -208,11 +219,19 @@ export default function ValidationDetailPage() {
       {/* ── Back nav ───────────────────────────────────────────────────────── */}
       <button
         type='button'
-        onClick={() => navigate(ROUTES.ASSISTANT_VALIDATION)}
+        onClick={() =>
+          navigate(
+            isResearcherReview && routeUserId
+              ? getResearcherReviewsPath(routeUserId)
+              : ROUTES.ASSISTANT_ACTIVITY,
+          )
+        }
         className='mb-5 inline-flex w-fit items-center gap-1.5 rounded-md px-1 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors'
       >
         <ArrowLeft className='size-4' strokeWidth={1.5} />
-        {t('assistant.queue.backToQueue')}
+        {isResearcherReview
+          ? t('researcher.reviews.backToList')
+          : t('assistant.queue.backToActivity')}
       </button>
 
       {/* ── Hero card ──────────────────────────────────────────────────────── */}
@@ -421,7 +440,7 @@ export default function ValidationDetailPage() {
         {/* ── RIGHT: 1/3 ───────────────────────────────────────────────────── */}
         <div className='flex flex-col gap-5'>
           {/* Checklist with progress */}
-          {isPendingOrRevised && (
+          {showResearcherChecklist && (
             <Card>
               <CardHeader className='pb-3'>
                 <div className='flex items-center justify-between'>
@@ -480,12 +499,14 @@ export default function ValidationDetailPage() {
         </div>
       </div>
 
-      {/* ── Sticky action bar ──────────────────────────────────────────────── */}
-      <ValidationActionBar
-        onAction={openDecision}
-        disabled={isMutating}
-        status={supervision.validationStatus}
-      />
+      {/* ── Sticky action bar (main supervisor / researcher, PENDING only) ── */}
+      {isResearcherReview && supervision.validationStatus === 'PENDING' && (
+        <ValidationActionBar
+          onAction={openDecision}
+          disabled={isMutating}
+          status={supervision.validationStatus}
+        />
+      )}
 
       {/* ── Decision modal ─────────────────────────────────────────────────── */}
       <ValidationDecisionModal

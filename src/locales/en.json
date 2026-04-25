@@ -4,6 +4,7 @@
     "dashboard": "Dashboard",
     "supervisions": "Supervisions",
     "studentManagement": "Student Management",
+    "themeManagement": "Theme management",
     "statisticsReports": "Statistics & Reports",
     "profileSettings": "Profile & Settings",
     "researcher": "Researcher",
@@ -135,6 +136,57 @@
       "error": "Error while updating student"
     }
   },
+  "themes": {
+    "pageTitle": "Themes",
+    "list": {
+      "title": "Research themes",
+      "subtitle": "Create and manage themes used for supervisions.",
+      "add": "Add a theme",
+      "search": "Search by name or description…",
+      "count": "{{count}} theme",
+      "count_plural": "{{count}} themes",
+      "empty": "No themes yet. Add a theme to use it in supervisions.",
+      "error": "Error loading themes."
+    },
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "team": "Team",
+      "actions": "Actions"
+    },
+    "fields": {
+      "name": "Theme name",
+      "namePlaceholder": "e.g. Artificial intelligence",
+      "description": "Description"
+    },
+    "validation": {
+      "nameRequired": "Please enter a theme name."
+    },
+    "register": {
+      "badge": "New theme",
+      "title": "Add a theme",
+      "subtitle": "Define a research theme for supervisions.",
+      "submit": "Create theme",
+      "success": "Theme created successfully.",
+      "error": "Could not create the theme."
+    },
+    "detail": {
+      "notFound": "Theme not found.",
+      "backList": "Back to list",
+      "sectionDescription": "Description",
+      "noDescription": "No description provided.",
+      "created": "Created",
+      "updated": "Last updated"
+    },
+    "edit": {
+      "title": "Edit theme",
+      "save": "Save",
+      "success": "Theme updated.",
+      "error": "Could not update the theme."
+    },
+    "deleteTitle": "Delete theme",
+    "deleteDescription": "Supervisions that use this theme will have their theme cleared. This action cannot be undone."
+  },
   "supervisions": {
     "detail": {
       "title": "Supervision details",
@@ -215,6 +267,12 @@
       "validation": "Validation",
       "actions": "Actions"
     },
+    "form": {
+      "themeLabel": "Research theme",
+      "themeSearch": "Search by theme name…",
+      "themeRequired": "Select a research theme",
+      "noThemeMatch": "No theme found for"
+    },
     "filters": {
       "type": "Type",
       "status": "Status",
@@ -243,6 +301,33 @@
       "REVISED": "Revised"
     }
   },
+  "researcher": {
+    "reviews": {
+      "nav": "My reviews",
+      "breadcrumb": "My reviews",
+      "backToList": "Back to my reviews",
+      "openDetail": "Open review",
+      "historyTitle": "My review history",
+      "historySubtitle": "{{count}} decision entries you recorded as main supervisor",
+      "pendingQueueHero": "awaiting your review as main supervisor",
+      "decision": {
+        "validateTitle": "Confirm approval",
+        "rejectTitle": "Reject this supervision",
+        "reviseTitle": "Request changes",
+        "validate": "Approve",
+        "reject": "Reject",
+        "revise": "Request revision",
+        "subtitle": "The decision is recorded. All assistants in the organization are notified and can read the log.",
+        "commentsLabel": "Comments",
+        "commentsPlaceholder": "Add notes for the assistants and for the record (required to reject or request a revision)…",
+        "issuesLabel": "Issues to address",
+        "issueInputPlaceholder": "Describe a point and press Enter…"
+      },
+      "actionBar": {
+        "alreadyReviewed": "A decision is already recorded for this supervision."
+      }
+    }
+  },
   "dashboard": {
     "greeting": "Hello, {{name}}",
     "kpi": {
@@ -253,7 +338,9 @@
       "defenseRate": "Defense rate",
       "defenseRateSub": "{{defended}} out of {{total}}",
       "pending": "Pending",
-      "pendingSub": "validation"
+      "pendingSub": "validation",
+      "pendingReviews": "Awaiting your review",
+      "pendingReviewsSub": "PENDING in your review queue"
     },
     "charts": {
       "byType": "By type",
@@ -266,11 +353,20 @@
       "add": "Add a supervision",
       "noSupervisions": "No supervisions yet."
     },
+    "recentDecisions": {
+      "title": "Recent decisions you made",
+      "viewAll": "Full history",
+      "empty": "No validation decisions recorded yet.",
+      "colTitle": "Supervision",
+      "colDecision": "Decision",
+      "colDate": "Date"
+    },
     "statusBar": {
       "title": "Distribution by status"
     },
     "quickActions": {
       "newSupervision": "New supervision",
+      "myReviews": "My reviews",
       "registerStudent": "Register student"
     },
     "table": {
@@ -379,7 +475,14 @@
     "tabComingSoon": "{{tab}} settings will be available soon."
   },
   "assistant": {
-    "validationQueue": "Validation queue",
+    "activityQueue": "Activity",
+    "activity": {
+      "pageTitle": "Activity",
+      "pageEyebrow": "Organization",
+      "hint": "View-only list: open a row to see the supervision. Main supervisors approve or request changes in their portal."
+    },
+    "historyPageTitle": "Activity history",
+    "validationQueue": "Supervision requests",
     "historyTitle": "History",
     "status": {
       "pending": "Pending",
@@ -389,10 +492,10 @@
     },
     "dashboard": {
       "title": "Overview",
-      "subtitle": "Your validation activity at a glance.",
-      "pendingLabel": "Pending review",
-      "pendingCta": "Open queue",
-      "goToQueue": "Open queue",
+      "subtitle": "Supervision workflow and main-supervisor decisions for your team.",
+      "pendingLabel": "awaiting main supervisor review",
+      "pendingCta": "View activity",
+      "goToQueue": "View activity",
       "welcomeTitle": "Good morning, {{name}}",
       "validatedTodayLabel": "Validated today",
       "rejectedWeekLabel": "Rejected this week",
@@ -401,7 +504,7 @@
       "recentActivityTitle": "Recent decisions",
       "typeBreakdownTitle": "Pending by type",
       "kpi": {
-        "pending": "Pending validations",
+        "pending": "Awaiting main supervisor",
         "validatedToday": "Validated today",
         "rejectedWeek": "Rejected this week",
         "revisedWeek": "Revised this week",
@@ -416,7 +519,7 @@
       "subtitle": "{{count}} items",
       "empty": "No supervisions found.",
       "searchPlaceholder": "Search by title or student…",
-      "backToQueue": "Back to queue",
+      "backToActivity": "Back to activity",
       "tabs": {
         "all": "All"
       },
@@ -449,9 +552,9 @@
       "rejectTitle": "Reject supervision",
       "revise": "Request revision",
       "reviseTitle": "Request revision",
-      "subtitle": "Your decision will be logged and visible to the researcher.",
+      "subtitle": "Your action is recorded in the log.",
       "commentsLabel": "Comments",
-      "commentsPlaceholder": "Add notes for the researcher…",
+      "commentsPlaceholder": "Add notes for the record…",
       "issuesLabel": "Issues found",
       "issueInputPlaceholder": "Describe an issue and press Enter…"
     },
@@ -477,6 +580,7 @@
       }
     },
     "historySubtitle": "{{count}} decisions recorded",
+    "historyOrgSubtitle": "Organization-wide decisions (all supervisions in your team).",
     "history": {
       "empty": "No decisions recorded yet.",
       "dateFrom": "From",
@@ -490,7 +594,12 @@
       }
     },
     "supervisions": {
-      "subtitle": "{{count}} supervisions"
+      "new": "New supervision",
+      "subtitle": "{{count}} supervisions",
+      "delete": "Delete",
+      "deleteTitle": "Delete this supervision?",
+      "deleteDescription": "This cannot be undone. Only supervisions that are already validated cannot be deleted.",
+      "deleteError": "Could not delete (locked record or server error)."
     }
   }
 }

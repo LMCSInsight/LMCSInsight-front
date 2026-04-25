@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   BarChart,
@@ -35,6 +36,9 @@ const STATUS_BORDER: Record<string, string> = {
 
 export default function ValidationHistoryPage() {
   const { t } = useTranslation()
+  const { pathname } = useLocation()
+  const isAssistant = pathname.startsWith('/assistant')
+  const isResearcher = pathname.startsWith('/researcher')
   const [tab, setTab] = useState<ValidationStatus | 'ALL'>('ALL')
   const [page, setPage] = useState(1)
   const [from, setFrom] = useState('')
@@ -81,16 +85,25 @@ export default function ValidationHistoryPage() {
     }
   }, [chartData])
 
+  const historyTitle = isAssistant
+    ? t('assistant.historyPageTitle')
+    : isResearcher
+      ? t('researcher.reviews.historyTitle')
+      : t('assistant.historyTitle')
+  const historyLead = isAssistant
+    ? t('assistant.historyOrgSubtitle', { count: total })
+    : isResearcher
+      ? t('researcher.reviews.historySubtitle', { count: total })
+      : t('assistant.historySubtitle', { count: total })
+
   return (
-    <div className='flex flex-col gap-5 py-6 max-w-5xl'>
+    <div className='mx-auto flex w-full max-w-7xl flex-col gap-5 py-2'>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div>
         <h1 className='text-2xl font-semibold tracking-tight text-foreground'>
-          {t('assistant.historyTitle')}
+          {historyTitle}
         </h1>
-        <p className='mt-1 text-sm text-muted-foreground'>
-          {t('assistant.historySubtitle', { count: total })}
-        </p>
+        <p className='mt-1 text-sm text-muted-foreground'>{historyLead}</p>
       </div>
 
       {/* ── Decision stats row ─────────────────────────────────────────────── */}

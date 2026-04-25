@@ -9,11 +9,17 @@ import {
 import { flushSync } from 'react-dom'
 import { APP_CONSTANTS } from '@/config/constants'
 import { env } from '@/config/env'
+import { authApi } from '@/features/auth/api/authApi'
 import {
   DEFAULT_DEV_ROLE,
   getDevAccountByRole,
   normalizeAppRole,
 } from '@/features/auth/devAccounts'
+import { extractMatriculeFromAccessToken } from '@/features/auth/extractMatricule'
+import {
+  mapBackendUserToDisplayUser,
+  type BackendAuthUser,
+} from '@/features/auth/types'
 import type { AppRole } from '@/config/routes'
 
 export interface User {
@@ -21,6 +27,8 @@ export interface User {
   email: string
   name: string
   role: string
+  /** ESI matricule for supervision APIs when the researcher is main supervisor. */
+  matricule?: string
 }
 
 interface AuthContextValue {
@@ -38,7 +46,17 @@ function readStoredUser(): User | null {
   const storedUser = localStorage.getItem(APP_CONSTANTS.STORAGE_KEYS.USER)
   if (!storedUser) return null
   try {
-    return JSON.parse(storedUser) as User
+    let u = JSON.parse(storedUser) as User
+    if (u.role === 'RESEARCHER' && !u.matricule?.trim()) {
+      const token = localStorage.getItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN)
+      const fromJwt = extractMatriculeFromAccessToken(token)
+      if (fromJwt) u = { ...u, matricule: fromJwt }
+      else if (env.AUTH_BYPASS) {
+        const m = getDevAccountByRole('RESEARCHER').matricule
+        if (m) u = { ...u, matricule: m }
+      }
+    }
+    return u
   } catch {
     return null
   }
@@ -130,6 +148,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       )
     }
   }, [currentUser])
+
+  /** Backfill matricule for researchers when /me or JWT carries it but localStorage user was stale. */
+  useEffect(() => {
+    if (env.AUTH_BYPASS || !currentUser) return
+    if (currentUser.role !== 'RESEARCHER') return
+    if (currentUser.matricule?.trim()) return
+    const token = localStorage.getItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN)
+    if (!token || token.startsWith('dev-token')) return
+
+    let cancelled = false
+    void (async () => {
+      try {
+        const { data } = await authApi.me()
+        const merged = mapBackendUserToDisplayUser(data.user as BackendAuthUser)
+        if (cancelled || !merged.matricule?.trim()) return
+        setCurrentUser((prev) =>
+          prev && prev.id === merged.id
+            ? { ...prev, matricule: merged.matricule }
+            : prev,
+        )
+      } catch {
+        /* /v1/auth/me optional */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [currentUser?.id, currentUser?.role, currentUser?.matricule])
 
   const value: AuthContextValue = {
     currentUser,

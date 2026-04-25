@@ -1,4 +1,8 @@
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import {
+  getAssistantStudentsPath,
+  getAssistantStudentEditPath,
+} from '@/config/routes'
 import { useTranslation } from 'react-i18next'
 import {
   Mail,
@@ -60,17 +64,26 @@ function InfoField({
 }
 
 const LEVEL_COLORS: Record<string, string> = {
-  Master:
+  MASTER:
     'bg-blue-100/80 text-blue-900 border border-blue-200/50 dark:bg-blue-900/30 dark:text-blue-200',
-  Doctorant:
+  DOCTORANT:
     'bg-violet-100/80 text-violet-900 border border-violet-200/50 dark:bg-violet-900/30 dark:text-violet-200',
+}
+
+const INSTITUTION_LABEL: Record<string, string> = {
+  ESI: 'ESI',
+  EXTERNE: 'Extérieur',
+}
+
+const LEVEL_LABEL: Record<string, string> = {
+  MASTER: 'Master',
+  DOCTORANT: 'Doctorant',
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StudentDetailPage() {
   const { studentId } = useParams<{ studentId: string }>()
-  const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { data: student, isLoading, isError } = useStudent(studentId)
@@ -143,13 +156,9 @@ export default function StudentDetailPage() {
     : 0
   const levelColorClass =
     LEVEL_COLORS[student.level ?? ''] ?? 'bg-muted text-foreground'
-  const supervisionsPath = userId
-    ? `/researcher/${userId}/supervisions?student=${student.id}`
-    : '#'
-  const editPath = userId
-    ? `/researcher/${userId}/students/${studentId}/edit`
-    : 'edit'
-  const studentsPath = userId ? `/researcher/${userId}/students` : '#'
+  const supervisionsPath = `/assistant/supervisions?student=${student.id}`
+  const editPath = getAssistantStudentEditPath(studentId!)
+  const studentsPath = getAssistantStudentsPath()
 
   return (
     <div className='mx-auto max-w-3xl space-y-4'>
@@ -187,7 +196,9 @@ export default function StudentDetailPage() {
                 )}
                 <span className='inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-xs font-medium text-foreground'>
                   <Building2 className='size-3' />
-                  {student.institution || '—'}
+                  {(INSTITUTION_LABEL[student.institution] ??
+                    student.institution) ||
+                    '—'}
                 </span>
                 <span
                   className={cn(
@@ -195,7 +206,7 @@ export default function StudentDetailPage() {
                     levelColorClass,
                   )}
                 >
-                  {student.level || '—'}
+                  {(LEVEL_LABEL[student.level] ?? student.level) || '—'}
                 </span>
                 <Badge variant='secondary' className='gap-1 tabular'>
                   <BookOpen className='size-3' />
@@ -269,13 +280,15 @@ export default function StudentDetailPage() {
           <CardContent className='space-y-4'>
             <InfoField
               label={t('students.detail.institution')}
-              value={student.institution}
+              value={
+                INSTITUTION_LABEL[student.institution] ?? student.institution
+              }
               icon={Building2}
             />
             <div className='h-px bg-border' />
             <InfoField
               label={t('students.detail.level')}
-              value={student.level}
+              value={LEVEL_LABEL[student.level] ?? student.level}
             />
             <div className='h-px bg-border' />
             <InfoField

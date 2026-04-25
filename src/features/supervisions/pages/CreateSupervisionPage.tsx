@@ -1,5 +1,11 @@
 import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import {
+  getAssistantThemeNewPath,
+  getAssistantSupervisionDetailPath,
+} from '@/config/routes'
 import {
   Info,
   Users,
@@ -14,12 +20,27 @@ import {
   Loader2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { APP_CONSTANTS } from '@/config/constants'
+import { authApi } from '@/features/auth/api/authApi'
+import {
+  extractMatriculeFromAccessToken,
+  sanitizeChercheurIdForApi,
+} from '@/features/auth/extractMatricule'
+import {
+  mapBackendUserToDisplayUser,
+  type BackendAuthUser,
+} from '@/features/auth/types'
 import { useCreateSupervision } from '@/features/supervisions/hooks/useSupervisions'
 import { supervisionApi } from '@/features/supervisions/api/supervisionApi'
+import { splitContribPercent } from '@/features/supervisions/utils/splitContribPercent'
+import { SupervisorSearchPicker } from '@/features/supervisions/components/SupervisorSearchPicker'
+import { useAuthContext } from '@/shared/context/AuthContext'
+import { cn } from '@/lib/utils'
 import { useStudents } from '@/features/students/hooks'
+import { useThemes } from '@/features/themes/hooks'
 import type {
   CreateSupervisionPayload,
   SupervisionType,
@@ -120,10 +141,21 @@ function SectionHeader({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CreateSupervisionPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
+  const queryClient = useQueryClient()
+  const { currentUser } = useAuthContext()
+  const isAssistantPath = location.pathname.startsWith('/assistant/')
   const { mutateAsync: createSupervision, isPending } = useCreateSupervision()
   const { data: studentsPage } = useStudents({ limit: 200 })
+  const [themeSearch, setThemeSearch] = useState('')
+  const { data: themesPage } = useThemes({
+    limit: 200,
+    search: themeSearch.trim() || undefined,
+  })
   const studentOptions = studentsPage?.data ?? []
+  const themeOptions = themesPage?.data ?? []
   const [toast, setToast] = useState<{
     type: 'success' | 'error'
     message: string
@@ -136,6 +168,7 @@ export default function CreateSupervisionPage() {
   const [academicYear, setAcademicYear] = useState('')
   const [studentId, setStudentId] = useState('')
   const [studentSearch, setStudentSearch] = useState('')
+  const [themeId, setThemeId] = useState('')
   const [keywords, setKeywords] = useState('')
   const [description, setDescription] = useState('')
   const [startDate, setStartDate] = useState('')
@@ -143,19 +176,20 @@ export default function CreateSupervisionPage() {
   const [actualEndDate, setActualEndDate] = useState('')
   const [mainSupervisorId, setMainSupervisorId] = useState('')
   const [coSupervisors, setCoSupervisors] = useState<
-    { supervisorId: string; isExternal: boolean }[]
+    { supervisorId: string }[]
   >([])
 
   const activeStep = useMemo(() => {
     if (coSupervisors.length > 0 || mainSupervisorId) return 4
     if (startDate) return 3
-    if (keywords || description) return 2
+    if (themeId || keywords || description) return 2
     if (studentId) return 1
     if (title) return 0
     return 0
   }, [
     title,
     studentId,
+    themeId,
     keywords,
     description,
     startDate,
@@ -172,20 +206,28 @@ export default function CreateSupervisionPage() {
     )
   })
 
+  const filteredThemes = themeOptions.filter((th) => {
+    const q = themeSearch.toLowerCase()
+    return (
+      !q ||
+      th.name.toLowerCase().includes(q) ||
+      (th.description?.toLowerCase().includes(q) ?? false)
+    )
+  })
+  const themesPickList = themeSearch.trim()
+    ? filteredThemes
+    : filteredThemes.slice(0, 25)
+
   function addCo() {
-    setCoSupervisors((p) => [...p, { supervisorId: '', isExternal: false }])
+    setCoSupervisors((p) => [...p, { supervisorId: '' }])
   }
   function removeCo(i: number) {
     setCoSupervisors((p) => p.filter((_, idx) => idx !== i))
   }
-  function updateCo(
-    i: number,
-    field: 'supervisorId' | 'isExternal',
-    value: string | boolean,
-  ) {
+  function updateCoSupervisorId(i: number, supervisorId: string) {
     setCoSupervisors((p) => {
       const a = [...p]
-      a[i] = { ...a[i], [field]: value }
+      a[i] = { supervisorId }
       return a
     })
   }
@@ -201,6 +243,11 @@ export default function CreateSupervisionPage() {
     if (!academicYear.trim()) next.academicYear = true
     if (!studentId) next.studentId = true
     if (!startDate) next.startDate = true
+    if (!themeId) next.themeId = true
+    if (isAssistantPath) {
+      const main = sanitizeChercheurIdForApi(mainSupervisorId.trim())
+      if (!main) next.mainSupervisor = true
+    }
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -215,6 +262,7 @@ export default function CreateSupervisionPage() {
       status,
       academicYear: academicYear.trim(),
       studentId,
+      themeId,
       startDate,
       expectedEndDate: expectedEndDate || undefined,
       actualEndDate: actualEndDate || undefined,
@@ -227,26 +275,74 @@ export default function CreateSupervisionPage() {
         : undefined,
     }
 
-    try {
-      const created = await createSupervision(payload)
-      if (mainSupervisorId.trim()) {
-        await supervisionApi.assignSupervisor(created.id, {
-          supervisorId: mainSupervisorId.trim(),
-          isMainSupervisor: true,
-          isExternal: false,
-        })
-      }
-      for (const co of coSupervisors) {
-        if (co.supervisorId.trim()) {
-          await supervisionApi.assignSupervisor(created.id, {
-            supervisorId: co.supervisorId.trim(),
-            isMainSupervisor: false,
-            isExternal: co.isExternal,
-          })
+    const token = localStorage.getItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN)
+    let mainSupervisorMatricule =
+      sanitizeChercheurIdForApi(mainSupervisorId.trim()) || ''
+
+    if (!isAssistantPath) {
+      mainSupervisorMatricule =
+        mainSupervisorMatricule ||
+        sanitizeChercheurIdForApi(currentUser?.matricule) ||
+        extractMatriculeFromAccessToken(token) ||
+        ''
+      if (!mainSupervisorMatricule) {
+        try {
+          const { data } = await authApi.me()
+          mainSupervisorMatricule =
+            sanitizeChercheurIdForApi(
+              mapBackendUserToDisplayUser(data.user as BackendAuthUser)
+                .matricule,
+            ) || ''
+        } catch {
+          /* ignore */
         }
       }
+    }
+
+    try {
+      const created = await createSupervision(payload)
+      const { data: createdDetail } = await supervisionApi.getById(created.id)
+      const backendSeededSupervisor =
+        (createdDetail.supervisors?.length ?? 0) > 0
+
+      if (!mainSupervisorMatricule && !backendSeededSupervisor) {
+        setToast({
+          type: 'error',
+          message: isAssistantPath
+            ? "Renseignez l'encadrant principal (chercheur ESI) pour assigner le relecteur."
+            : "Impossible d'identifier votre profil chercheur (matricule ESI / chercheur_id). Renseignez l'encadrant principal, ou demandez que l'API auth (login ou /v1/auth/me) expose chercheur_id pour votre compte.",
+        })
+        setTimeout(() => setToast(null), 5000)
+        return
+      }
+      if (mainSupervisorMatricule) {
+        const main = mainSupervisorMatricule
+        const coList = coSupervisors
+          .map((c) => sanitizeChercheurIdForApi(c.supervisorId.trim()) || '')
+          .filter((id): id is string => Boolean(id) && id !== main)
+        const uniqueCo = [...new Set(coList)]
+        const all: string[] = [main, ...uniqueCo]
+        const parts = splitContribPercent(all.length)
+        await supervisionApi.replaceSupervisionSupervisors(created.id, {
+          supervisors: all.map((id, i) => ({
+            supervisorId: id,
+            isMainSupervisor: i === 0,
+            isExternal: false,
+            contributionPercent: parts[i]!,
+          })),
+        })
+      }
+      await queryClient.invalidateQueries({ queryKey: ['supervisions'] })
       setToast({ type: 'success', message: 'Encadrement ajouté avec succès !' })
-      setTimeout(() => navigate(-1), 1200)
+      setTimeout(() => {
+        if (isAssistantPath) {
+          navigate(getAssistantSupervisionDetailPath(created.id), {
+            replace: true,
+          })
+        } else {
+          navigate(-1)
+        }
+      }, 1200)
     } catch (err: unknown) {
       const msg =
         err instanceof Error ? err.message : 'Erreur lors de la création'
@@ -261,7 +357,7 @@ export default function CreateSupervisionPage() {
     .filter(Boolean)
 
   return (
-    <div className='mx-auto max-w-3xl space-y-5'>
+    <div className='mx-auto w-full max-w-3xl space-y-5'>
       {/* Toast */}
       {toast && (
         <div
@@ -378,18 +474,29 @@ export default function CreateSupervisionPage() {
               <Label htmlFor='academicYear' className='text-xs font-medium'>
                 Année universitaire <span className='text-destructive'>*</span>
               </Label>
-              <Input
+              <select
                 id='academicYear'
                 value={academicYear}
                 onChange={(e) => {
                   setAcademicYear(e.target.value)
                   clearError('academicYear')
                 }}
-                placeholder='ex: 2025-2026'
-                className={`h-9 ${
-                  errors.academicYear ? 'border-destructive' : ''
-                }`}
-              />
+                className={
+                  SELECT_CLASS +
+                  (errors.academicYear ? ' border-destructive' : '')
+                }
+              >
+                <option value=''>Sélectionner une année</option>
+                {Array.from({ length: 11 }, (_, i) => {
+                  const start = new Date().getFullYear() - 2 + i
+                  const label = `${start}-${start + 1}`
+                  return (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  )
+                })}
+              </select>
               {errors.academicYear && (
                 <p className='text-xs text-destructive'>Champ requis</p>
               )}
@@ -500,6 +607,109 @@ export default function CreateSupervisionPage() {
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='space-y-1.5'>
+              <div className='flex flex-wrap items-end justify-between gap-2'>
+                <Label htmlFor='themeSearch' className='text-xs font-medium'>
+                  {t('supervisions.form.themeLabel')}{' '}
+                  <span className='text-destructive'>*</span>
+                </Label>
+                <Link
+                  to={getAssistantThemeNewPath()}
+                  className={cn(
+                    buttonVariants({ variant: 'link', size: 'sm' }),
+                    'h-auto p-0 text-xs',
+                  )}
+                >
+                  + {t('themes.list.add')}
+                </Link>
+              </div>
+              <Input
+                id='themeSearch'
+                value={themeSearch}
+                onChange={(e) => setThemeSearch(e.target.value)}
+                placeholder={t('supervisions.form.themeSearch')}
+                className={cn(
+                  'h-9',
+                  errors.themeId ? 'border-destructive' : 'border-input',
+                )}
+                autoComplete='off'
+              />
+              {!themeId && themesPickList.length > 0 && (
+                <div className='max-h-40 overflow-y-auto rounded-lg border border-border bg-card'>
+                  {themesPickList.map((th) => (
+                    <button
+                      key={th.id}
+                      type='button'
+                      onClick={() => {
+                        setThemeId(th.id)
+                        clearError('themeId')
+                      }}
+                      className='flex w-full items-center gap-2 border-b border-border px-3 py-2.5 text-left last:border-0 hover:bg-muted/60'
+                    >
+                      <div className='min-w-0 flex-1'>
+                        <p className='text-sm font-medium'>{th.name}</p>
+                        {th.description && (
+                          <p className='line-clamp-1 text-xs text-muted-foreground'>
+                            {th.description}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {!themeId &&
+                themeSearch &&
+                themeOptions.length > 0 &&
+                themesPickList.length === 0 && (
+                  <p className='text-xs text-muted-foreground py-1'>
+                    {t('supervisions.form.noThemeMatch')} « {themeSearch} »
+                  </p>
+                )}
+              {!themeId && themeOptions.length === 0 && (
+                <p className='text-xs text-muted-foreground py-1'>
+                  <Link
+                    to={getAssistantThemeNewPath()}
+                    className='text-primary underline underline-offset-2'
+                  >
+                    {t('themes.list.add')}
+                  </Link>
+                </p>
+              )}
+              {errors.themeId && (
+                <p className='text-xs text-destructive'>
+                  {t('supervisions.form.themeRequired')}
+                </p>
+              )}
+              {themeId &&
+                (() => {
+                  const sel = themeOptions.find((x) => x.id === themeId)
+                  return sel ? (
+                    <div className='flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2'>
+                      <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary'>
+                        <Tag className='size-4' />
+                      </div>
+                      <div className='min-w-0 flex-1'>
+                        <p className='text-sm font-medium'>{sel.name}</p>
+                        {sel.description && (
+                          <p className='text-xs text-muted-foreground line-clamp-2'>
+                            {sel.description}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        type='button'
+                        onClick={() => {
+                          setThemeId('')
+                        }}
+                        className='text-xs text-muted-foreground hover:text-foreground'
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : null
+                })()}
+            </div>
+            <div className='space-y-1.5'>
               <Label htmlFor='keywords' className='text-xs font-medium'>
                 Mots-clés{' '}
                 <span className='text-muted-foreground font-normal'>
@@ -606,19 +816,48 @@ export default function CreateSupervisionPage() {
             <SectionHeader icon={UserCheck} title='Encadrants' step={5} />
           </CardHeader>
           <CardContent className='space-y-4'>
-            <div className='space-y-1.5'>
-              <Label htmlFor='mainSupervisorId' className='text-xs font-medium'>
-                Encadrant principal{' '}
-                <span className='text-muted-foreground font-normal'>
-                  (Matricule ESI)
-                </span>
-              </Label>
-              <Input
-                id='mainSupervisorId'
+            <div className='max-w-lg space-y-1.5'>
+              <SupervisorSearchPicker
+                id='main-supervisor'
+                label={
+                  <>
+                    Encadrant principal
+                    {isAssistantPath ? (
+                      <span className='text-destructive'> *</span>
+                    ) : (
+                      <span className='text-muted-foreground font-normal'>
+                        {' '}
+                        — facultatif
+                      </span>
+                    )}
+                  </>
+                }
                 value={mainSupervisorId}
-                onChange={(e) => setMainSupervisorId(e.target.value)}
-                placeholder='ex: 12345'
-                className='h-9 max-w-xs'
+                onChange={(id) => {
+                  setMainSupervisorId(id)
+                  if (errors.mainSupervisor) {
+                    setErrors((p) => ({ ...p, mainSupervisor: false }))
+                  }
+                }}
+                excludeIds={coSupervisors
+                  .map((c) => c.supervisorId)
+                  .filter(Boolean)}
+                error={errors.mainSupervisor}
+                helperText={
+                  <>
+                    {errors.mainSupervisor && (
+                      <p className='text-xs text-destructive pt-0.5'>
+                        Sélectionnez l&apos;encadrant principal (relecteur
+                        désigné).
+                      </p>
+                    )}
+                    <p className='text-xs text-muted-foreground max-w-lg pt-0.5'>
+                      {isAssistantPath
+                        ? 'Requis pour l’assignation : choisissez un chercheur actif dans la liste.'
+                        : 'Si ce champ est vide, le système tentera d’utiliser votre matricule (compte chercheur). Ne pas saisir un identifiant utilisateur (UUID).'}
+                    </p>
+                  </>
+                }
               />
             </div>
 
@@ -630,39 +869,32 @@ export default function CreateSupervisionPage() {
                 {coSupervisors.map((co, idx) => (
                   <div
                     key={idx}
-                    className='flex items-end gap-3 rounded-lg border border-border bg-muted/30 p-3'
+                    className='flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center'
                   >
-                    <div className='flex-1 space-y-1'>
-                      <Label className='text-xs'>
-                        CO_Encadrant {idx + 1} (Matricule ESI)
-                      </Label>
-                      <Input
+                    <div className='min-w-0 flex-1'>
+                      <SupervisorSearchPicker
+                        id={`co-supervisor-${idx}`}
+                        label={
+                          <span className='text-xs'>
+                            Co-encadrant {idx + 1}
+                          </span>
+                        }
+                        compact
                         value={co.supervisorId}
-                        onChange={(e) =>
-                          updateCo(idx, 'supervisorId', e.target.value)
-                        }
-                        placeholder='ex: 12345'
-                        className='h-8 text-sm'
+                        onChange={(id) => updateCoSupervisorId(idx, id)}
+                        excludeIds={[
+                          mainSupervisorId,
+                          ...coSupervisors
+                            .map((c) => c.supervisorId)
+                            .filter((sid, j) => j !== idx && Boolean(sid)),
+                        ].filter(Boolean)}
                       />
-                    </div>
-                    <div className='w-28 space-y-1'>
-                      <Label className='text-xs'>Externe ?</Label>
-                      <select
-                        value={co.isExternal ? 'true' : 'false'}
-                        onChange={(e) =>
-                          updateCo(idx, 'isExternal', e.target.value === 'true')
-                        }
-                        className='h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs text-foreground outline-none'
-                      >
-                        <option value='false'>Interne</option>
-                        <option value='true'>Externe</option>
-                      </select>
                     </div>
                     <Button
                       type='button'
                       variant='ghost'
                       size='icon'
-                      className='size-8 text-destructive hover:bg-destructive/10'
+                      className='size-8 shrink-0 text-destructive hover:bg-destructive/10'
                       onClick={() => removeCo(idx)}
                     >
                       <MinusCircle className='size-4' />
@@ -680,7 +912,7 @@ export default function CreateSupervisionPage() {
               className='gap-2 border-dashed'
             >
               <Plus className='size-4' />
-              Ajouter un CO_Encadrant
+              Ajouter un CO-Encadrant
             </Button>
           </CardContent>
         </Card>

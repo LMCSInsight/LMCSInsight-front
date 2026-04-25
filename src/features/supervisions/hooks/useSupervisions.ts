@@ -5,6 +5,7 @@ import type {
   CreateSupervisionPayload,
   UpdateSupervisionPayload,
   AssignSupervisorPayload,
+  ReplaceSupervisionSupervisorsPayload,
 } from '@/features/supervisions/types'
 
 export function useSupervisions(filters: SupervisionsFilter = {}) {
@@ -23,11 +24,9 @@ export function useSupervision(id: string | undefined) {
 }
 
 export function useCreateSupervision() {
-  const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateSupervisionPayload) =>
       supervisionApi.create(data).then((res) => res.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['supervisions'] }),
   })
 }
 
@@ -46,8 +45,14 @@ export function useUpdateSupervision(id: string) {
 export function useDeleteSupervision() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => supervisionApi.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['supervisions'] }),
+    mutationFn: async (id: string) => {
+      await supervisionApi.delete(id)
+      return id
+    },
+    onSuccess: (id) => {
+      void qc.invalidateQueries({ queryKey: ['supervisions'] })
+      void qc.removeQueries({ queryKey: ['supervision', id] })
+    },
   })
 }
 
@@ -58,8 +63,10 @@ export function useAssignSupervisor(supervisionId: string) {
       supervisionApi
         .assignSupervisor(supervisionId, data)
         .then((res) => res.data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ['supervision', supervisionId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['supervision', supervisionId] })
+      qc.invalidateQueries({ queryKey: ['supervisions'] })
+    },
   })
 }
 
@@ -68,7 +75,23 @@ export function useRemoveSupervisor(supervisionId: string) {
   return useMutation({
     mutationFn: (supervisorId: string) =>
       supervisionApi.removeSupervisor(supervisionId, supervisorId),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ['supervision', supervisionId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['supervision', supervisionId] })
+      qc.invalidateQueries({ queryKey: ['supervisions'] })
+    },
+  })
+}
+
+export function useReplaceSupervisionSupervisors(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: ReplaceSupervisionSupervisorsPayload) =>
+      supervisionApi
+        .replaceSupervisionSupervisors(id, data)
+        .then((res) => res.data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['supervision', id] })
+      void qc.invalidateQueries({ queryKey: ['supervisions'] })
+    },
   })
 }

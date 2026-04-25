@@ -2,14 +2,18 @@ import axiosInstance from '@/shared/lib/axios'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type Institution = 'ESI' | 'EXTERNE'
+export type StudentLevel = 'MASTER' | 'DOCTORANT'
+export type Specialty = 'SIL' | 'SID' | 'SIT' | 'SIQ'
+
 export interface Student {
   id: string
   firstName: string
   lastName: string
   email: string
-  institution: string
-  level: string
-  specialty?: string | null
+  institution: Institution
+  level: StudentLevel
+  specialty?: Specialty | null
   supervisions?: unknown[]
   createdAt: string
   updatedAt: string
@@ -26,15 +30,15 @@ export interface StudentPayload {
   firstName: string
   lastName: string
   email: string
-  institution: string
-  level: string
-  specialty?: string
+  institution: Institution
+  level: StudentLevel
+  specialty?: Specialty
 }
 
 export interface StudentsFilter {
   search?: string
-  institution?: string
-  level?: string
+  institution?: Institution
+  level?: StudentLevel
   page?: number
   limit?: number
 }

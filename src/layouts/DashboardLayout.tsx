@@ -66,9 +66,9 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
       icon: LayoutDashboard,
     },
     {
-      key: 'validation',
-      path: ROUTES.ASSISTANT_VALIDATION,
-      label: 'Validation queue',
+      key: 'activity',
+      path: ROUTES.ASSISTANT_ACTIVITY,
+      label: 'Activity',
       icon: ClipboardCheck,
     },
     {

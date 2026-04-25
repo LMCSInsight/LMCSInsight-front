@@ -1,13 +1,34 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Search, ArrowRight, ListOrdered } from 'lucide-react'
-import { useSupervisions } from '@/features/supervisions/hooks/useSupervisions'
+import {
+  Search,
+  ListOrdered,
+  Plus,
+  MoreVertical,
+  Eye,
+  Trash2,
+} from 'lucide-react'
+import {
+  useSupervisions,
+  useDeleteSupervision,
+} from '@/features/supervisions/hooks/useSupervisions'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { QueuePagination } from '@/features/validation/components/ValidationQueueTable'
 import { ValidationStatusBadge } from '@/features/validation/components/ValidationStatusBadge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
-import { getAssistantValidationDetailPath } from '@/config/routes'
+import {
+  getAssistantSupervisionDetailPath,
+  getAssistantSupervisionNewPath,
+} from '@/config/routes'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { ValidationStatus } from '@/features/validation/types'
 
@@ -42,6 +63,7 @@ export default function AssistantSupervisionListPage() {
   const [statusTab, setStatusTab] = useState<ValidationStatus | 'ALL'>('ALL')
   const [type, setType] = useState<string | undefined>(undefined)
   const [page, setPage] = useState(1)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const { data, isLoading } = useSupervisions({
     search: search.trim() || undefined,
@@ -51,6 +73,7 @@ export default function AssistantSupervisionListPage() {
     page,
     limit: 20,
   })
+  const { mutate: deleteSupervision } = useDeleteSupervision()
   const items = data?.data ?? []
   const total = data?.total ?? 0
 
@@ -64,8 +87,12 @@ export default function AssistantSupervisionListPage() {
     setPage(1)
   }
 
+  function isSupervisionDeletable(validationStatus: string) {
+    return validationStatus !== 'VALIDATED'
+  }
+
   return (
-    <div className='flex flex-col gap-5 py-6 max-w-7xl'>
+    <div className='mx-auto flex w-full max-w-7xl flex-col gap-5 py-2'>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className='flex items-start justify-between gap-4'>
         <div>
@@ -76,6 +103,14 @@ export default function AssistantSupervisionListPage() {
             {t('assistant.supervisions.subtitle', { count: total })}
           </p>
         </div>
+        <Button
+          type='button'
+          onClick={() => navigate(getAssistantSupervisionNewPath())}
+          className='shrink-0 gap-1.5'
+        >
+          <Plus className='size-4' />
+          {t('assistant.supervisions.new')}
+        </Button>
         {/* Status legend */}
         <div className='hidden sm:flex flex-wrap gap-x-4 gap-y-1.5 pt-1'>
           {(['PENDING', 'VALIDATED', 'REJECTED', 'REVISED'] as const).map(
@@ -193,7 +228,9 @@ export default function AssistantSupervisionListPage() {
                 <th className='px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground'>
                   {t('assistant.queue.columns.status')}
                 </th>
-                <th className='w-12 px-3 py-3' />
+                <th className='w-16 px-3 py-3 text-right'>
+                  <span className='sr-only'>{t('themes.columns.actions')}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -205,22 +242,16 @@ export default function AssistantSupervisionListPage() {
                   item.supervisors?.find((s) => s.isMainSupervisor)?.supervisor
                     ?.nom_complet ??
                   item.supervisors?.[0]?.supervisor?.nom_complet
-                const isPending =
-                  item.validationStatus === 'PENDING' ||
-                  item.validationStatus === 'REVISED'
-
                 return (
                   <tr
                     key={item.id}
-                    onClick={() => {
-                      if (isPending)
-                        navigate(getAssistantValidationDetailPath(item.id))
-                    }}
+                    onClick={() =>
+                      navigate(getAssistantSupervisionDetailPath(item.id))
+                    }
                     className={cn(
-                      'border-b border-border last:border-0 border-l-[3px] transition-colors',
+                      'border-b border-border last:border-0 border-l-[3px] transition-colors cursor-pointer hover:bg-muted/40',
                       STATUS_BORDER[item.validationStatus] ??
                         'border-l-transparent',
-                      isPending && 'cursor-pointer hover:bg-muted/40',
                     )}
                   >
                     <td className='px-4 py-3.5'>
@@ -247,20 +278,40 @@ export default function AssistantSupervisionListPage() {
                     <td className='px-4 py-3.5'>
                       <ValidationStatusBadge status={item.validationStatus} />
                     </td>
-                    <td className='px-3 py-3.5'>
-                      {isPending && (
-                        <button
+                    <td
+                      className='px-3 py-3.5 w-16 text-right'
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
                           type='button'
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            navigate(getAssistantValidationDetailPath(item.id))
-                          }}
-                          className='flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors ml-auto'
-                          aria-label={t('common.view')}
+                          className='inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                          aria-label={t('themes.columns.actions')}
                         >
-                          <ArrowRight className='size-3.5' strokeWidth={1.5} />
-                        </button>
-                      )}
+                          <MoreVertical className='size-3.5' />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              navigate(
+                                getAssistantSupervisionDetailPath(item.id),
+                              )
+                            }
+                          >
+                            <Eye className='mr-2 size-4' />
+                            {t('common.view')}
+                          </DropdownMenuItem>
+                          {isSupervisionDeletable(item.validationStatus) && (
+                            <DropdownMenuItem
+                              className='text-destructive focus:text-destructive'
+                              onClick={() => setDeleteTarget(item.id)}
+                            >
+                              <Trash2 className='mr-2 size-4' />
+                              {t('assistant.supervisions.delete')}
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 )
@@ -275,6 +326,21 @@ export default function AssistantSupervisionListPage() {
         total={total}
         limit={20}
         onPageChange={setPage}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={t('assistant.supervisions.deleteTitle')}
+        description={t('assistant.supervisions.deleteDescription')}
+        confirmLabel={t('assistant.supervisions.delete')}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (!deleteTarget) return
+          const id = deleteTarget
+          deleteSupervision(id, {
+            onSettled: () => setDeleteTarget(null),
+          })
+        }}
       />
     </div>
   )

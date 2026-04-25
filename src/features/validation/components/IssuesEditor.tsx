@@ -40,7 +40,7 @@ export function IssuesEditor({ issues, onChange, disabled }: Props) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={t('assistant.decision.issueInputPlaceholder')}
+          placeholder={t('researcher.reviews.decision.issueInputPlaceholder')}
           disabled={disabled}
           className='flex-1'
         />

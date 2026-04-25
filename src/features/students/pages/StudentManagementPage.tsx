@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
@@ -33,30 +33,41 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import {
+  getAssistantStudentDetailPath,
+  getAssistantStudentEditPath,
+  getAssistantStudentRegisterPath,
+} from '@/config/routes'
 import { useStudents, useDeleteStudent } from '@/features/students/hooks'
+import type {
+  Institution,
+  StudentLevel,
+  Specialty,
+} from '@/features/students/api'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // ─── Filter constants ─────────────────────────────────────────────────────────
 
-const ETABLISSEMENTS = ['ESI', 'Extérieur'] as const
-const NIVEAUX = ['Master', 'Doctorant'] as const
-const SPECIALITES = ['SIL', 'SID', 'SIT', 'SIQ'] as const
-
-type Etablissement = (typeof ETABLISSEMENTS)[number]
-type Niveau = (typeof NIVEAUX)[number]
-type Specialite = (typeof SPECIALITES)[number]
+const ETABLISSEMENTS: { value: Institution; label: string }[] = [
+  { value: 'ESI', label: 'ESI' },
+  { value: 'EXTERNE', label: 'Extérieur' },
+]
+const NIVEAUX: { value: StudentLevel; label: string }[] = [
+  { value: 'MASTER', label: 'Master' },
+  { value: 'DOCTORANT', label: 'Doctorant' },
+]
+const SPECIALITES: Specialty[] = ['SIL', 'SID', 'SIT', 'SIQ']
 
 const LEVEL_BADGE: Record<string, string> = {
-  Doctorant:
+  DOCTORANT:
     'bg-violet-100/80 text-violet-900 border border-violet-200/50 dark:bg-violet-900/30 dark:text-violet-200',
-  Master:
+  MASTER:
     'bg-blue-100/80 text-blue-900 border border-blue-200/50 dark:bg-blue-900/30 dark:text-blue-200',
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StudentManagementPage() {
-  const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
   const { t } = useTranslation()
 
@@ -66,21 +77,21 @@ export default function StudentManagementPage() {
   const [page, setPage] = useState(1)
   const [perPage] = useState(10)
 
-  const [etablissementFilter, setEtablissementFilter] = useState<
-    Etablissement[]
-  >([])
-  const [niveauFilter, setNiveauFilter] = useState<Niveau[]>([])
-  const [specialiteFilter, setSpecialiteFilter] = useState<Specialite[]>([])
+  const [etablissementFilter, setEtablissementFilter] = useState<Institution[]>(
+    [],
+  )
+  const [niveauFilter, setNiveauFilter] = useState<StudentLevel[]>([])
+  const [specialiteFilter, setSpecialiteFilter] = useState<Specialty[]>([])
 
-  const toggleEtablissement = (v: Etablissement) =>
+  const toggleEtablissement = (v: Institution) =>
     setEtablissementFilter((p) =>
       p.includes(v) ? p.filter((x) => x !== v) : [...p, v],
     )
-  const toggleNiveau = (v: Niveau) =>
+  const toggleNiveau = (v: StudentLevel) =>
     setNiveauFilter((p) =>
       p.includes(v) ? p.filter((x) => x !== v) : [...p, v],
     )
-  const toggleSpecialite = (v: Specialite) =>
+  const toggleSpecialite = (v: Specialty) =>
     setSpecialiteFilter((p) =>
       p.includes(v) ? p.filter((x) => x !== v) : [...p, v],
     )
@@ -99,7 +110,7 @@ export default function StudentManagementPage() {
 
   const rows = (pageResult?.data ?? []).filter((r) => {
     if (specialiteFilter.length === 0) return true
-    return specialiteFilter.includes(r.specialty as Specialite)
+    return specialiteFilter.includes(r.specialty as Specialty)
   })
 
   const total = pageResult?.total ?? 0
@@ -110,12 +121,24 @@ export default function StudentManagementPage() {
     niveauFilter.length > 0 ||
     specialiteFilter.length > 0
 
+  const ETAB_LABEL: Record<string, string> = Object.fromEntries(
+    ETABLISSEMENTS.map((o) => [o.value, o.label]),
+  )
+  const NIV_LABEL: Record<string, string> = Object.fromEntries(
+    NIVEAUX.map((o) => [o.value, o.label]),
+  )
   const activeFilterLabels: { key: string; label: string }[] = []
   etablissementFilter.forEach((v) =>
-    activeFilterLabels.push({ key: `etab-${v}`, label: `Établissement: ${v}` }),
+    activeFilterLabels.push({
+      key: `etab-${v}`,
+      label: `Établissement: ${ETAB_LABEL[v] ?? v}`,
+    }),
   )
   niveauFilter.forEach((v) =>
-    activeFilterLabels.push({ key: `niv-${v}`, label: `Niveau: ${v}` }),
+    activeFilterLabels.push({
+      key: `niv-${v}`,
+      label: `Niveau: ${NIV_LABEL[v] ?? v}`,
+    }),
   )
   specialiteFilter.forEach((v) =>
     activeFilterLabels.push({ key: `spe-${v}`, label: `Spécialité: ${v}` }),
@@ -146,14 +169,12 @@ export default function StudentManagementPage() {
     setDeleteTarget(null)
   }
 
-  const detailPath = (id: string) =>
-    userId ? `/researcher/${userId}/students/${id}` : '#'
-  const editPath = (id: string) =>
-    userId ? `/researcher/${userId}/students/${id}/edit` : '#'
-  const registerPath = userId ? `/researcher/${userId}/students/register` : '#'
+  const detailPath = (id: string) => getAssistantStudentDetailPath(id)
+  const editPath = (id: string) => getAssistantStudentEditPath(id)
+  const registerPath = getAssistantStudentRegisterPath()
 
   return (
-    <div className='space-y-4'>
+    <div className='mx-auto w-full max-w-7xl space-y-4'>
       {/* Header */}
       <div className='flex flex-wrap items-center gap-3'>
         <div className='flex-1'>
@@ -351,7 +372,9 @@ export default function StudentManagementPage() {
                     <TableCell className='hidden sm:table-cell text-muted-foreground text-sm'>
                       {row.email}
                     </TableCell>
-                    <TableCell className='text-sm'>{row.institution}</TableCell>
+                    <TableCell className='text-sm'>
+                      {ETAB_LABEL[row.institution] ?? row.institution}
+                    </TableCell>
                     <TableCell>
                       <span
                         className={cn(
@@ -404,9 +427,7 @@ export default function StudentManagementPage() {
                           <DropdownMenuItem
                             onClick={() =>
                               navigate(
-                                userId
-                                  ? `/researcher/${userId}/supervisions?student=${row.id}`
-                                  : '#',
+                                `/assistant/supervisions?student=${row.id}`,
                               )
                             }
                           >
@@ -504,18 +525,18 @@ export default function StudentManagementPage() {
                 {t('students.columns.institution')}
               </div>
               <div className='space-y-2'>
-                {ETABLISSEMENTS.map((v) => (
+                {ETABLISSEMENTS.map((o) => (
                   <label
-                    key={v}
+                    key={o.value}
                     className='flex items-center gap-2 cursor-pointer'
                   >
                     <input
                       type='checkbox'
-                      checked={etablissementFilter.includes(v)}
-                      onChange={() => toggleEtablissement(v)}
+                      checked={etablissementFilter.includes(o.value)}
+                      onChange={() => toggleEtablissement(o.value)}
                       className='rounded border-input accent-primary'
                     />
-                    <span className='text-sm'>{v}</span>
+                    <span className='text-sm'>{o.label}</span>
                   </label>
                 ))}
               </div>
@@ -526,18 +547,18 @@ export default function StudentManagementPage() {
                 {t('students.columns.level')}
               </div>
               <div className='space-y-2'>
-                {NIVEAUX.map((v) => (
+                {NIVEAUX.map((o) => (
                   <label
-                    key={v}
+                    key={o.value}
                     className='flex items-center gap-2 cursor-pointer'
                   >
                     <input
                       type='checkbox'
-                      checked={niveauFilter.includes(v)}
-                      onChange={() => toggleNiveau(v)}
+                      checked={niveauFilter.includes(o.value)}
+                      onChange={() => toggleNiveau(o.value)}
                       className='rounded border-input accent-primary'
                     />
-                    <span className='text-sm'>{v}</span>
+                    <span className='text-sm'>{o.label}</span>
                   </label>
                 ))}
               </div>

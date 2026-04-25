@@ -1,6 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useMatch } from 'react-router-dom'
 import { Search, X, ClipboardCheck } from 'lucide-react'
+import {
+  getResearcherReviewDetailPath,
+  getAssistantSupervisionDetailPath,
+} from '@/config/routes'
 import { Card, CardContent } from '@/components/ui/card'
 import { useValidationQueue } from '@/features/validation/hooks/useValidationQueue'
 import { useValidationStats } from '@/features/validation/hooks/useValidationStats'
@@ -26,6 +31,19 @@ const TYPE_OPTIONS = ['PFE', 'MASTER', 'PHD', 'INTERNSHIP', 'PROJECT']
 
 export default function ValidationQueuePage() {
   const { t } = useTranslation()
+  const researcherListMatch = useMatch({
+    path: '/researcher/:userId/reviews',
+    end: true,
+  })
+  const researcherId = researcherListMatch?.params.userId
+  const isResearcherReviews = Boolean(researcherId)
+  const resolveDetailPath = useMemo(
+    () =>
+      isResearcherReviews && researcherId
+        ? (id: string) => getResearcherReviewDetailPath(researcherId, id)
+        : (id: string) => getAssistantSupervisionDetailPath(id),
+    [isResearcherReviews, researcherId],
+  )
   const [tab, setTab] = useState<ValidationStatus | 'ALL'>('PENDING')
   const [search, setSearch] = useState('')
   const [type, setType] = useState<string | undefined>(undefined)
@@ -76,14 +94,18 @@ export default function ValidationQueuePage() {
           <div className='flex flex-wrap items-start justify-between gap-4'>
             <div>
               <p className='mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-primary/70'>
-                {t('assistant.validationQueue')}
+                {isResearcherReviews
+                  ? t('researcher.reviews.breadcrumb')
+                  : t('assistant.activityQueue')}
               </p>
               <div className='flex items-baseline gap-2.5'>
                 <span className='text-5xl font-black leading-none tabular-nums text-foreground'>
                   {stats?.pending ?? '—'}
                 </span>
                 <span className='text-sm text-muted-foreground'>
-                  {t('assistant.dashboard.pendingLabel')}
+                  {isResearcherReviews
+                    ? t('researcher.reviews.pendingQueueHero')
+                    : t('assistant.dashboard.pendingLabel')}
                 </span>
               </div>
             </div>
@@ -271,7 +293,11 @@ export default function ValidationQueuePage() {
           </div>
         </div>
       ) : (
-        <ValidationQueueTable items={items} />
+        <ValidationQueueTable
+          items={items}
+          readOnly={false}
+          resolveDetailPath={resolveDetailPath}
+        />
       )}
 
       <QueuePagination

@@ -1,13 +1,14 @@
 import { useMemo } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   BarChart3,
   Clock,
   GraduationCap,
   Hourglass,
-  Plus,
   UserPlus,
+  ClipboardCheck,
+  History,
   List,
   MoreVertical,
   Pencil,
@@ -27,7 +28,7 @@ import {
   Tooltip,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -53,9 +54,12 @@ import {
   getResearcherSupervisionsPath,
   getResearcherSupervisionDetailPath,
   getSupervisionEditPath,
-  getResearcherSupervisionNewPath,
+  getResearcherReviewsPath,
   getResearcherStudentsPath,
+  getResearcherHistoryPath,
 } from '@/config/routes'
+import { useValidationStats } from '@/features/validation/hooks/useValidationStats'
+import { useValidationHistory } from '@/features/validation/hooks/useValidationHistory'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -206,10 +210,13 @@ function KpiCard({
 
 export default function ResearcherDashboard() {
   const { userId } = useParams<{ userId: string }>()
+  const navigate = useNavigate()
   const { currentUser } = useAuthContext()
   const { t } = useTranslation()
 
   const { data: supPage, isLoading } = useSupervisions({ limit: 200 })
+  const { data: reviewStats } = useValidationStats()
+  const { data: decisionHistory } = useValidationHistory({ page: 1, limit: 5 })
   const { mutate: deleteSupervision } = useDeleteSupervision()
 
   const supervisions = supPage?.data ?? []
@@ -258,8 +265,9 @@ export default function ResearcherDashboard() {
   )
 
   const basePath = userId ? getResearcherSupervisionsPath(userId) : '#'
-  const newPath = userId ? getResearcherSupervisionNewPath(userId) : '#'
+  const reviewsPath = userId ? getResearcherReviewsPath(userId) : '#'
   const studPath = userId ? getResearcherStudentsPath(userId) : '#'
+  const myReviewCount = reviewStats?.pending ?? pending
   const today = new Date().toLocaleDateString('fr-DZ', {
     weekday: 'long',
     day: 'numeric',
@@ -291,33 +299,31 @@ export default function ResearcherDashboard() {
             <p className='text-sm text-muted-foreground capitalize'>{today}</p>
           </div>
           <div className='flex flex-wrap gap-2'>
-            <Button
-              asChild
-              size='sm'
-              className='gap-2 whitespace-nowrap shadow-primary-sm'
+            <Link
+              to={reviewsPath}
+              className={cn(
+                buttonVariants({ size: 'sm' }),
+                'inline-flex items-center gap-2 whitespace-nowrap shadow-primary-sm',
+              )}
             >
-              <Link
-                to={newPath}
-                className='inline-flex items-center gap-2 whitespace-nowrap'
-              >
-                <Plus className='size-3.5 shrink-0' />
-                <span>{t('dashboard.quickActions.newSupervision')}</span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size='sm'
-              variant='outline'
-              className='gap-2 whitespace-nowrap'
+              <ClipboardCheck className='size-3.5 shrink-0' />
+              <span>{t('dashboard.quickActions.myReviews')}</span>
+              {myReviewCount > 0 && (
+                <span className='rounded-full bg-primary-foreground/20 px-1.5 text-xs tabular-nums'>
+                  {myReviewCount}
+                </span>
+              )}
+            </Link>
+            <Link
+              to={studPath}
+              className={cn(
+                buttonVariants({ size: 'sm', variant: 'outline' }),
+                'inline-flex items-center gap-2 whitespace-nowrap',
+              )}
             >
-              <Link
-                to={studPath}
-                className='inline-flex items-center gap-2 whitespace-nowrap'
-              >
-                <UserPlus className='size-3.5 shrink-0' />
-                <span>{t('dashboard.quickActions.registerStudent')}</span>
-              </Link>
-            </Button>
+              <UserPlus className='size-3.5 shrink-0' />
+              <span>{t('dashboard.quickActions.registerStudent')}</span>
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -374,12 +380,12 @@ export default function ResearcherDashboard() {
               sub={t('dashboard.kpi.defenseRateSub', { defended, total })}
             />
             <KpiCard
-              title={t('dashboard.kpi.pending')}
-              value={pending}
+              title={t('dashboard.kpi.pendingReviews')}
+              value={myReviewCount}
               icon={Clock}
-              to={basePath}
+              to={reviewsPath}
               accent='bg-amber-100 dark:bg-amber-900/30'
-              sub={t('dashboard.kpi.pendingSub')}
+              sub={t('dashboard.kpi.pendingReviewsSub')}
             />
           </div>
         </div>
@@ -412,7 +418,9 @@ export default function ResearcherDashboard() {
                         outerRadius={70}
                         isAnimationActive
                         animationDuration={600}
-                        label={({ name, pct }) => `${name} ${pct}%`}
+                        label={({ name, percent }) =>
+                          `${name} ${(Number(percent) * 100).toFixed(0)}%`
+                        }
                         labelLine={false}
                       >
                         {byType.map((_, i) => (
@@ -422,7 +430,7 @@ export default function ResearcherDashboard() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(v: number) => [`${v}`, '']} />
+                      <Tooltip formatter={(v) => [`${v ?? ''}`, '']} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -485,26 +493,102 @@ export default function ResearcherDashboard() {
         </Card>
       </div>
 
+      {/* ── Recent decisions (validation history) ─────────────────── */}
+      <Card>
+        <CardHeader className='flex flex-row items-center justify-between'>
+          <CardTitle className='text-sm font-semibold flex items-center gap-2'>
+            <History className='size-4 text-muted-foreground' />
+            {t('dashboard.recentDecisions.title')}
+          </CardTitle>
+          {userId && (
+            <Link
+              to={getResearcherHistoryPath(userId)}
+              className={cn(
+                buttonVariants({ variant: 'ghost', size: 'sm' }),
+                'text-xs',
+              )}
+            >
+              {t('dashboard.recentDecisions.viewAll')}
+            </Link>
+          )}
+        </CardHeader>
+        <CardContent className='p-0'>
+          {!(decisionHistory?.data && decisionHistory.data.length > 0) ? (
+            <p className='px-6 py-8 text-center text-sm text-muted-foreground'>
+              {t('dashboard.recentDecisions.empty')}
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    {t('dashboard.recentDecisions.colTitle')}
+                  </TableHead>
+                  <TableHead>
+                    {t('dashboard.recentDecisions.colDecision')}
+                  </TableHead>
+                  <TableHead className='hidden sm:table-cell'>
+                    {t('dashboard.recentDecisions.colDate')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(decisionHistory?.data ?? []).map((entry) => (
+                  <TableRow
+                    key={entry.id}
+                    className='cursor-pointer hover:bg-muted/50'
+                    onClick={() => {
+                      if (userId) {
+                        navigate(
+                          getResearcherSupervisionDetailPath(
+                            userId,
+                            entry.supervisionId,
+                          ),
+                        )
+                      }
+                    }}
+                  >
+                    <TableCell className='max-w-48 font-medium text-sm'>
+                      {entry.supervision?.title ?? entry.supervisionId}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={VALIDATION_BADGE[entry.status] ?? 'outline'}
+                        className='text-xs'
+                      >
+                        {VALIDATION_LABELS[entry.status] ?? entry.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className='hidden sm:table-cell text-xs text-muted-foreground'>
+                      {new Date(entry.createdAt).toLocaleString('fr-FR', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
       {/* ── Recent supervisions table ─────────────────────────────── */}
       <Card>
         <CardHeader className='flex flex-row items-center justify-between'>
           <CardTitle className='text-sm font-semibold'>
             {t('dashboard.recent.title')}
           </CardTitle>
-          <Button
-            asChild
-            variant='ghost'
-            size='sm'
-            className='gap-1 whitespace-nowrap text-xs'
+          <Link
+            to={basePath}
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'gap-1 whitespace-nowrap text-xs inline-flex items-center',
+            )}
           >
-            <Link
-              to={basePath}
-              className='inline-flex items-center gap-1 whitespace-nowrap'
-            >
-              <List className='size-3.5 shrink-0' />
-              <span>{t('dashboard.recent.viewAll')}</span>
-            </Link>
-          </Button>
+            <List className='size-3.5 shrink-0' />
+            <span>{t('dashboard.recent.viewAll')}</span>
+          </Link>
         </CardHeader>
         <CardContent className='p-0'>
           {recent.length === 0 ? (
@@ -515,15 +599,16 @@ export default function ResearcherDashboard() {
               <p className='text-sm text-muted-foreground'>
                 {t('dashboard.recent.noSupervisions')}
               </p>
-              <Button asChild size='sm' className='whitespace-nowrap'>
-                <Link
-                  to={newPath}
-                  className='inline-flex items-center gap-2 whitespace-nowrap'
-                >
-                  <Plus className='size-4 shrink-0' />
-                  <span>{t('dashboard.recent.add')}</span>
-                </Link>
-              </Button>
+              <Link
+                to={reviewsPath}
+                className={cn(
+                  buttonVariants({ size: 'sm' }),
+                  'whitespace-nowrap inline-flex items-center gap-2',
+                )}
+              >
+                <ClipboardCheck className='size-4 shrink-0' />
+                <span>{t('dashboard.quickActions.myReviews')}</span>
+              </Link>
             </div>
           ) : (
             <Table>
@@ -572,44 +657,41 @@ export default function ResearcherDashboard() {
                     </TableCell>
                     <TableCell className='text-right'>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            className='size-8'
-                          >
-                            <MoreVertical className='size-4' />
-                          </Button>
+                        <DropdownMenuTrigger
+                          className={cn(
+                            buttonVariants({ variant: 'ghost', size: 'icon' }),
+                            'size-8',
+                          )}
+                        >
+                          <MoreVertical className='size-4' />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align='end'>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              to={
-                                userId
-                                  ? getResearcherSupervisionDetailPath(
-                                      userId,
-                                      row.id,
-                                    )
-                                  : '#'
+                          <DropdownMenuItem
+                            onClick={() => {
+                              if (userId) {
+                                navigate(
+                                  getResearcherSupervisionDetailPath(
+                                    userId,
+                                    row.id,
+                                  ),
+                                )
                               }
-                              className='inline-flex items-center gap-2 whitespace-nowrap'
-                            >
-                              <List className='size-4 shrink-0' />
-                              <span>Voir</span>
-                            </Link>
+                            }}
+                            className='inline-flex items-center gap-2 whitespace-nowrap'
+                          >
+                            <List className='size-4 shrink-0' />
+                            <span>Voir</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              to={
-                                userId
-                                  ? getSupervisionEditPath(userId, row.id)
-                                  : '#'
+                          <DropdownMenuItem
+                            onClick={() => {
+                              if (userId) {
+                                navigate(getSupervisionEditPath(userId, row.id))
                               }
-                              className='inline-flex items-center gap-2 whitespace-nowrap'
-                            >
-                              <Pencil className='size-4 shrink-0' />
-                              <span>Modifier</span>
-                            </Link>
+                            }}
+                            className='inline-flex items-center gap-2 whitespace-nowrap'
+                          >
+                            <Pencil className='size-4 shrink-0' />
+                            <span>Modifier</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className='inline-flex items-center gap-2 whitespace-nowrap text-destructive focus:text-destructive'

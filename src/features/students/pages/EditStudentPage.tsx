@@ -15,12 +15,23 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useStudent, useUpdateStudent } from '@/features/students/hooks'
-import type { StudentPayload } from '@/features/students/api'
+import type {
+  StudentPayload,
+  Institution,
+  StudentLevel,
+  Specialty,
+} from '@/features/students/api'
 import { cn } from '@/lib/utils'
 
-const INSTITUTION_OPTIONS = ['ESI', 'Extérieur']
-const LEVEL_OPTIONS = ['Master', 'Doctorant']
-const SPECIALTY_OPTIONS = ['SIL', 'SID', 'SIT', 'SIQ']
+const INSTITUTION_OPTIONS: { value: Institution; label: string }[] = [
+  { value: 'ESI', label: 'ESI' },
+  { value: 'EXTERNE', label: 'Extérieur' },
+]
+const LEVEL_OPTIONS: { value: StudentLevel; label: string }[] = [
+  { value: 'MASTER', label: 'Master' },
+  { value: 'DOCTORANT', label: 'Doctorant' },
+]
+const SPECIALTY_OPTIONS: Specialty[] = ['SIL', 'SID', 'SIT', 'SIQ']
 
 const SELECT_CLASS =
   'h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
@@ -47,9 +58,9 @@ export default function EditStudentPage() {
     firstName: '',
     lastName: '',
     email: '',
-    institution: '',
-    level: '',
-    specialty: '',
+    institution: '' as Institution,
+    level: '' as StudentLevel,
+    specialty: undefined,
   })
   const [errors, setErrors] = useState<
     Partial<Record<keyof StudentPayload, boolean>>
@@ -66,9 +77,9 @@ export default function EditStudentPage() {
         firstName: student.firstName ?? '',
         lastName: student.lastName ?? '',
         email: student.email ?? '',
-        institution: student.institution ?? '',
-        level: student.level ?? '',
-        specialty: student.specialty ?? '',
+        institution: student.institution,
+        level: student.level,
+        specialty: student.specialty ?? undefined,
       }
       setForm(populated)
       originalRef.current = populated
@@ -317,8 +328,8 @@ export default function EditStudentPage() {
                   >
                     <option value=''>Sélectionner...</option>
                     {INSTITUTION_OPTIONS.map((o) => (
-                      <option key={o} value={o}>
-                        {o}
+                      <option key={o.value} value={o.value}>
+                        {o.label}
                       </option>
                     ))}
                   </select>
@@ -349,8 +360,8 @@ export default function EditStudentPage() {
                   >
                     <option value=''>Sélectionner...</option>
                     {LEVEL_OPTIONS.map((o) => (
-                      <option key={o} value={o}>
-                        {o}
+                      <option key={o.value} value={o.value}>
+                        {o.label}
                       </option>
                     ))}
                   </select>

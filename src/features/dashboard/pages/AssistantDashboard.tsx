@@ -9,6 +9,7 @@ import {
   BarChart3,
   TrendingUp,
   ArrowRight,
+  ListPlus,
 } from 'lucide-react'
 import {
   PieChart,
@@ -37,7 +38,11 @@ import { useValidationHistory } from '@/features/validation/hooks/useValidationH
 import { useValidationQueue } from '@/features/validation/hooks/useValidationQueue'
 import { useSupervisions } from '@/features/supervisions/hooks/useSupervisions'
 import { ValidationTimeline } from '@/features/validation/components/ValidationTimeline'
-import { getAssistantValidationDetailPath, ROUTES } from '@/config/routes'
+import {
+  getAssistantSupervisionDetailPath,
+  getAssistantSupervisionNewPath,
+  ROUTES,
+} from '@/config/routes'
 import { useAuthContext } from '@/shared/context/AuthContext'
 import { cn } from '@/lib/utils'
 
@@ -103,7 +108,7 @@ function FeaturedKpiCard({
   icon: React.ElementType
 }) {
   const inner = (
-    <Card className='h-full cursor-pointer bg-primary text-primary-foreground transition-all hover:-translate-y-0.5 border-0'>
+    <Card className='h-full cursor-pointer border-0 bg-primary text-primary-foreground shadow-primary-sm transition-all hover:-translate-y-0.5'>
       <CardHeader className='flex flex-row items-start justify-between pb-3'>
         <CardTitle className='text-sm font-medium text-primary-foreground/70'>
           {title}
@@ -226,7 +231,7 @@ export default function AssistantDashboard() {
   }, [allItems])
 
   return (
-    <div className='space-y-6'>
+    <div className='mx-auto w-full max-w-7xl space-y-6'>
       {/* ── Welcome hero ────────────────────────────────────────────────── */}
       <Card className='relative overflow-hidden border-0 bg-linear-to-br from-primary/15 via-primary/5 to-transparent'>
         {pending > 0 && (
@@ -244,16 +249,28 @@ export default function AssistantDashboard() {
             </h2>
             <p className='text-sm text-muted-foreground capitalize'>{today}</p>
           </div>
-          <Link
-            to={ROUTES.ASSISTANT_VALIDATION}
-            className={buttonVariants({
-              size: 'sm',
-              className: 'gap-2 whitespace-nowrap shadow-primary-sm',
-            })}
-          >
-            <ClipboardCheck className='size-3.5 shrink-0' strokeWidth={1.5} />
-            {t('assistant.dashboard.goToQueue')}
-          </Link>
+          <div className='flex flex-wrap items-center gap-2'>
+            <Link
+              to={ROUTES.ASSISTANT_ACTIVITY}
+              className={cn(
+                buttonVariants({ size: 'sm' }),
+                'gap-2 whitespace-nowrap shadow-primary-sm',
+              )}
+            >
+              <ClipboardCheck className='size-3.5 shrink-0' strokeWidth={1.5} />
+              {t('assistant.dashboard.goToQueue')}
+            </Link>
+            <Link
+              to={getAssistantSupervisionNewPath()}
+              className={cn(
+                buttonVariants({ size: 'sm', variant: 'outline' }),
+                'gap-2 whitespace-nowrap',
+              )}
+            >
+              <ListPlus className='size-3.5 shrink-0' strokeWidth={1.5} />
+              {t('assistant.supervisions.new')}
+            </Link>
+          </div>
         </CardContent>
       </Card>
 
@@ -281,7 +298,7 @@ export default function AssistantDashboard() {
             title={t('assistant.dashboard.kpi.pending')}
             value={pending}
             icon={ClipboardCheck}
-            to={ROUTES.ASSISTANT_VALIDATION}
+            to={ROUTES.ASSISTANT_ACTIVITY}
             sub={t('assistant.dashboard.pendingCta')}
           />
           <div className='grid grid-cols-2 gap-4 lg:col-span-2'>
@@ -486,9 +503,9 @@ export default function AssistantDashboard() {
             {t('assistant.dashboard.urgencyTitle')}
           </CardTitle>
           <Link
-            to={ROUTES.ASSISTANT_VALIDATION}
+            to={ROUTES.ASSISTANT_ACTIVITY}
             className='flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors'
-            aria-label={t('assistant.validationQueue')}
+            aria-label={t('assistant.dashboard.goToQueue')}
           >
             <ArrowRight className='size-3.5' strokeWidth={1.5} />
           </Link>
@@ -531,7 +548,7 @@ export default function AssistantDashboard() {
                     <TableRow
                       key={item.id}
                       onClick={() =>
-                        navigate(getAssistantValidationDetailPath(item.id))
+                        navigate(getAssistantSupervisionDetailPath(item.id))
                       }
                       className={cn(
                         'cursor-pointer hover:bg-muted/50 transition-colors border-l-[3px]',
@@ -564,7 +581,7 @@ export default function AssistantDashboard() {
                           type='button'
                           onClick={(e) => {
                             e.stopPropagation()
-                            navigate(getAssistantValidationDetailPath(item.id))
+                            navigate(getAssistantSupervisionDetailPath(item.id))
                           }}
                           className='flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors ml-auto'
                           aria-label={t('common.view')}

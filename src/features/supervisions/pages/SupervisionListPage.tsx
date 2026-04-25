@@ -4,9 +4,6 @@ import { useTranslation } from 'react-i18next'
 import {
   Search,
   SlidersHorizontal,
-  Plus,
-  Pencil,
-  Trash2,
   MoreVertical,
   X,
   ChevronLeft,
@@ -35,19 +32,14 @@ import {
 import { cn } from '@/lib/utils'
 import {
   getResearcherSupervisionDetailPath,
-  getSupervisionEditPath,
-  getResearcherSupervisionNewPath,
+  getResearcherReviewDetailPath,
 } from '@/config/routes'
-import {
-  useSupervisions,
-  useDeleteSupervision,
-} from '@/features/supervisions/hooks/useSupervisions'
+import { useSupervisions } from '@/features/supervisions/hooks/useSupervisions'
 import type {
   SupervisionType,
   SupervisionStatus,
   ValidationStatus,
 } from '@/features/supervisions/types'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -147,10 +139,8 @@ const VALIDATION_LABELS: Record<ValidationStatus, string> = {
 
 export default function SupervisionListPage() {
   const { userId } = useParams<{ userId: string }>()
-  const navigate = useNavigate()
   const { t } = useTranslation()
 
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(1)
@@ -193,7 +183,7 @@ export default function SupervisionListPage() {
     isLoading,
     isError,
   } = useSupervisions(serverFilters)
-  const { mutate: deleteSupervision } = useDeleteSupervision()
+  const navigate = useNavigate()
 
   // Client-side filter for multi-select (when >1 value selected)
   const rows = (pageResult?.data ?? []).filter((r) => {
@@ -260,15 +250,6 @@ export default function SupervisionListPage() {
     setPage(1)
   }
 
-  const handleDelete = (id: string) => {
-    setDeleteTarget(id)
-  }
-
-  const confirmDelete = () => {
-    if (deleteTarget) deleteSupervision(deleteTarget)
-    setDeleteTarget(null)
-  }
-
   return (
     <div className='space-y-4'>
       {/* Header */}
@@ -309,16 +290,6 @@ export default function SupervisionListPage() {
         >
           <SlidersHorizontal className='size-4 shrink-0' />
           <span>{t('common.filter')}</span>
-        </Button>
-        <Button
-          onClick={() =>
-            userId && navigate(getResearcherSupervisionNewPath(userId))
-          }
-          className='inline-flex shrink-0 items-center gap-2 whitespace-nowrap'
-          disabled={!userId}
-        >
-          <Plus className='size-4 shrink-0' />
-          <span>{t('supervisions.list.new')}</span>
         </Button>
       </div>
 
@@ -411,18 +382,6 @@ export default function SupervisionListPage() {
                   ? t('supervisions.list.noResultsFiltered')
                   : t('supervisions.list.noResultsEmpty')}
               </p>
-              {!hasActiveFilters && (
-                <Button
-                  size='sm'
-                  onClick={() =>
-                    userId && navigate(getResearcherSupervisionNewPath(userId))
-                  }
-                  disabled={!userId}
-                >
-                  <Plus className='mr-2 size-4' />
-                  {t('supervisions.list.new')}
-                </Button>
-              )}
             </div>
           ) : (
             <Table>
@@ -507,39 +466,34 @@ export default function SupervisionListPage() {
                           <MoreVertical className='size-4' />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align='end'>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              to={
-                                userId
-                                  ? getResearcherSupervisionDetailPath(
-                                      userId,
-                                      row.id,
-                                    )
-                                  : '#'
-                              }
-                              className='inline-flex items-center gap-2 whitespace-nowrap'
-                            >
-                              <Eye className='size-4 shrink-0' />
-                              <span>{t('common.view')}</span>
-                            </Link>
-                          </DropdownMenuItem>
                           <DropdownMenuItem
-                            className='inline-flex items-center gap-2 whitespace-nowrap'
+                            className='inline-flex items-center gap-2'
                             onClick={() =>
                               userId &&
-                              navigate(getSupervisionEditPath(userId, row.id))
+                              navigate(
+                                getResearcherSupervisionDetailPath(
+                                  userId,
+                                  row.id,
+                                ),
+                              )
                             }
                           >
-                            <Pencil className='size-4 shrink-0' />
-                            <span>{t('common.edit')}</span>
+                            <Eye className='size-4 shrink-0' />
+                            <span>{t('common.view')}</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className='inline-flex items-center gap-2 whitespace-nowrap text-destructive focus:text-destructive'
-                            onClick={() => handleDelete(row.id)}
-                          >
-                            <Trash2 className='size-4 shrink-0' />
-                            <span>{t('common.delete')}</span>
-                          </DropdownMenuItem>
+                          {row.validationStatus === 'PENDING' && userId && (
+                            <DropdownMenuItem
+                              className='inline-flex items-center gap-2'
+                              onClick={() =>
+                                navigate(
+                                  getResearcherReviewDetailPath(userId, row.id),
+                                )
+                              }
+                            >
+                              <BookOpen className='size-4 shrink-0' />
+                              <span>{t('researcher.reviews.openDetail')}</span>
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -746,17 +700,6 @@ export default function SupervisionListPage() {
           onClick={() => setFiltersOpen(false)}
         />
       )}
-
-      {/* Delete confirmation dialog */}
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        title={t('confirmDelete.supervisions.title')}
-        description={t('confirmDelete.supervisions.description')}
-        confirmLabel={t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
     </div>
   )
 }

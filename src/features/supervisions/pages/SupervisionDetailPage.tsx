@@ -1,8 +1,11 @@
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useNavigate, useParams, Link, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { ROUTES, getAssistantSupervisionEditPath } from '@/config/routes'
 import { useEffect, useState } from 'react'
 import {
   ArrowLeft,
   Pencil,
+  Trash2,
   Calendar,
   Tag,
   Users,
@@ -18,9 +21,14 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { useSupervision } from '@/features/supervisions/hooks/useSupervisions'
+import {
+  useSupervision,
+  useDeleteSupervision,
+} from '@/features/supervisions/hooks/useSupervisions'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // ─── Label / color maps ──────────────────────────────────────────────────────
 
@@ -143,7 +151,7 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
 
 function SkeletonPage() {
   return (
-    <div className='mx-auto max-w-4xl space-y-4'>
+    <div className='mx-auto w-full max-w-4xl space-y-4'>
       <div className='h-36 animate-pulse rounded-2xl bg-muted' />
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='h-40 animate-pulse rounded-xl bg-muted' />
@@ -162,7 +170,9 @@ function SkeletonPage() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SupervisionDetailPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { id, supervisionId, userId } = useParams<{
     id?: string
     supervisionId?: string
@@ -171,6 +181,10 @@ export default function SupervisionDetailPage() {
   const resolvedId = supervisionId ?? id
 
   const { data, isLoading, isError } = useSupervision(resolvedId)
+  const { mutate: deleteSupervision, isPending: isDeleting } =
+    useDeleteSupervision()
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // ── Hooks must be declared before any early return ────────────────────────
   const [barsVisible, setBarsVisible] = useState(false)
@@ -184,7 +198,7 @@ export default function SupervisionDetailPage() {
 
   if (isError || !data) {
     return (
-      <div className='mx-auto max-w-4xl'>
+      <div className='mx-auto w-full max-w-4xl'>
         <Card className='border-destructive/40 bg-destructive/5'>
           <CardContent className='flex flex-col items-center gap-3 py-14 text-center'>
             <div className='flex size-12 items-center justify-center rounded-full bg-destructive/10'>
@@ -204,11 +218,25 @@ export default function SupervisionDetailPage() {
   }
 
   const accent = STATUS_ACCENT[data.status] ?? STATUS_ACCENT.SUSPENDED
+  const isAssistantPortal = location.pathname.startsWith('/assistant/')
+  const canEditAsAssistant =
+    isAssistantPortal &&
+    resolvedId &&
+    (data.validationStatus === 'PENDING' ||
+      data.validationStatus === 'REVISED' ||
+      data.validationStatus === 'REJECTED')
   const editPath =
-    userId && resolvedId
-      ? `/researcher/${userId}/supervisions/${resolvedId}/edit`
-      : 'edit'
-  const basePath = userId ? `/researcher/${userId}/supervisions` : '#'
+    canEditAsAssistant && resolvedId
+      ? getAssistantSupervisionEditPath(resolvedId)
+      : undefined
+  const basePath = isAssistantPortal
+    ? '/assistant/supervisions'
+    : userId
+      ? `/researcher/${userId}/supervisions`
+      : '#'
+  const showEditButton = canEditAsAssistant
+  const deletableByAssistant = data.validationStatus !== 'VALIDATED'
+  const showDeleteAsAssistant = isAssistantPortal && deletableByAssistant
   const ValidationIcon = VALIDATION_ICON[data.validationStatus] ?? Clock
 
   // Timeline progress calculation
@@ -229,7 +257,35 @@ export default function SupervisionDetailPage() {
       : null
 
   return (
-    <div className='mx-auto max-w-4xl space-y-4'>
+    <div className='mx-auto w-full max-w-4xl space-y-4'>
+      <ConfirmDialog
+        open={deleteOpen}
+        title={t('assistant.supervisions.deleteTitle')}
+        description={t('assistant.supervisions.deleteDescription')}
+        confirmLabel={t('assistant.supervisions.delete')}
+        onCancel={() => {
+          setDeleteOpen(false)
+          setDeleteError(null)
+        }}
+        onConfirm={() => {
+          if (!resolvedId) return
+          setDeleteError(null)
+          deleteSupervision(resolvedId, {
+            onSuccess: () => {
+              setDeleteOpen(false)
+              navigate(ROUTES.ASSISTANT_SUPERVISIONS)
+            },
+            onError: () => {
+              setDeleteError(t('assistant.supervisions.deleteError'))
+            },
+          })
+        }}
+      />
+      {deleteError && showDeleteAsAssistant && (
+        <p className='text-sm text-destructive' role='alert'>
+          {deleteError}
+        </p>
+      )}
       {/* ── Breadcrumb ───────────────────────────────────────────────── */}
       <nav className='flex items-center gap-1.5 text-xs text-muted-foreground'>
         <Link to={basePath} className='hover:text-foreground transition-colors'>
@@ -618,12 +674,33 @@ export default function SupervisionDetailPage() {
           Retour
         </Button>
         <div className='flex-1' />
-        <Button variant='outline' asChild className='gap-2'>
-          <Link to={editPath}>
+        {showEditButton && editPath && (
+          <Link
+            to={editPath}
+            className={cn(
+              buttonVariants({ variant: 'outline' }),
+              'gap-2 inline-flex items-center',
+            )}
+          >
             <Pencil className='size-4' />
             Modifier
           </Link>
-        </Button>
+        )}
+        {showDeleteAsAssistant && (
+          <Button
+            type='button'
+            variant='destructive'
+            disabled={isDeleting}
+            className='gap-2'
+            onClick={() => {
+              setDeleteError(null)
+              setDeleteOpen(true)
+            }}
+          >
+            <Trash2 className='size-4' />
+            {t('assistant.supervisions.delete')}
+          </Button>
+        )}
       </div>
     </div>
   )

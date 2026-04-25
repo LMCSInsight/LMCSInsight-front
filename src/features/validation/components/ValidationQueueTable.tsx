@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, Eye, FileX } from 'lucide-react'
 import { ValidationStatusBadge } from './ValidationStatusBadge'
-import { getAssistantValidationDetailPath } from '@/config/routes'
+import { getAssistantSupervisionDetailPath } from '@/config/routes'
 import type { ValidationQueueItem } from '@/features/validation/types'
 import { cn } from '@/lib/utils'
 
@@ -41,11 +41,19 @@ function rowBorderClass(dateStr: string): string {
 
 interface Props {
   items: ValidationQueueItem[]
+  /** true = row links disabled (e.g. activity-only). */
   readOnly?: boolean
   emptyMessage?: string
+  /** Default: assistant supervisions detail. */
+  resolveDetailPath?: (id: string) => string
 }
 
-export function ValidationQueueTable({ items, readOnly, emptyMessage }: Props) {
+export function ValidationQueueTable({
+  items,
+  readOnly,
+  emptyMessage,
+  resolveDetailPath = getAssistantSupervisionDetailPath,
+}: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const rowsRef = useRef<HTMLTableRowElement[]>([])
@@ -120,10 +128,7 @@ export function ValidationQueueTable({ items, readOnly, emptyMessage }: Props) {
                 ref={(el) => {
                   if (el) rowsRef.current[i] = el
                 }}
-                onClick={() =>
-                  !readOnly &&
-                  navigate(getAssistantValidationDetailPath(item.id))
-                }
+                onClick={() => navigate(resolveDetailPath(item.id))}
                 style={{
                   opacity: 0,
                   transform: 'translateY(10px)',
@@ -134,7 +139,7 @@ export function ValidationQueueTable({ items, readOnly, emptyMessage }: Props) {
                 className={cn(
                   'border-b border-border last:border-0 border-l-[3px] transition-colors',
                   rowBorderClass(item.createdAt),
-                  !readOnly && 'cursor-pointer hover:bg-muted/40',
+                  'cursor-pointer hover:bg-muted/40',
                 )}
               >
                 <td className='px-4 py-3.5'>
@@ -166,7 +171,7 @@ export function ValidationQueueTable({ items, readOnly, emptyMessage }: Props) {
                     type='button'
                     onClick={(e) => {
                       e.stopPropagation()
-                      navigate(getAssistantValidationDetailPath(item.id))
+                      navigate(resolveDetailPath(item.id))
                     }}
                     className='flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors ml-auto'
                     aria-label={t('common.view')}

@@ -10,11 +10,17 @@ export const ROUTES = {
   DASHBOARD_ADMIN: '/admin/dashboard',
   DIRECTOR_SUPERVISIONS: '/director/supervisions',
   DIRECTOR_VALIDATION: '/director/validation',
+  /** Primary: org-wide activity list (read-only, assistant). */
+  ASSISTANT_ACTIVITY: '/assistant/activity',
+  /** Legacy: redirects to {@link ROUTES.ASSISTANT_ACTIVITY}. */
   ASSISTANT_VALIDATION: '/assistant/validation',
   ASSISTANT_VALIDATION_DETAIL: '/assistant/validation/:supervisionId',
   ASSISTANT_SUPERVISIONS: '/assistant/supervisions',
   ASSISTANT_HISTORY: '/assistant/history',
   ASSISTANT_PROFILE: '/assistant/profile',
+  ASSISTANT_STUDENTS: '/assistant/students',
+  /** Assistant research themes (thématiques). */
+  ASSISTANT_THEMES: '/assistant/themes',
   ADMIN_USERS: '/admin/users',
   SUPERVISIONS: '/supervisions',
   STUDENTS: '/students',
@@ -40,9 +46,26 @@ export function getResearcherSupervisionsPath(userId: string): string {
   return `${getResearcherBasePath(userId)}/supervisions`
 }
 
-/** Researcher create supervision. */
+/** Researcher create supervision (legacy; creation is assistant-only). */
 export function getResearcherSupervisionNewPath(userId: string): string {
   return `${getResearcherBasePath(userId)}/supervisions/new`
+}
+
+/** Researcher: queue of supervisions assigned to the user as main supervisor (PENDING). */
+export function getResearcherReviewsPath(userId: string): string {
+  return `${getResearcherBasePath(userId)}/reviews`
+}
+
+export function getResearcherReviewDetailPath(
+  userId: string,
+  supervisionId: string,
+): string {
+  return `${getResearcherBasePath(userId)}/reviews/${supervisionId}`
+}
+
+/** Researcher: validation / decision history (API scoped to the logged-in user). */
+export function getResearcherHistoryPath(userId: string): string {
+  return `${getResearcherBasePath(userId)}/history`
 }
 
 /** Researcher supervision detail. */
@@ -97,6 +120,42 @@ export function getResearcherProfilePath(userId: string): string {
   return `${getResearcherBasePath(userId)}/profile`
 }
 
+export function getAssistantStudentsPath(): string {
+  return '/assistant/students'
+}
+
+export function getAssistantStudentDetailPath(studentId: string): string {
+  return `/assistant/students/${studentId}`
+}
+
+export function getAssistantStudentEditPath(studentId: string): string {
+  return `/assistant/students/${studentId}/edit`
+}
+
+export function getAssistantStudentRegisterPath(): string {
+  return '/assistant/students/register'
+}
+
+export function getAssistantThemesPath(): string {
+  return ROUTES.ASSISTANT_THEMES
+}
+
+export function getAssistantThemeNewPath(): string {
+  return '/assistant/themes/new'
+}
+
+export function getAssistantThemeDetailPath(themeId: string): string {
+  return `/assistant/themes/${themeId}`
+}
+
+export function getAssistantThemeEditPath(themeId: string): string {
+  return `/assistant/themes/${themeId}/edit`
+}
+
+export function getAssistantActivityPath(): string {
+  return ROUTES.ASSISTANT_ACTIVITY
+}
+
 /** Assistant validation detail: /assistant/validation/:supervisionId */
 export function getAssistantValidationDetailPath(
   supervisionId: string,
@@ -109,6 +168,14 @@ export function getAssistantSupervisionDetailPath(
   supervisionId: string,
 ): string {
   return `/assistant/supervisions/${supervisionId}`
+}
+
+export function getAssistantSupervisionNewPath(): string {
+  return '/assistant/supervisions/new'
+}
+
+export function getAssistantSupervisionEditPath(supervisionId: string): string {
+  return `/assistant/supervisions/${supervisionId}/edit`
 }
 
 /** Default dashboard path for each role after login. Pass user for RESEARCHER to get /researcher/:id/dashboard. */

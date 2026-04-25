@@ -132,6 +132,17 @@ export interface AssignSupervisorPayload {
   contributionPercent?: number
 }
 
+export interface SupervisionSupervisorReplaceRow {
+  supervisorId: string
+  isMainSupervisor: boolean
+  isExternal?: boolean
+  contributionPercent: number
+}
+
+export interface ReplaceSupervisionSupervisorsPayload {
+  supervisors: SupervisionSupervisorReplaceRow[]
+}
+
 // ─── Filter params for GET /v1/supervisions ──────────────────────────────────
 
 export interface SupervisionsFilter {

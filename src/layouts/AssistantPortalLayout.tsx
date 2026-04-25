@@ -12,6 +12,8 @@ import {
   History,
   Settings,
   ChevronRight,
+  Users,
+  BookMarked,
 } from 'lucide-react'
 import { useAuthContext } from '@/shared/context/AuthContext'
 import { useTheme } from '@/shared/context/ThemeContext'
@@ -26,8 +28,12 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { ROUTES } from '@/config/routes'
+import { ROUTES, getAssistantSupervisionDetailPath } from '@/config/routes'
 import i18n, { LANGUAGES } from '@/i18n'
+import {
+  useNotifications,
+  useMarkNotificationRead,
+} from '@/features/notifications/hooks/useNotifications'
 
 const ASSISTANT_NAV: {
   key: string
@@ -43,17 +49,34 @@ const ASSISTANT_NAV: {
     icon: LayoutDashboard,
   },
   {
-    key: 'validation',
-    labelKey: 'assistant.validationQueue',
-    path: ROUTES.ASSISTANT_VALIDATION,
+    key: 'activity',
+    labelKey: 'assistant.activityQueue',
+    path: ROUTES.ASSISTANT_ACTIVITY,
     icon: ClipboardCheck,
-    isActive: (p) => p.startsWith(ROUTES.ASSISTANT_VALIDATION),
+    isActive: (p) =>
+      p === ROUTES.ASSISTANT_ACTIVITY ||
+      p.startsWith(`${ROUTES.ASSISTANT_ACTIVITY}/`) ||
+      p === ROUTES.ASSISTANT_VALIDATION,
   },
   {
     key: 'supervisions',
     labelKey: 'common.supervisions',
     path: ROUTES.ASSISTANT_SUPERVISIONS,
     icon: ListOrdered,
+  },
+  {
+    key: 'students',
+    labelKey: 'common.studentManagement',
+    path: ROUTES.ASSISTANT_STUDENTS,
+    icon: Users,
+    isActive: (p) => p.startsWith('/assistant/students'),
+  },
+  {
+    key: 'themes',
+    labelKey: 'common.themeManagement',
+    path: ROUTES.ASSISTANT_THEMES,
+    icon: BookMarked,
+    isActive: (p) => p.startsWith('/assistant/themes'),
   },
   {
     key: 'history',
@@ -71,13 +94,19 @@ const ASSISTANT_NAV: {
 
 const PAGE_TITLE_KEYS: Record<string, string> = {
   dashboard: 'common.dashboard',
-  validation: 'assistant.validationQueue',
+  activity: 'assistant.activity.pageTitle',
+  validation: 'assistant.activity.pageTitle',
   supervisions: 'common.supervisions',
-  history: 'assistant.historyTitle',
+  students: 'common.studentManagement',
+  themes: 'themes.pageTitle',
+  history: 'assistant.historyPageTitle',
   profile: 'common.profileSettings',
 }
 
 function getPageKey(pathname: string): string {
+  if (pathname === ROUTES.ASSISTANT_VALIDATION) {
+    return 'activity'
+  }
   const item = ASSISTANT_NAV.find((nav) => {
     if (nav.isActive) return nav.isActive(pathname)
     return pathname === nav.path || pathname.startsWith(nav.path + '/')
@@ -125,6 +154,10 @@ export function AssistantPortalLayout() {
   const pageKey = getPageKey(location.pathname)
   const pageTitle = t(PAGE_TITLE_KEYS[pageKey] ?? 'common.dashboard')
   const initials = getInitials(currentUser?.name, currentUser?.email)
+
+  const { data: notifications = [] } = useNotifications()
+  const { mutate: markRead } = useMarkNotificationRead()
+  const unreadCount = notifications.filter((n) => !n.readAt).length
 
   return (
     <div className='researcher-portal flex min-h-screen bg-muted/30 dark:bg-background'>
@@ -226,15 +259,14 @@ export function AssistantPortalLayout() {
             </Button>
 
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='size-8 text-muted-foreground hover:bg-accent hover:text-foreground'
-                  aria-label={t('common.language')}
-                >
-                  <Globe className='size-4' strokeWidth={1.5} />
-                </Button>
+              <DropdownMenuTrigger
+                className={cn(
+                  buttonVariants({ variant: 'ghost', size: 'icon' }),
+                  'size-8 text-muted-foreground hover:bg-accent hover:text-foreground',
+                )}
+                aria-label={t('common.language')}
+              >
+                <Globe className='size-4' strokeWidth={1.5} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end' className='min-w-[140px]'>
                 {LANGUAGES.map(({ code, labelKey }) => (
@@ -250,28 +282,71 @@ export function AssistantPortalLayout() {
             </DropdownMenu>
 
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='size-8 text-muted-foreground hover:bg-accent hover:text-foreground'
-                  aria-label={t('common.notifications')}
-                >
-                  <Bell className='size-4' strokeWidth={1.5} />
-                </Button>
+              <DropdownMenuTrigger
+                className={cn(
+                  buttonVariants({ variant: 'ghost', size: 'icon' }),
+                  'relative size-8 text-muted-foreground hover:bg-accent hover:text-foreground',
+                )}
+                aria-label={t('common.notifications')}
+              >
+                <Bell className='size-4' strokeWidth={1.5} />
+                {unreadCount > 0 && (
+                  <span className='absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground'>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </DropdownMenuTrigger>
-              <DropdownMenuContent align='end' className='w-72'>
+              <DropdownMenuContent align='end' className='w-80'>
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>
+                  <DropdownMenuLabel className='flex items-center justify-between'>
                     {t('common.notifications')}
+                    {unreadCount > 0 && (
+                      <span className='rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary'>
+                        {unreadCount}
+                      </span>
+                    )}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    disabled
-                    className='justify-center py-6 text-center text-muted-foreground cursor-default'
-                  >
-                    {t('common.noNotifications')}
-                  </DropdownMenuItem>
+                  {notifications.length === 0 ? (
+                    <DropdownMenuItem
+                      disabled
+                      className='justify-center py-6 text-center text-muted-foreground cursor-default'
+                    >
+                      {t('common.noNotifications')}
+                    </DropdownMenuItem>
+                  ) : (
+                    notifications.slice(0, 10).map((n) => (
+                      <DropdownMenuItem
+                        key={n.id}
+                        className={cn(
+                          'flex flex-col items-start gap-0.5 px-3 py-2.5 cursor-pointer',
+                          !n.readAt && 'bg-primary/5',
+                        )}
+                        onClick={() => {
+                          if (!n.readAt) markRead(n.id)
+                          if (n.supervisionId) {
+                            navigate(
+                              getAssistantSupervisionDetailPath(
+                                n.supervisionId,
+                              ),
+                            )
+                          }
+                        }}
+                      >
+                        <span
+                          className={cn(
+                            'text-xs font-medium',
+                            !n.readAt && 'text-primary',
+                          )}
+                        >
+                          {n.title}
+                        </span>
+                        <span className='text-xs text-muted-foreground line-clamp-2'>
+                          {n.message}
+                        </span>
+                      </DropdownMenuItem>
+                    ))
+                  )}
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>

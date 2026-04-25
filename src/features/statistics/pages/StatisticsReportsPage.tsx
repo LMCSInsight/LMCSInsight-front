@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
 import {
   BarChart3,
   Clock,
@@ -156,8 +155,6 @@ function KpiCard({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StatisticsReportsPage() {
-  useParams<{ userId: string }>()
-
   const { data: supPage, isLoading: loadingSup } = useSupervisions({
     limit: 500,
   })
@@ -475,7 +472,9 @@ export default function StatisticsReportsPage() {
                             cx='50%'
                             cy='50%'
                             outerRadius={90}
-                            label={({ name, pct }) => `${name} ${pct}%`}
+                            label={({ name, percent }) =>
+                              `${name} ${(Number(percent) * 100).toFixed(0)}%`
+                            }
                             labelLine={false}
                           >
                             {byType.map((_, i) => (
@@ -485,12 +484,7 @@ export default function StatisticsReportsPage() {
                               />
                             ))}
                           </Pie>
-                          <Tooltip
-                            formatter={(v: number, name: string) => [
-                              `${v}`,
-                              name,
-                            ]}
-                          />
+                          <Tooltip formatter={(v) => [String(v ?? ''), '']} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
