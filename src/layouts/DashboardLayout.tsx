@@ -6,6 +6,7 @@ import {
   ListOrdered,
   History,
   Settings,
+  Users,
 } from 'lucide-react'
 import { useAuthContext } from '@/shared/context/AuthContext'
 import { ROUTES, getResearcherDashboardPath } from '@/config/routes'
@@ -44,6 +45,12 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
       key: 'validation',
       path: ROUTES.DIRECTOR_VALIDATION,
       label: 'Validation queue',
+    },
+    {
+      key: 'chercheurs',
+      path: ROUTES.DIRECTOR_CHERCHEURS,
+      label: 'Charge D’encadrement',
+      icon: Users,
     },
   ],
   RESEARCHER: [

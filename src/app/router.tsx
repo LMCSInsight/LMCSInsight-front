@@ -39,6 +39,11 @@ import DirectorDashboard from '@/features/dashboard/pages/DirectorDashboard'
 import AssistantDashboard from '@/features/dashboard/pages/AssistantDashboard'
 import { AssistantPortalLayout } from '@/layouts/AssistantPortalLayout'
 import AdminDashboard from '@/features/dashboard/pages/AdminDashboard'
+import TableChercheurs from '@/features/direction/TableChercheurs'
+import DetailChercheur from '@/features/direction/DetailChercheurs'
+import { DirectionPortalLayout } from '@/layouts/DirectionPortalLayout'
+import DirectionStatisticsPage from '@/features/direction/pages/DirectionStatisticsPage'
+import DirectionProfilePage from '@/features/direction/pages/DirectionProfilePage'
 import ValidationQueuePage from '@/features/validation/pages/ValidationQueuePage'
 import ValidationDetailPage from '@/features/validation/pages/ValidationDetailPage'
 import ValidationHistoryPage from '@/features/validation/pages/ValidationHistoryPage'
@@ -197,7 +202,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <RoleRoute allowedRoles={['DIRECTOR']}>
-          <DashboardLayout />
+          <DirectionPortalLayout />
         </RoleRoute>
       </ProtectedRoute>
     ),
@@ -206,6 +211,10 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: <DirectorDashboard /> },
       { path: 'supervisions', element: <DirectorSupervisionListPage /> },
       { path: 'validation', element: <ValidationQueuePage /> },
+      { path: 'chercheurs', element: <TableChercheurs /> },
+      { path: 'chercheurs/:chercheurId', element: <DetailChercheur /> },
+      { path: 'statistics', element: <DirectionStatisticsPage /> },
+      { path: 'profile', element: <DirectionProfilePage /> },
     ],
   },
   {
