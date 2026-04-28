@@ -3,11 +3,13 @@
     "welcome": "Welcome",
     "dashboard": "Dashboard",
     "supervisions": "Supervisions",
+    "bilan": "Bilan",
     "studentManagement": "Student Management",
     "themeManagement": "Theme management",
     "statisticsReports": "Statistics & Reports",
     "profileSettings": "Profile & Settings",
     "researcher": "Researcher",
+    "director": "Director",
     "assistant": "Assistant",
     "theme": "Theme",
     "language": "Language",
@@ -473,6 +475,67 @@
     },
     "unsavedChanges": "Unsaved changes",
     "tabComingSoon": "{{tab}} settings will be available soon."
+    ,"director": {
+      "tabs": {
+        "profile": "Profile",
+        "academic": "Institution",
+        "research": "Supervision",
+        "security": "Security"
+      },
+      "sections": {
+        "profile": {
+          "title": "Director information",
+          "subtitle": "Update your professional identity."
+        },
+        "academic": {
+          "title": "Institutional information",
+          "subtitle": "Present your role within the institution."
+        },
+        "research": {
+          "title": "Supervision and research",
+          "subtitle": "Describe your scientific and supervision activity."
+        },
+        "security": {
+          "title": "Account security",
+          "subtitle": "Manage your password and security alerts."
+        }
+      },
+      "fields": {
+        "fullName": "Director name",
+        "email": "Professional email address",
+        "phone": "Professional phone",
+        "diploma": "Title / rank",
+        "quality": "Function",
+        "hIndex": "H-index",
+        "googleScholar": "Google Scholar profile",
+        "researchGate": "ResearchGate",
+        "personalSite": "Personal site",
+        "currentPassword": "Current password",
+        "newPassword": "New password",
+        "confirmPassword": "Confirm password"
+      },
+      "placeholders": {
+        "fullName": "Prof. Ahmed Benali",
+        "email": "director@univ.dz",
+        "phone": "+213 ...",
+        "diploma": "Professor / Doctor",
+        "quality": "Select a function",
+        "hIndex": "25",
+        "googleScholar": "https://scholar.google.com/...",
+        "researchGate": "https://www.researchgate.net/...",
+        "personalSite": "https://...",
+        "currentPassword": "••••••••",
+        "newPassword": "••••••••",
+        "confirmPassword": "••••••••"
+      },
+      "academicOptions": {
+        "quality": {
+          "leadResearcher": "Laboratory director",
+          "departmentHead": "Department director",
+          "projectLead": "Project lead"
+        }
+      }
+    }
   },
   "assistant": {
     "activityQueue": "Activity",

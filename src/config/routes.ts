@@ -9,7 +9,9 @@ export const ROUTES = {
   DASHBOARD_ASSISTANT: '/assistant/dashboard',
   DASHBOARD_ADMIN: '/admin/dashboard',
   DIRECTOR_SUPERVISIONS: '/director/supervisions',
+  DIRECTOR_SUPERVISION_DETAIL: '/director/supervisions/:supervisionId',
   DIRECTOR_VALIDATION: '/director/validation',
+  DIRECTOR_STATISTICS_REPORTS: '/director/statistics/reports',
   /** Primary: org-wide activity list (read-only, assistant). */
   ASSISTANT_ACTIVITY: '/assistant/activity',
   /** Legacy: redirects to {@link ROUTES.ASSISTANT_ACTIVITY}. */
@@ -176,6 +178,23 @@ export function getAssistantSupervisionNewPath(): string {
 
 export function getAssistantSupervisionEditPath(supervisionId: string): string {
   return `/assistant/supervisions/${supervisionId}/edit`
+}
+
+/** Director bilan page. */
+/** Director statistics reports page. */
+export function getDirectorStatisticsReportsPath(): string {
+  return ROUTES.DIRECTOR_STATISTICS_REPORTS
+}
+
+/** Director profile & settings. */
+export function getDirectorProfilePath(): string {
+  return '/director/profile'
+}
+
+export function getDirectorSupervisionDetailPath(
+  supervisionId: string,
+): string {
+  return `/director/supervisions/${supervisionId}`
 }
 
 /** Default dashboard path for each role after login. Pass user for RESEARCHER to get /researcher/:id/dashboard. */

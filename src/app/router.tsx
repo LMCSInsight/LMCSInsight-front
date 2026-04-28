@@ -32,12 +32,14 @@ import ThemeRegisterPage from '@/features/themes/pages/ThemeRegisterPage'
 import ThemeDetailPage from '@/features/themes/pages/ThemeDetailPage'
 import ThemeEditPage from '@/features/themes/pages/ThemeEditPage'
 import ProfileSettingsPage from '@/features/profile/pages/ProfileSettingsPage'
+import DirectorStatisticsReportsPage from '@/features/statistics/pages/DirectorStatisticsReportsPage'
 import StatisticsReportsPage from '@/features/statistics/pages/StatisticsReportsPage'
 import AdminPage from '@/features/admin/pages'
 import ResearcherDashboard from '@/features/dashboard/pages/ResearcherDashboard'
 import DirectorDashboard from '@/features/dashboard/pages/DirectorDashboard'
 import AssistantDashboard from '@/features/dashboard/pages/AssistantDashboard'
 import { AssistantPortalLayout } from '@/layouts/AssistantPortalLayout'
+import { DirectorPortalLayout } from '@/layouts/DirectorPortalLayout'
 import AdminDashboard from '@/features/dashboard/pages/AdminDashboard'
 import ValidationQueuePage from '@/features/validation/pages/ValidationQueuePage'
 import ValidationDetailPage from '@/features/validation/pages/ValidationDetailPage'
@@ -197,7 +199,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <RoleRoute allowedRoles={['DIRECTOR']}>
-          <DashboardLayout />
+          <DirectorPortalLayout />
         </RoleRoute>
       </ProtectedRoute>
     ),
@@ -205,7 +207,17 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to='dashboard' replace /> },
       { path: 'dashboard', element: <DirectorDashboard /> },
       { path: 'supervisions', element: <DirectorSupervisionListPage /> },
+      {
+        path: 'supervisions/:supervisionId',
+        element: <SupervisionDetailPage />,
+      },
+      { path: 'profile', element: <ProfileSettingsPage /> },
       { path: 'validation', element: <ValidationQueuePage /> },
+      { path: 'statistics', element: <DirectorStatisticsReportsPage /> },
+      {
+        path: 'statistics/reports',
+        element: <DirectorStatisticsReportsPage />,
+      },
     ],
   },
   {

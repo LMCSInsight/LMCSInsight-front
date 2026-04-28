@@ -3,11 +3,13 @@
     "welcome": "Bienvenue",
     "dashboard": "Tableau de bord",
     "supervisions": "Encadrements",
+    "bilan": "Bilan",
     "studentManagement": "Gestion des étudiants",
     "themeManagement": "Gestion des thèmes",
     "statisticsReports": "Statistiques et rapports",
     "profileSettings": "Profil et paramètres",
     "researcher": "Chercheur",
+    "director": "Directeur",
     "assistant": "Assistant",
     "theme": "Thème",
     "language": "Langue",
@@ -473,6 +475,67 @@
     },
     "unsavedChanges": "Modifications non enregistrées",
     "tabComingSoon": "Les paramètres {{tab}} seront bientôt disponibles."
+    ,"director": {
+      "tabs": {
+        "profile": "Profil",
+        "academic": "Institution",
+        "research": "Encadrement",
+        "security": "Sécurité"
+      },
+      "sections": {
+        "profile": {
+          "title": "Informations du directeur",
+          "subtitle": "Mettez à jour votre identité professionnelle."
+        },
+        "academic": {
+          "title": "Informations institutionnelles",
+          "subtitle": "Présentez votre rôle au sein de l’établissement."
+        },
+        "research": {
+          "title": "Encadrement et recherche",
+          "subtitle": "Décrivez votre activité scientifique et d’encadrement."
+        },
+        "security": {
+          "title": "Sécurité du compte",
+          "subtitle": "Gérez votre mot de passe et les alertes de sécurité."
+        }
+      },
+      "fields": {
+        "fullName": "Nom du directeur",
+        "email": "Adresse e-mail professionnelle",
+        "phone": "Téléphone professionnel",
+        "diploma": "Titre / grade",
+        "quality": "Fonction",
+        "hIndex": "H-index",
+        "googleScholar": "Profil Google Scholar",
+        "researchGate": "ResearchGate",
+        "personalSite": "Site personnel",
+        "currentPassword": "Mot de passe actuel",
+        "newPassword": "Nouveau mot de passe",
+        "confirmPassword": "Confirmer le mot de passe"
+      },
+      "placeholders": {
+        "fullName": "Pr. Ahmed Benali",
+        "email": "directeur@univ.dz",
+        "phone": "+213 ...",
+        "diploma": "Professeur / Docteur",
+        "quality": "Sélectionner une fonction",
+        "hIndex": "25",
+        "googleScholar": "https://scholar.google.com/...",
+        "researchGate": "https://www.researchgate.net/...",
+        "personalSite": "https://...",
+        "currentPassword": "••••••••",
+        "newPassword": "••••••••",
+        "confirmPassword": "••••••••"
+      },
+      "academicOptions": {
+        "quality": {
+          "leadResearcher": "Directeur de laboratoire",
+          "departmentHead": "Directeur de département",
+          "projectLead": "Chef de projet"
+        }
+      }
+    }
   },
   "assistant": {
     "activityQueue": "Activité",

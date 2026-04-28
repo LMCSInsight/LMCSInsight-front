@@ -9,7 +9,7 @@ import {
   LayoutDashboard,
   ListOrdered,
   ClipboardCheck,
-  BarChart3,
+  FileText,
   Settings,
   ChevronRight,
 } from 'lucide-react'
@@ -28,13 +28,8 @@ import {
 import { cn } from '@/lib/utils'
 import {
   ROUTES,
-  getResearcherDashboardPath,
-  getResearcherReviewsPath,
-  getResearcherSupervisionsPath,
-  getResearcherSupervisionDetailPath,
-  getResearcherReviewDetailPath,
-  getResearcherStatisticsPath,
-  getResearcherProfilePath,
+  getDirectorProfilePath,
+  getDirectorStatisticsReportsPath,
 } from '@/config/routes'
 import i18n, { LANGUAGES } from '@/i18n'
 import {
@@ -42,63 +37,55 @@ import {
   useMarkNotificationRead,
 } from '@/features/notifications/hooks/useNotifications'
 
-const RESEARCHER_NAV: {
+const DIRECTOR_NAV: {
   key: string
   labelKey: string
-  getPath: (researcherId: string) => string
+  path: string
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
-  isActive?: (pathname: string, researcherId: string) => boolean
 }[] = [
   {
     key: 'dashboard',
     labelKey: 'common.dashboard',
-    getPath: (id) => getResearcherDashboardPath(id),
+    path: ROUTES.DASHBOARD_DIRECTOR,
     icon: LayoutDashboard,
-  },
-  {
-    key: 'reviews',
-    labelKey: 'researcher.reviews.nav',
-    getPath: (id) => getResearcherReviewsPath(id),
-    icon: ClipboardCheck,
-    isActive: (path, id) =>
-      path.startsWith(getResearcherReviewsPath(id) + '/') ||
-      path === getResearcherReviewsPath(id),
   },
   {
     key: 'supervisions',
     labelKey: 'common.supervisions',
-    getPath: (id) => getResearcherSupervisionsPath(id),
+    path: ROUTES.DIRECTOR_SUPERVISIONS,
     icon: ListOrdered,
-    isActive: (path, id) => path.startsWith(getResearcherSupervisionsPath(id)),
+  },
+  {
+    key: 'validation',
+    labelKey: 'assistant.validationQueue',
+    path: ROUTES.DIRECTOR_VALIDATION,
+    icon: ClipboardCheck,
   },
   {
     key: 'statistics',
     labelKey: 'common.statisticsReports',
-    getPath: (id) => getResearcherStatisticsPath(id),
-    icon: BarChart3,
-    isActive: (path, id) => path === getResearcherStatisticsPath(id),
+    path: getDirectorStatisticsReportsPath(),
+    icon: FileText,
   },
   {
     key: 'profile',
     labelKey: 'common.profileSettings',
-    getPath: (id) => getResearcherProfilePath(id),
+    path: getDirectorProfilePath(),
     icon: Settings,
   },
 ]
 
 const PAGE_TITLE_KEYS: Record<string, string> = {
   dashboard: 'common.dashboard',
-  reviews: 'researcher.reviews.nav',
   supervisions: 'common.supervisions',
+  validation: 'assistant.validationQueue',
   statistics: 'common.statisticsReports',
   profile: 'common.profileSettings',
 }
 
-function getPageKey(pathname: string, researcherId: string): string {
-  const item = RESEARCHER_NAV.find((nav) => {
-    if (nav.isActive) return nav.isActive(pathname, researcherId)
-    const path = nav.getPath(researcherId)
-    return pathname === path || pathname.startsWith(path + '/')
+function getPageKey(pathname: string): string {
+  const item = DIRECTOR_NAV.find((nav) => {
+    return pathname === nav.path || pathname.startsWith(nav.path + '/')
   })
   return item?.key ?? 'dashboard'
 }
@@ -120,19 +107,17 @@ function getInitials(
   return '?'
 }
 
-export function ResearcherPortalLayout() {
+export function DirectorPortalLayout() {
   const { t } = useTranslation()
   const { currentUser, logout } = useAuthContext()
   const { isDark, toggleTheme } = useTheme()
   const location = useLocation()
   const navigate = useNavigate()
-  const researcherId = currentUser?.id ?? ''
 
-  function isItemSelected(item: (typeof RESEARCHER_NAV)[number]): boolean {
-    if (item.isActive) return item.isActive(location.pathname, researcherId)
-    const path = item.getPath(researcherId)
+  function isItemSelected(item: (typeof DIRECTOR_NAV)[number]): boolean {
     return (
-      location.pathname === path || location.pathname.startsWith(path + '/')
+      location.pathname === item.path ||
+      location.pathname.startsWith(item.path + '/')
     )
   }
 
@@ -141,7 +126,7 @@ export function ResearcherPortalLayout() {
     navigate(ROUTES.LOGIN, { replace: true })
   }
 
-  const pageKey = getPageKey(location.pathname, researcherId)
+  const pageKey = getPageKey(location.pathname)
   const pageTitle = t(PAGE_TITLE_KEYS[pageKey] ?? 'common.dashboard')
   const initials = getInitials(currentUser?.name, currentUser?.email)
 
@@ -151,10 +136,8 @@ export function ResearcherPortalLayout() {
 
   return (
     <div className='researcher-portal flex min-h-screen bg-muted/30 dark:bg-background'>
-      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
       <aside className='fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-border bg-card bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,oklch(0.45_0.2_260_/_0.06),transparent)]'>
         <div className='flex flex-1 flex-col gap-5 overflow-y-auto p-4'>
-          {/* Logo */}
           <div className='flex justify-center py-2'>
             <img
               src='/lmcs.png'
@@ -163,7 +146,6 @@ export function ResearcherPortalLayout() {
             />
           </div>
 
-          {/* User identity */}
           <div className='flex items-center gap-3 rounded-xl border border-border bg-muted/50 px-3 py-2.5'>
             <div className='flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground ring-2 ring-primary/20 ring-offset-2 ring-offset-card'>
               {initials}
@@ -173,21 +155,19 @@ export function ResearcherPortalLayout() {
                 {currentUser?.name ?? '—'}
               </p>
               <p className='text-xs font-medium text-primary'>
-                {t('common.researcher')}
+                {t('common.director')}
               </p>
             </div>
           </div>
 
-          {/* Nav */}
           <nav className='flex flex-col gap-0.5'>
-            {RESEARCHER_NAV.map((item) => {
-              const path = item.getPath(researcherId)
+            {DIRECTOR_NAV.map((item) => {
               const selected = isItemSelected(item)
               const Icon = item.icon
               return (
                 <Link
                   key={item.key}
-                  to={path}
+                  to={item.path}
                   className={cn(
                     buttonVariants({ variant: 'ghost', size: 'default' }),
                     'relative h-10 w-full justify-start gap-3 px-3 font-normal transition-colors',
@@ -204,7 +184,6 @@ export function ResearcherPortalLayout() {
           </nav>
         </div>
 
-        {/* Logout */}
         <div className='mt-auto border-t border-border p-4'>
           <Button
             variant='ghost'
@@ -217,23 +196,19 @@ export function ResearcherPortalLayout() {
         </div>
       </aside>
 
-      {/* ── Main area ─────────────────────────────────────────────────────── */}
       <div className='ml-64 flex min-w-0 flex-1 flex-col min-h-screen'>
-        {/* Header */}
         <header className='sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-border bg-card/90 backdrop-blur-sm px-6 py-3'>
-          {/* Breadcrumb */}
           <nav
             className='flex items-center gap-1.5 text-sm'
             aria-label='Breadcrumb'
           >
             <span className='text-muted-foreground'>
-              {t('common.researcher')}
+              {t('common.director')}
             </span>
             <ChevronRight className='size-3.5 text-muted-foreground/50 shrink-0' />
             <span className='font-medium text-foreground'>{pageTitle}</span>
           </nav>
 
-          {/* Controls */}
           <div className='flex items-center gap-1'>
             <Button
               variant='ghost'
@@ -315,24 +290,8 @@ export function ResearcherPortalLayout() {
                         )}
                         onClick={() => {
                           if (!n.readAt) markRead(n.id)
-                          if (!n.supervisionId) return
-                          if (
-                            n.type === 'NEW_SUBMISSION' ||
-                            n.type === 'RESUBMISSION'
-                          ) {
-                            navigate(
-                              getResearcherReviewDetailPath(
-                                researcherId,
-                                n.supervisionId,
-                              ),
-                            )
-                          } else {
-                            navigate(
-                              getResearcherSupervisionDetailPath(
-                                researcherId,
-                                n.supervisionId,
-                              ),
-                            )
+                          if (n.supervisionId) {
+                            navigate(ROUTES.DIRECTOR_VALIDATION)
                           }
                         }}
                       >
