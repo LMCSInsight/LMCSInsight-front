@@ -10,6 +10,9 @@ export const ROUTES = {
   DASHBOARD_ADMIN: '/admin/dashboard',
   DIRECTOR_SUPERVISIONS: '/director/supervisions',
   DIRECTOR_VALIDATION: '/director/validation',
+  DIRECTOR_CHERCHEURS: '/director/chercheurs',
+  DIRECTOR_STATISTICS: '/director/statistics',
+  DIRECTOR_PROFILE: '/director/profile',
   /** Primary: org-wide activity list (read-only, assistant). */
   ASSISTANT_ACTIVITY: '/assistant/activity',
   /** Legacy: redirects to {@link ROUTES.ASSISTANT_ACTIVITY}. */
