@@ -3,16 +3,666 @@
     "welcome": "Welcome",
     "dashboard": "Dashboard",
     "supervisions": "Supervisions",
+    "bilan": "Bilan",
     "studentManagement": "Student Management",
+    "themeManagement": "Theme management",
     "statisticsReports": "Statistics & Reports",
     "profileSettings": "Profile & Settings",
     "researcher": "Researcher",
+    "director": "Director",
+    "assistant": "Assistant",
     "theme": "Theme",
     "language": "Language",
     "notifications": "Notifications",
     "noNotifications": "No notifications",
     "french": "French",
     "english": "English",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "add": "Add",
+    "back": "Back",
+    "search": "Search",
+    "filter": "Filter",
+    "apply": "Apply",
+    "reset": "Reset",
+    "confirm": "Confirm",
+    "close": "Close",
+    "remove": "Remove",
+    "previous": "Prev.",
+    "next": "Next",
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "noData": "No data",
+    "required": "Required field",
+    "saving": "Saving…",
+    "activeFilters": "Active filters:",
+    "clearAll": "Clear all",
+    "optional": "optional",
+    "select": "Select…",
+    "email": "Email"
+  },
+  "confirmDelete": {
+    "supervisions": {
+      "title": "Delete supervision",
+      "description": "This action cannot be undone. The supervision will be permanently deleted."
+    },
+    "students": {
+      "title": "Delete student",
+      "description": "This action cannot be undone. The student will be permanently deleted."
+    }
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "subtitle": "Enter your credentials to access the portal.",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "orContinueWith": "or continue with",
+    "googleSignIn": "Sign in with Google @esi.dz",
+    "devMode": "Development mode",
+    "errors": {
+      "invalidCredentials": "Incorrect email or password.",
+      "serverError": "An error occurred. Please try again."
+    }
+  },
+  "students": {
+    "list": {
+      "title": "My Students",
+      "subtitle": "Manage your supervised students.",
+      "register": "Register a student",
+      "count": "{{count}} student",
+      "count_plural": "{{count}} students",
+      "search": "Search by name, email, institution…",
+      "noStudents": "No students found",
+      "noStudentsFiltered": "Try modifying or resetting your filters.",
+      "noStudentsEmpty": "Start by registering a student.",
+      "loadError": "Error loading students.",
+      "total": "{{count}} student(s) in total"
+    },
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "institution": "Institution",
+      "level": "Level",
+      "specialty": "Specialty",
+      "actions": "Actions"
+    },
+    "actions": {
+      "viewDetails": "View details",
+      "supervisions": "Supervisions"
+    },
+    "detail": {
+      "personalInfo": "Personal information",
+      "academicInfo": "Academic",
+      "breadcrumb": "Students",
+      "supervisions": "Supervisions",
+      "supervision": "supervision",
+      "addedOn": "Added on",
+      "institution": "Institution",
+      "level": "Level",
+      "specialty": "Specialty",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "notFound": "Unable to load student data.",
+      "back": "Back",
+      "edit": "Edit"
+    },
+    "register": {
+      "title": "Add a student",
+      "subtitle": "Fill in the information to register a new student.",
+      "section1": "1. Personal information",
+      "section2": "2. Academic information",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "institution": "Institution",
+      "level": "Level",
+      "specialty": "Specialty",
+      "specialtyOptional": "Specialty (optional)",
+      "submit": "Add student",
+      "success": "Student added successfully!",
+      "error": "Error while creating student"
+    },
+    "edit": {
+      "title": "Edit student",
+      "subtitle": "Edit mode",
+      "changesCount_one": "{{count}} field modified",
+      "changesCount_other": "{{count}} fields modified",
+      "noChanges": "No changes",
+      "submit": "Save changes",
+      "success": "Student updated successfully!",
+      "error": "Error while updating student"
+    }
+  },
+  "themes": {
+    "pageTitle": "Themes",
+    "list": {
+      "title": "Research themes",
+      "subtitle": "Create and manage themes used for supervisions.",
+      "add": "Add a theme",
+      "search": "Search by name or description…",
+      "count": "{{count}} theme",
+      "count_plural": "{{count}} themes",
+      "empty": "No themes yet. Add a theme to use it in supervisions.",
+      "error": "Error loading themes."
+    },
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "team": "Team",
+      "actions": "Actions"
+    },
+    "fields": {
+      "name": "Theme name",
+      "namePlaceholder": "e.g. Artificial intelligence",
+      "description": "Description"
+    },
+    "validation": {
+      "nameRequired": "Please enter a theme name."
+    },
+    "register": {
+      "badge": "New theme",
+      "title": "Add a theme",
+      "subtitle": "Define a research theme for supervisions.",
+      "submit": "Create theme",
+      "success": "Theme created successfully.",
+      "error": "Could not create the theme."
+    },
+    "detail": {
+      "notFound": "Theme not found.",
+      "backList": "Back to list",
+      "sectionDescription": "Description",
+      "noDescription": "No description provided.",
+      "created": "Created",
+      "updated": "Last updated"
+    },
+    "edit": {
+      "title": "Edit theme",
+      "save": "Save",
+      "success": "Theme updated.",
+      "error": "Could not update the theme."
+    },
+    "deleteTitle": "Delete theme",
+    "deleteDescription": "Supervisions that use this theme will have their theme cleared. This action cannot be undone."
+  },
+  "supervisions": {
+    "detail": {
+      "title": "Supervision details",
+      "subtitle": "View all information related to this supervision.",
+      "loading": "Loading data...",
+      "error": "Error while loading data. Please check your connection.",
+      "na": "N/A",
+      "back": "Back",
+      "notFound": "Unable to load this supervision.",
+      "edit": "Edit",
+      "breadcrumb": "Supervisions",
+      "sections": {
+        "general": "1. General information:",
+        "student": "2. Student:",
+        "topic": "3. Topic",
+        "dates": "4. Dates:",
+        "supervisors": "5. Supervisors:",
+        "validation": "6. Validation"
+      },
+      "labels": {
+        "projectTitle": "Project title",
+        "status": "Status",
+        "supervisionType": "Supervision type",
+        "academicYear": "Academic year",
+        "studentName": "Student name",
+        "subject": "Subject",
+        "theme": "Theme",
+        "topicDescription": "Subject description",
+        "startDate": "Start date",
+        "endDate": "End date",
+        "actualEndDate": "Actual end date",
+        "mainSupervisor": "Main supervisor",
+        "coSupervisor": "Co-supervisor {{index}}",
+        "validationStatus": "Validation status",
+        "notes": "Notes",
+        "noKeywords": "No keywords",
+        "noDescription": "No description",
+        "noSupervisors": "No supervisors assigned",
+        "noValidationNotes": "No validation notes",
+        "noStudent": "No student assigned",
+        "elapsed": "{{pct}}% elapsed",
+        "description": "Description",
+        "researchTheme": "Research theme",
+        "keywords": "Keywords",
+        "calendar": "Schedule",
+        "start": "Start",
+        "expectedEnd": "Expected end",
+        "actualEnd": "Actual end",
+        "supervisors": "Supervisors",
+        "validation": "Validation",
+        "validatedOn": "Validated on",
+        "createdOn": "Created on",
+        "updatedOn": "Updated on",
+        "main": "Main",
+        "coSup": "Co-supervisor",
+        "external": "External",
+        "student": "Student"
+      }
+    },
+    "list": {
+      "title": "My Supervisions",
+      "subtitle": "Manage and track all your supervisions.",
+      "new": "New supervision",
+      "search": "Search by title, keywords, student…",
+      "count": "{{count}} supervision",
+      "count_plural": "{{count}} supervisions",
+      "noResults": "No supervision found",
+      "noResultsFiltered": "Try modifying or resetting your filters.",
+      "noResultsEmpty": "Start by creating a supervision.",
+      "loadError": "Error loading supervisions.",
+      "total": "{{count}} supervision(s) total"
+    },
+    "columns": {
+      "title": "Title",
+      "student": "Student",
+      "type": "Type",
+      "status": "Status",
+      "validation": "Validation",
+      "actions": "Actions"
+    },
+    "form": {
+      "themeLabel": "Research theme",
+      "themeSearch": "Search by theme name…",
+      "themeRequired": "Select a research theme",
+      "noThemeMatch": "No theme found for"
+    },
+    "filters": {
+      "type": "Type",
+      "status": "Status",
+      "validation": "Validation",
+      "academicYear": "Academic year",
+      "all": "All"
+    },
+    "status": {
+      "IN_PROGRESS": "In progress",
+      "DEFENDED": "Defended",
+      "ABANDONED": "Abandoned",
+      "EXTENSION": "Extension",
+      "SUSPENDED": "Suspended"
+    },
+    "type": {
+      "PFE": "FYP",
+      "MASTER": "Master",
+      "PHD": "PhD",
+      "INTERNSHIP": "Internship",
+      "PROJECT": "Research project"
+    },
+    "validation": {
+      "PENDING": "Pending",
+      "VALIDATED": "Validated",
+      "REJECTED": "Rejected",
+      "REVISED": "Revised"
+    }
+  },
+  "researcher": {
+    "reviews": {
+      "nav": "My reviews",
+      "breadcrumb": "My reviews",
+      "backToList": "Back to my reviews",
+      "openDetail": "Open review",
+      "historyTitle": "My review history",
+      "historySubtitle": "{{count}} decision entries you recorded as main supervisor",
+      "pendingQueueHero": "awaiting your review as main supervisor",
+      "decision": {
+        "validateTitle": "Confirm approval",
+        "rejectTitle": "Reject this supervision",
+        "reviseTitle": "Request changes",
+        "validate": "Approve",
+        "reject": "Reject",
+        "revise": "Request revision",
+        "subtitle": "The decision is recorded. All assistants in the organization are notified and can read the log.",
+        "commentsLabel": "Comments",
+        "commentsPlaceholder": "Add notes for the assistants and for the record (required to reject or request a revision)…",
+        "issuesLabel": "Issues to address",
+        "issueInputPlaceholder": "Describe a point and press Enter…"
+      },
+      "actionBar": {
+        "alreadyReviewed": "A decision is already recorded for this supervision."
+      }
+    }
+  },
+  "dashboard": {
+    "greeting": "Hello, {{name}}",
+    "kpi": {
+      "total": "Total supervisions",
+      "totalSub": "registered supervisions",
+      "inProgress": "In progress",
+      "defended": "Defended",
+      "defenseRate": "Defense rate",
+      "defenseRateSub": "{{defended}} out of {{total}}",
+      "pending": "Pending",
+      "pendingSub": "validation",
+      "pendingReviews": "Awaiting your review",
+      "pendingReviewsSub": "PENDING in your review queue"
+    },
+    "charts": {
+      "byType": "By type",
+      "byYear": "Evolution by academic year",
+      "noData": "No data"
+    },
+    "recent": {
+      "title": "Recent supervisions",
+      "viewAll": "View all",
+      "add": "Add a supervision",
+      "noSupervisions": "No supervisions yet."
+    },
+    "recentDecisions": {
+      "title": "Recent decisions you made",
+      "viewAll": "Full history",
+      "empty": "No validation decisions recorded yet.",
+      "colTitle": "Supervision",
+      "colDecision": "Decision",
+      "colDate": "Date"
+    },
+    "statusBar": {
+      "title": "Distribution by status"
+    },
+    "quickActions": {
+      "newSupervision": "New supervision",
+      "myReviews": "My reviews",
+      "registerStudent": "Register student"
+    },
+    "table": {
+      "title": "Title",
+      "student": "Student",
+      "type": "Type",
+      "validation": "Validation",
+      "actions": "Actions"
+    }
+  },
+  "profile": {
+    "tabs": {
+      "profile": "Profile",
+      "academic": "Academic",
+      "research": "Research",
+      "security": "Security"
+    },
+    "personalInfo": {
+      "title": "Personal Information",
+      "subtitle": "Update your account information"
+    },
+    "academicInfo": {
+      "title": "Academic Information",
+      "subtitle": "Update your academic profile information"
+    },
+    "researchInfo": {
+      "title": "Research & Profiles",
+      "subtitle": "Manage your research metrics and external profiles"
+    },
+    "securityInfo": {
+      "title": "PASSWORD",
+      "subtitle": "Security information"
+    },
+    "fields": {
+      "fullName": "Researcher Name",
+      "email": "Contact Email",
+      "phone": "Phone"
+    },
+    "academicFields": {
+      "diploma": "Diploma",
+      "institution": "Institution",
+      "quality": "Quality",
+      "researchGrade": "Research grade",
+      "team": "Team"
+    },
+    "researchFields": {
+      "hIndex": "H-index",
+      "googleScholar": "Google Scholar profile",
+      "researchGate": "ResearchGate",
+      "personalSite": "Personal site"
+    },
+    "securityFields": {
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password"
+    },
+    "placeholders": {
+      "fullName": "Dr. Ahmed Benali",
+      "email": "ahmed@univ.dz",
+      "phone": "Enter Phone Number"
+    },
+    "academicPlaceholders": {
+      "diploma": "PhD in AI",
+      "institution": "ahmed@univ.dz",
+      "quality": "Select quality",
+      "researchGrade": "Select research grade",
+      "team": "LMCS"
+    },
+    "researchPlaceholders": {
+      "hIndex": "25",
+      "googleScholar": "Link",
+      "researchGate": "Scientific social network (link)",
+      "personalSite": "Link"
+    },
+    "securityPlaceholders": {
+      "currentPassword": "************",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password"
+    },
+    "securityNotifications": {
+      "title": "Security notifications",
+      "subtitle": "Security information",
+      "loginAlert": "Login alert",
+      "passwordChange": "Password change",
+      "suspiciousActivity": "Suspicious activity"
+    },
+    "academicOptions": {
+      "quality": {
+        "teacherResearcher": "Teacher-Researcher",
+        "associateProfessor": "Associate Professor",
+        "professor": "Professor"
+      },
+      "researchGrade": {
+        "director": "Research Director",
+        "senior": "Senior Researcher",
+        "junior": "Junior Researcher"
+      }
+    },
+    "actions": {
+      "save": "Save",
+      "saveAll": "Save All",
+      "confirmPassword": "Confirm password",
+      "confirm": "Confirm"
+    },
+    "unsavedChanges": "Unsaved changes",
+    "tabComingSoon": "{{tab}} settings will be available soon."
+    ,"director": {
+      "tabs": {
+        "profile": "Profile",
+        "academic": "Institution",
+        "research": "Supervision",
+        "security": "Security"
+      },
+      "sections": {
+        "profile": {
+          "title": "Director information",
+          "subtitle": "Update your professional identity."
+        },
+        "academic": {
+          "title": "Institutional information",
+          "subtitle": "Present your role within the institution."
+        },
+        "research": {
+          "title": "Supervision and research",
+          "subtitle": "Describe your scientific and supervision activity."
+        },
+        "security": {
+          "title": "Account security",
+          "subtitle": "Manage your password and security alerts."
+        }
+      },
+      "fields": {
+        "fullName": "Director name",
+        "email": "Professional email address",
+        "phone": "Professional phone",
+        "diploma": "Title / rank",
+        "quality": "Function",
+        "hIndex": "H-index",
+        "googleScholar": "Google Scholar profile",
+        "researchGate": "ResearchGate",
+        "personalSite": "Personal site",
+        "currentPassword": "Current password",
+        "newPassword": "New password",
+        "confirmPassword": "Confirm password"
+      },
+      "placeholders": {
+        "fullName": "Prof. Ahmed Benali",
+        "email": "director@univ.dz",
+        "phone": "+213 ...",
+        "diploma": "Professor / Doctor",
+        "quality": "Select a function",
+        "hIndex": "25",
+        "googleScholar": "https://scholar.google.com/...",
+        "researchGate": "https://www.researchgate.net/...",
+        "personalSite": "https://...",
+        "currentPassword": "••••••••",
+        "newPassword": "••••••••",
+        "confirmPassword": "••••••••"
+      },
+      "academicOptions": {
+        "quality": {
+          "leadResearcher": "Laboratory director",
+          "departmentHead": "Department director",
+          "projectLead": "Project lead"
+        }
+      }
+    }
+  },
+  "assistant": {
+    "activityQueue": "Activity",
+    "activity": {
+      "pageTitle": "Activity",
+      "pageEyebrow": "Organization",
+      "hint": "View-only list: open a row to see the supervision. Main supervisors approve or request changes in their portal."
+    },
+    "historyPageTitle": "Activity history",
+    "validationQueue": "Supervision requests",
+    "historyTitle": "History",
+    "status": {
+      "pending": "Pending",
+      "validated": "Validated",
+      "rejected": "Rejected",
+      "revised": "Revised"
+    },
+    "dashboard": {
+      "title": "Overview",
+      "subtitle": "Supervision workflow and main-supervisor decisions for your team.",
+      "pendingLabel": "awaiting main supervisor review",
+      "pendingCta": "View activity",
+      "goToQueue": "View activity",
+      "welcomeTitle": "Good morning, {{name}}",
+      "validatedTodayLabel": "Validated today",
+      "rejectedWeekLabel": "Rejected this week",
+      "revisedWeekLabel": "Revised this week",
+      "urgencyTitle": "Oldest pending supervisions",
+      "recentActivityTitle": "Recent decisions",
+      "typeBreakdownTitle": "Pending by type",
+      "kpi": {
+        "pending": "Awaiting main supervisor",
+        "validatedToday": "Validated today",
+        "rejectedWeek": "Rejected this week",
+        "revisedWeek": "Revised this week",
+        "totalProcessed": "Total processed"
+      },
+      "charts": {
+        "byStatus": "Status distribution",
+        "byYear": "Activity by academic year"
+      }
+    },
+    "queue": {
+      "subtitle": "{{count}} items",
+      "empty": "No supervisions found.",
+      "searchPlaceholder": "Search by title or student…",
+      "backToActivity": "Back to activity",
+      "tabs": {
+        "all": "All"
+      },
+      "columns": {
+        "title": "Title",
+        "student": "Student",
+        "type": "Type",
+        "year": "Year",
+        "status": "Status",
+        "age": "Waiting",
+        "supervisor": "Supervisor"
+      },
+      "filters": {
+        "type": "Type",
+        "year": "Academic year",
+        "active": "Active filters"
+      },
+      "miniStats": "{{pending}} pending · {{revised}} revised · {{validated}} validated"
+    },
+    "detail": {
+      "submitted": "submitted",
+      "mainSupervisor": "Main supervisor",
+      "coSupervisor": "Co-supervisor",
+      "flaggedIssues": "Flagged issues from last review"
+    },
+    "decision": {
+      "validate": "Validate",
+      "validateTitle": "Confirm validation",
+      "reject": "Reject",
+      "rejectTitle": "Reject supervision",
+      "revise": "Request revision",
+      "reviseTitle": "Request revision",
+      "subtitle": "Your action is recorded in the log.",
+      "commentsLabel": "Comments",
+      "commentsPlaceholder": "Add notes for the record…",
+      "issuesLabel": "Issues found",
+      "issueInputPlaceholder": "Describe an issue and press Enter…"
+    },
+    "actionBar": {
+      "alreadyReviewed": "This supervision has already been reviewed."
+    },
+    "timeline": {
+      "title": "Validation log",
+      "empty": "No validation history yet.",
+      "unknown": "Unknown supervision"
+    },
+    "checklist": {
+      "title": "Fields checked",
+      "fields": {
+        "title": "Title",
+        "type": "Type",
+        "academicYear": "Academic year",
+        "student": "Student assigned",
+        "supervisors": "Supervisors assigned",
+        "description": "Description complete",
+        "keywords": "Keywords present",
+        "dates": "Dates coherent"
+      }
+    },
+    "historySubtitle": "{{count}} decisions recorded",
+    "historyOrgSubtitle": "Organization-wide decisions (all supervisions in your team).",
+    "history": {
+      "empty": "No decisions recorded yet.",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "activityChart": "Validation activity (30 days)",
+      "columns": {
+        "date": "Date",
+        "title": "Supervision",
+        "status": "Decision",
+        "comments": "Comments"
+      }
+    },
+    "supervisions": {
+      "new": "New supervision",
+      "subtitle": "{{count}} supervisions",
+      "delete": "Delete",
+      "deleteTitle": "Delete this supervision?",
+      "deleteDescription": "This cannot be undone. Only supervisions that are already validated cannot be deleted.",
+      "deleteError": "Could not delete (locked record or server error)."
+    }
   }
 }

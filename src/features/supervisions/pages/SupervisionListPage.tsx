@@ -1,20 +1,20 @@
-import { useState, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Search,
   SlidersHorizontal,
-  Plus,
-  Pencil,
-  Trash2,
   MoreVertical,
   X,
   ChevronLeft,
   ChevronRight,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+  BookOpen,
+  Eye,
+} from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -22,547 +22,703 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 import {
-  getResearcherSupervisionsPath,
   getResearcherSupervisionDetailPath,
-  getSupervisionEditPath,
-  getResearcherSupervisionNewPath,
-} from "@/config/routes";
+  getResearcherReviewDetailPath,
+} from '@/config/routes'
+import { useSupervisions } from '@/features/supervisions/hooks/useSupervisions'
+import type {
+  SupervisionType,
+  SupervisionStatus,
+  ValidationStatus,
+} from '@/features/supervisions/types'
 
-// ─── Types ─────────────────────────────────────────────────────────────
+const SUPERVISION_TYPES = [
+  'PFE',
+  'MASTER',
+  'PHD',
+  'INTERNSHIP',
+  'PROJECT',
+] as const
+const SUPERVISION_STATUSES = [
+  'IN_PROGRESS',
+  'DEFENDED',
+  'ABANDONED',
+  'EXTENSION',
+  'SUSPENDED',
+] as const
+const ACADEMIC_YEARS = [
+  '2021-2022',
+  '2022-2023',
+  '2023-2024',
+  '2024-2025',
+  '2025-2026',
+] as const
 
-const SUPERVISION_TYPES = ["PFE", "Master", "PhD", "Internship", "Project"] as const;
-const SUPERVISION_STATUSES = ["IN_PROGRESS", "DEFENDED", "ABANDONED", "EXTENSION", "SUSPENDED"] as const;
-const VALIDATION_STATUSES = ["PENDING", "VALIDATED", "REJECTED", "REVISED"] as const;
-const ACADEMIC_YEARS = ["2021-2022", "2022-2023", "2023-2024", "2024-2025", "2025-2026"] as const;
-const THEMES = ["Machine Learning", "Cybersecurity", "Blockchain", "IoT", "NLP", "Cloud", "Quantum", "Healthcare"] as const;
-
-type SupervisionType = (typeof SUPERVISION_TYPES)[number];
-type SupervisionStatus = (typeof SUPERVISION_STATUSES)[number];
-type ValidationStatus = (typeof VALIDATION_STATUSES)[number];
-
-interface SupervisionRow {
-  id: string;
-  title: string;
-  student: string;
-  type: SupervisionType;
-  status: SupervisionStatus;
-  validationStatus: ValidationStatus;
-  academicYear: string;
-  theme: string;
-  startDate: string;
+const TYPE_LABELS: Record<SupervisionType, string> = {
+  PFE: 'PFE',
+  MASTER: 'Master',
+  PHD: 'Doctorat',
+  INTERNSHIP: 'Stage',
+  PROJECT: 'Projet',
 }
-
-// ─── Mock data (25 total) ───────────────────────────────────────────────
-
-const MOCK_SUPERVISIONS: SupervisionRow[] = [
-  { id: "1", title: "Deep Learning for Medical Imaging", student: "Ali Khelifi", type: "Master", status: "IN_PROGRESS", validationStatus: "PENDING", academicYear: "2025-2026", theme: "Machine Learning", startDate: "2024-09-01" },
-  { id: "2", title: "Blockchain for Supply Chain", student: "Sara Meziani", type: "PFE", status: "DEFENDED", validationStatus: "VALIDATED", academicYear: "2024-2025", theme: "Blockchain", startDate: "2024-02-01" },
-  { id: "3", title: "IoT Security Framework", student: "Youcef Benali", type: "Master", status: "IN_PROGRESS", validationStatus: "REJECTED", academicYear: "2025-2026", theme: "IoT", startDate: "2024-10-01" },
-  { id: "4", title: "AI for Healthcare Diagnostics", student: "Amina Taleb", type: "PhD", status: "IN_PROGRESS", validationStatus: "VALIDATED", academicYear: "2024-2025", theme: "Healthcare", startDate: "2023-09-01" },
-  { id: "5", title: "NLP for Arabic Text", student: "Mohamed Khelifi", type: "Master", status: "IN_PROGRESS", validationStatus: "PENDING", academicYear: "2025-2026", theme: "NLP", startDate: "2024-09-15" },
-  { id: "6", title: "Cloud Computing Architecture", student: "Fatima Lahmar", type: "Master", status: "DEFENDED", validationStatus: "VALIDATED", academicYear: "2023-2024", theme: "Cloud", startDate: "2023-02-01" },
-  { id: "7", title: "Mobile App Development", student: "Karim Bouzid", type: "PFE", status: "IN_PROGRESS", validationStatus: "REVISED", academicYear: "2025-2026", theme: "IoT", startDate: "2024-11-01" },
-  { id: "8", title: "Cybersecurity Analysis", student: "Nadia Cherif", type: "Master", status: "IN_PROGRESS", validationStatus: "PENDING", academicYear: "2025-2026", theme: "Cybersecurity", startDate: "2024-09-01" },
-  { id: "9", title: "Data Mining Algorithms", student: "Hamza Mokhtar", type: "PFE", status: "ABANDONED", validationStatus: "VALIDATED", academicYear: "2023-2024", theme: "Machine Learning", startDate: "2023-03-01" },
-  { id: "10", title: "Quantum Computing", student: "Sami Arous", type: "PhD", status: "IN_PROGRESS", validationStatus: "VALIDATED", academicYear: "2024-2025", theme: "Quantum", startDate: "2023-09-01" },
-  { id: "11", title: "Distributed Systems", student: "Leila Amrani", type: "Master", status: "DEFENDED", validationStatus: "VALIDATED", academicYear: "2024-2025", theme: "Cloud", startDate: "2023-10-01" },
-  { id: "12", title: "Smart City Sensors", student: "Omar Djemai", type: "Internship", status: "IN_PROGRESS", validationStatus: "PENDING", academicYear: "2025-2026", theme: "IoT", startDate: "2025-01-15" },
-  { id: "13", title: "Cryptography Protocols", student: "Yasmine Bensaad", type: "PhD", status: "IN_PROGRESS", validationStatus: "REVISED", academicYear: "2024-2025", theme: "Cybersecurity", startDate: "2022-09-01" },
-  { id: "14", title: "Web Security Audit", student: "Rafik Mansouri", type: "PFE", status: "DEFENDED", validationStatus: "VALIDATED", academicYear: "2024-2025", theme: "Cybersecurity", startDate: "2024-02-01" },
-  { id: "15", title: "Recommendation Systems", student: "Ines Ferhat", type: "Master", status: "IN_PROGRESS", validationStatus: "VALIDATED", academicYear: "2025-2026", theme: "Machine Learning", startDate: "2024-09-01" },
-  { id: "16", title: "DeFi Smart Contracts", student: "Anis Kaddour", type: "Master", status: "EXTENSION", validationStatus: "PENDING", academicYear: "2024-2025", theme: "Blockchain", startDate: "2023-09-01" },
-  { id: "17", title: "Edge Computing", student: "Salma Hamdi", type: "PFE", status: "IN_PROGRESS", validationStatus: "REJECTED", academicYear: "2025-2026", theme: "Cloud", startDate: "2024-10-01" },
-  { id: "18", title: "Medical Image Segmentation", student: "Nabil Chouiter", type: "PhD", status: "IN_PROGRESS", validationStatus: "VALIDATED", academicYear: "2024-2025", theme: "Healthcare", startDate: "2022-03-01" },
-  { id: "19", title: "Arabic Speech Recognition", student: "Dalia Meziane", type: "Master", status: "SUSPENDED", validationStatus: "REJECTED", academicYear: "2023-2024", theme: "NLP", startDate: "2023-02-01" },
-  { id: "20", title: "DevOps Pipeline", student: "Walid Khelifi", type: "Project", status: "DEFENDED", validationStatus: "VALIDATED", academicYear: "2024-2025", theme: "Cloud", startDate: "2024-01-01" },
-  { id: "21", title: "Network Intrusion Detection", student: "Samira Belkadi", type: "Master", status: "IN_PROGRESS", validationStatus: "PENDING", academicYear: "2025-2026", theme: "Cybersecurity", startDate: "2024-09-01" },
-  { id: "22", title: "Supply Chain Blockchain", student: "Tarek Boussaha", type: "PFE", status: "DEFENDED", validationStatus: "VALIDATED", academicYear: "2023-2024", theme: "Blockchain", startDate: "2023-03-01" },
-  { id: "23", title: "Federated Learning", student: "Houda Slimani", type: "PhD", status: "IN_PROGRESS", validationStatus: "REVISED", academicYear: "2024-2025", theme: "Machine Learning", startDate: "2023-09-01" },
-  { id: "24", title: "Smart Home IoT", student: "Ibrahim Ziani", type: "Internship", status: "IN_PROGRESS", validationStatus: "VALIDATED", academicYear: "2025-2026", theme: "IoT", startDate: "2025-02-01" },
-  { id: "25", title: "API Security", student: "Farida Benali", type: "PFE", status: "IN_PROGRESS", validationStatus: "PENDING", academicYear: "2025-2026", theme: "Cybersecurity", startDate: "2024-11-01" },
-];
-
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  PENDING: "outline",
-  IN_PROGRESS: "secondary",
-  DEFENDED: "default",
-  VALIDATED: "default",
-  REJECTED: "destructive",
-  REVISED: "secondary",
-  ABANDONED: "destructive",
-  EXTENSION: "outline",
-  SUSPENDED: "outline",
-};
-
-function formatStatus(s: string): string {
-  if (s === "IN_PROGRESS") return "IN_PROG";
-  return s;
+const STATUS_LABELS: Record<SupervisionStatus, string> = {
+  IN_PROGRESS: 'En cours',
+  DEFENDED: 'Soutenu',
+  ABANDONED: 'Abandonné',
+  EXTENSION: 'Prolongation',
+  SUSPENDED: 'Suspendu',
 }
-
-// ─── Component ─────────────────────────────────────────────────────────────
+const VALIDATION_LABELS: Record<ValidationStatus, string> = {
+  PENDING: 'En attente',
+  VALIDATED: 'Validé',
+  REJECTED: 'Refusé',
+  REVISED: 'Révisé',
+}
+const STATUS_DOT: Record<string, string> = {
+  IN_PROGRESS: 'bg-blue-500',
+  DEFENDED: 'bg-green-500',
+  ABANDONED: 'bg-red-400',
+  EXTENSION: 'bg-orange-400',
+  SUSPENDED: 'bg-gray-400',
+}
+const STATUS_VARIANT: Record<
+  string,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+  PENDING: 'outline',
+  IN_PROGRESS: 'secondary',
+  DEFENDED: 'default',
+  VALIDATED: 'default',
+  REJECTED: 'destructive',
+  REVISED: 'secondary',
+  ABANDONED: 'destructive',
+  EXTENSION: 'outline',
+  SUSPENDED: 'outline',
+}
+const STATUS_ROW_BORDER: Record<string, string> = {
+  IN_PROGRESS: 'border-l-blue-400',
+  DEFENDED: 'border-l-green-500',
+  ABANDONED: 'border-l-red-400',
+  EXTENSION: 'border-l-orange-400',
+  SUSPENDED: 'border-l-gray-400',
+}
+const TYPE_COLOR: Record<string, string> = {
+  PFE: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
+  MASTER:
+    'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
+  PHD: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
+  INTERNSHIP:
+    'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300',
+  PROJECT:
+    'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+}
 
 export default function SupervisionListPage() {
-  const { userId } = useParams<{ userId: string }>();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const { userId } = useParams<{ userId: string }>()
+  const { t } = useTranslation()
+  const navigate = useNavigate()
 
-  // Filter state (same shape as in Filters panel)
-  const [typeFilter, setTypeFilter] = useState<SupervisionType[]>([]);
-  const [statusFilter, setStatusFilter] = useState<SupervisionStatus[]>([]);
-  const [validationFilter, setValidationFilter] = useState<ValidationStatus[]>([]);
-  const [academicYearFilter, setAcademicYearFilter] = useState<string>("");
-  const [themeFilter, setThemeFilter] = useState<string>("");
-  const [startDateFrom, setStartDateFrom] = useState("");
-  const [startDateTo, setStartDateTo] = useState("");
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [page, setPage] = useState(1)
+  const perPage = 10
 
-  const toggleType = (t: SupervisionType) => {
-    setTypeFilter((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
-  };
-  const toggleStatus = (s: SupervisionStatus) => {
-    setStatusFilter((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
-  };
-  const toggleValidation = (v: ValidationStatus) => {
-    setValidationFilter((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
-  };
+  const [typeFilter, setTypeFilter] = useState<SupervisionType[]>([])
+  const [statusFilter, setStatusFilter] = useState<SupervisionStatus[]>([])
+  const [validationFilter, setValidationFilter] = useState<ValidationStatus[]>(
+    [],
+  )
+  const [academicYearFilter, setAcademicYearFilter] = useState('')
 
-  const hasActiveFilters =
-    typeFilter.length > 0 ||
-    statusFilter.length > 0 ||
-    validationFilter.length > 0 ||
-    academicYearFilter !== "" ||
-    themeFilter !== "" ||
-    startDateFrom !== "" ||
-    startDateTo !== "";
+  const toggleType = (t: SupervisionType) =>
+    setTypeFilter((p) => {
+      setPage(1)
+      return p.includes(t) ? p.filter((x) => x !== t) : [...p, t]
+    })
+  const toggleStatus = (s: SupervisionStatus) =>
+    setStatusFilter((p) => {
+      setPage(1)
+      return p.includes(s) ? p.filter((x) => x !== s) : [...p, s]
+    })
+  const toggleValidation = (v: ValidationStatus) =>
+    setValidationFilter((p) => {
+      setPage(1)
+      return p.includes(v) ? p.filter((x) => x !== v) : [...p, v]
+    })
+  const toggleAcademicYear = (year: string) => {
+    setPage(1)
+    setAcademicYearFilter(academicYearFilter === year ? '' : year)
+  }
 
-  const activeFilterLabels: { key: string; label: string }[] = [];
-  typeFilter.forEach((t) => activeFilterLabels.push({ key: `type-${t}`, label: `Type: ${t}` }));
-  statusFilter.forEach((s) => activeFilterLabels.push({ key: `status-${s}`, label: `Status: ${s.replace("_", " ")}` }));
-  validationFilter.forEach((v) => activeFilterLabels.push({ key: `val-${v}`, label: `Validation: ${v}` }));
-  if (academicYearFilter) activeFilterLabels.push({ key: "year", label: `Academic Year: ${academicYearFilter}` });
-  if (themeFilter) activeFilterLabels.push({ key: "theme", label: `Theme: ${themeFilter}` });
-  if (startDateFrom) activeFilterLabels.push({ key: "from", label: `From: ${startDateFrom}` });
-  if (startDateTo) activeFilterLabels.push({ key: "to", label: `To: ${startDateTo}` });
+  const serverFilters = {
+    search: searchQuery.trim() || undefined,
+    page,
+    limit: perPage,
+  }
 
-  const removeFilter = (key: string) => {
-    if (key.startsWith("type-")) setTypeFilter((p) => p.filter((x) => `type-${x}` !== key));
-    else if (key.startsWith("status-")) setStatusFilter((p) => p.filter((x) => `status-${x}` !== key));
-    else if (key.startsWith("val-")) setValidationFilter((p) => p.filter((x) => `val-${x}` !== key));
-    else if (key === "year") setAcademicYearFilter("");
-    else if (key === "theme") setThemeFilter("");
-    else if (key === "from") setStartDateFrom("");
-    else if (key === "to") setStartDateTo("");
-  };
+  const {
+    data: pageResult,
+    isLoading,
+    isError,
+  } = useSupervisions(serverFilters)
 
-  const clearAllFilters = () => {
-    setTypeFilter([]);
-    setStatusFilter([]);
-    setValidationFilter([]);
-    setAcademicYearFilter("");
-    setThemeFilter("");
-    setStartDateFrom("");
-    setStartDateTo("");
-    setPage(1);
-  };
-
-  const applyFiltersFromPanel = () => {
-    setFiltersOpen(false);
-    setPage(1);
-  };
-
-  const resetPanelFilters = () => {
-    setTypeFilter([]);
-    setStatusFilter([]);
-    setValidationFilter([]);
-    setAcademicYearFilter("");
-    setThemeFilter("");
-    setStartDateFrom("");
-    setStartDateTo("");
-    setPage(1);
-    setFiltersOpen(false);
-  };
-
-  const filtered = useMemo(() => {
-    let list = MOCK_SUPERVISIONS;
-    const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      list = list.filter(
-        (r) =>
-          r.title.toLowerCase().includes(q) ||
-          r.student.toLowerCase().includes(q) ||
-          r.theme.toLowerCase().includes(q) ||
-          r.type.toLowerCase().includes(q)
-      );
-    }
-    if (typeFilter.length > 0) list = list.filter((r) => typeFilter.includes(r.type));
-    if (statusFilter.length > 0) list = list.filter((r) => statusFilter.includes(r.status));
-    if (validationFilter.length > 0) list = list.filter((r) => validationFilter.includes(r.validationStatus));
-    if (academicYearFilter) list = list.filter((r) => r.academicYear === academicYearFilter);
-    if (themeFilter) list = list.filter((r) => r.theme === themeFilter);
-    if (startDateFrom) list = list.filter((r) => r.startDate >= startDateFrom);
-    if (startDateTo) list = list.filter((r) => r.startDate <= startDateTo);
-    return list;
+  const rows = useMemo(() => {
+    const baseRows = pageResult?.data ?? []
+    const query = searchQuery.trim().toLowerCase()
+    return baseRows.filter((row) => {
+      if (query) {
+        const supervisorName =
+          row.supervisors?.[0]?.supervisor?.nom_complet ?? ''
+        const themeName = row.theme?.name ?? ''
+        const haystack = `${row.title} ${row.student?.firstName ?? ''} ${
+          row.student?.lastName ?? ''
+        } ${supervisorName} ${themeName} ${row.academicYear} ${row.type} ${
+          row.status
+        } ${row.validationStatus}`.toLowerCase()
+        if (!haystack.includes(query)) return false
+      }
+      if (typeFilter.length > 0 && !typeFilter.includes(row.type)) return false
+      if (statusFilter.length > 0 && !statusFilter.includes(row.status))
+        return false
+      if (
+        validationFilter.length > 0 &&
+        !validationFilter.includes(row.validationStatus)
+      )
+        return false
+      if (academicYearFilter && row.academicYear !== academicYearFilter)
+        return false
+      return true
+    })
   }, [
+    pageResult?.data,
     searchQuery,
     typeFilter,
     statusFilter,
     validationFilter,
     academicYearFilter,
-    themeFilter,
-    startDateFrom,
-    startDateTo,
-  ]);
+  ])
 
-  const totalFiltered = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage));
-  const currentPage = Math.min(page, totalPages);
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * perPage;
-    return filtered.slice(start, start + perPage);
-  }, [filtered, currentPage, perPage]);
+  const total = rows.length
+  const totalPages = Math.max(1, Math.ceil(total / perPage))
+  const safePage = Math.min(page, totalPages)
+  const displayRows = rows.slice((safePage - 1) * perPage, safePage * perPage)
 
-  function handleDelete(id: string) {
-    console.log("Delete supervision", id);
+  const hasActiveFilters = Boolean(
+    typeFilter.length > 0 ||
+      statusFilter.length > 0 ||
+      validationFilter.length > 0 ||
+      academicYearFilter,
+  )
+
+  const activeFilterLabels: { key: string; label: string }[] = []
+  typeFilter.forEach((t) =>
+    activeFilterLabels.push({
+      key: `type-${t}`,
+      label: `Type: ${TYPE_LABELS[t]}`,
+    }),
+  )
+  statusFilter.forEach((s) =>
+    activeFilterLabels.push({
+      key: `status-${s}`,
+      label: `Statut: ${STATUS_LABELS[s]}`,
+    }),
+  )
+  validationFilter.forEach((v) =>
+    activeFilterLabels.push({
+      key: `val-${v}`,
+      label: `Validation: ${VALIDATION_LABELS[v]}`,
+    }),
+  )
+  if (academicYearFilter)
+    activeFilterLabels.push({
+      key: 'year',
+      label: `Année: ${academicYearFilter}`,
+    })
+
+  const removeFilter = (key: string) => {
+    if (key.startsWith('type-'))
+      setTypeFilter((p) => p.filter((x) => `type-${x}` !== key))
+    else if (key.startsWith('status-'))
+      setStatusFilter((p) => p.filter((x) => `status-${x}` !== key))
+    else if (key.startsWith('val-'))
+      setValidationFilter((p) => p.filter((x) => `val-${x}` !== key))
+    else if (key === 'year') setAcademicYearFilter('')
+    setPage(1)
+  }
+
+  const clearAllFilters = () => {
+    setTypeFilter([])
+    setStatusFilter([])
+    setValidationFilter([])
+    setAcademicYearFilter('')
+    setPage(1)
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          My Supervisions ({totalFiltered} total)
-        </h1>
+    <div className='space-y-4'>
+      <div className='flex flex-wrap items-center gap-3'>
+        <div className='flex-1'>
+          <h1 className='text-2xl font-semibold tracking-tight'>
+            {t('supervisions.list.title')}
+          </h1>
+          <p className='text-sm text-muted-foreground'>
+            {t('supervisions.list.subtitle')}
+          </p>
+        </div>
+        {total > 0 && (
+          <span className='inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary tabular'>
+            {t('supervisions.list.count', { count: total })}
+          </span>
+        )}
       </div>
 
-      {/* Toolbar: Search | Filters | Add New */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <div className='flex flex-wrap items-center gap-3'>
+        <div className='relative flex-1 min-w-50 max-w-md'>
+          <Search className='absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder="Search by title, keywords, student name..."
+            placeholder={t('supervisions.list.search')}
             value={searchQuery}
             onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(1);
+              setSearchQuery(e.target.value)
+              setPage(1)
             }}
-            className="pl-9"
+            className='pl-9'
           />
         </div>
         <Button
-          variant="outline"
+          variant='outline'
           onClick={() => setFiltersOpen(true)}
-          className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap"
+          className='inline-flex shrink-0 items-center gap-2 whitespace-nowrap'
         >
-          <SlidersHorizontal className="size-4 shrink-0" />
-          <span>Filters</span>
-        </Button>
-        <Button asChild className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
-          <Link to={userId ? getResearcherSupervisionNewPath(userId) : "#"} className="inline-flex items-center gap-2">
-            <Plus className="size-4 shrink-0" />
-            <span>Add New</span>
-          </Link>
+          <SlidersHorizontal className='size-4 shrink-0' />
+          <span>{t('common.filter')}</span>
         </Button>
       </div>
 
-      {/* Active Filters */}
       {hasActiveFilters && (
         <Card>
-          <CardContent className="flex flex-wrap items-center gap-2 py-3">
-            <span className="text-sm text-muted-foreground">Active Filters:</span>
+          <CardContent className='flex flex-wrap items-center gap-2 py-3'>
+            <span className='text-sm text-muted-foreground'>
+              {t('common.activeFilters')}
+            </span>
             {activeFilterLabels.map(({ key, label }) => (
               <span
                 key={key}
-                className="inline-flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1 text-sm"
+                className='inline-flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1 text-sm'
               >
                 {label}
                 <button
-                  type="button"
+                  type='button'
                   onClick={() => removeFilter(key)}
-                  className="rounded p-0.5 hover:bg-muted"
-                  aria-label={`Remove ${label}`}
+                  className='rounded p-0.5 hover:bg-muted'
+                  aria-label={`${t('common.remove')} ${label}`}
                 >
-                  <X className="size-3.5" />
+                  <X className='size-3.5' />
                 </button>
               </span>
             ))}
-            <Button variant="ghost" size="sm" onClick={clearAllFilters}>
-              Clear All
+            <Button variant='ghost' size='sm' onClick={clearAllFilters}>
+              {t('common.clearAll')}
             </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Table */}
       <Card>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Validation</TableHead>
-                <TableHead className="w-[100px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginated.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium max-w-[220px]">{row.title}</TableCell>
-                  <TableCell>{row.student}</TableCell>
-                  <TableCell>{row.type}</TableCell>
-                  <TableCell>{formatStatus(row.status)}</TableCell>
-                  <TableCell>
-                    <Badge variant={STATUS_VARIANT[row.validationStatus] ?? "outline"}>
-                      {row.validationStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="size-8" aria-label="Actions">
-                          <MoreVertical className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to={
-                              userId
-                                ? getSupervisionEditPath(userId, row.id)
-                                : "#"
+        <div className='overflow-x-auto'>
+          {isLoading ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('supervisions.columns.title')}</TableHead>
+                  <TableHead>{t('supervisions.columns.student')}</TableHead>
+                  <TableHead>{t('supervisions.columns.type')}</TableHead>
+                  <TableHead>{t('supervisions.columns.status')}</TableHead>
+                  <TableHead>{t('supervisions.columns.validation')}</TableHead>
+                  <TableHead>
+                    {t('supervisions.filters.academicYear')}
+                  </TableHead>
+                  <TableHead className='w-25 text-right'>
+                    {t('supervisions.columns.actions')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className='border-l-2 border-l-muted'>
+                    <TableCell>
+                      <div className='h-4 w-48 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 w-32 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-5 w-16 animate-pulse rounded-md bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 w-20 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-5 w-20 animate-pulse rounded-md bg-muted' />
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 w-20 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      <div className='ml-auto h-8 w-8 animate-pulse rounded bg-muted' />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : isError ? (
+            <div className='py-10 text-center text-sm text-destructive'>
+              {t('supervisions.list.loadError')}
+            </div>
+          ) : displayRows.length === 0 ? (
+            <div className='flex flex-col items-center gap-3 py-16 text-center'>
+              <div className='flex size-14 items-center justify-center rounded-full bg-muted'>
+                <BookOpen className='size-7 text-muted-foreground' />
+              </div>
+              <p className='text-sm font-medium text-foreground'>
+                {t('supervisions.list.noResults')}
+              </p>
+              <p className='text-xs text-muted-foreground'>
+                {hasActiveFilters
+                  ? t('supervisions.list.noResultsFiltered')
+                  : t('supervisions.list.noResultsEmpty')}
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className='min-w-[220px]'>
+                    {t('supervisions.columns.title')}
+                  </TableHead>
+                  <TableHead className='whitespace-nowrap'>
+                    {t('supervisions.columns.student')}
+                  </TableHead>
+                  <TableHead>{t('supervisions.columns.type')}</TableHead>
+                  <TableHead>{t('supervisions.columns.status')}</TableHead>
+                  <TableHead>{t('supervisions.columns.validation')}</TableHead>
+                  <TableHead>
+                    {t('supervisions.filters.academicYear')}
+                  </TableHead>
+                  <TableHead className='w-25 text-right'>
+                    {t('supervisions.columns.actions')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {displayRows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className={cn(
+                      'hover:bg-muted/50 transition-colors border-l-2',
+                      STATUS_ROW_BORDER[row.status] ?? 'border-l-border',
+                    )}
+                  >
+                    <TableCell className='font-medium max-w-[260px]'>
+                      <Link
+                        to={
+                          userId
+                            ? getResearcherSupervisionDetailPath(userId, row.id)
+                            : '#'
+                        }
+                        className='block truncate text-inherit no-underline visited:text-inherit hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm'
+                        title={row.title}
+                      >
+                        {row.title}
+                      </Link>
+                    </TableCell>
+                    <TableCell className='text-sm whitespace-nowrap text-muted-foreground'>
+                      {row.student
+                        ? `${row.student.lastName} ${row.student.firstName}`
+                        : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
+                          TYPE_COLOR[row.type] ?? 'bg-muted text-foreground'
+                        }`}
+                      >
+                        {TYPE_LABELS[row.type] ?? row.type}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className='inline-flex items-center gap-1.5 text-sm text-foreground'>
+                        <span
+                          className={`inline-block size-2 rounded-full ${
+                            STATUS_DOT[row.status] ?? 'bg-muted-foreground'
+                          }`}
+                        />
+                        {STATUS_LABELS[row.status] ?? row.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          STATUS_VARIANT[row.validationStatus] ?? 'outline'
+                        }
+                      >
+                        {VALIDATION_LABELS[row.validationStatus] ??
+                          row.validationStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className='text-sm text-muted-foreground'>
+                      {row.academicYear}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          className='inline-flex size-8 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-accent hover:text-foreground'
+                          aria-label='Actions'
+                        >
+                          <MoreVertical className='size-4' />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align='end'
+                          className='w-44 border border-border/60 bg-popover text-popover-foreground shadow-md'
+                        >
+                          <DropdownMenuItem
+                            className='inline-flex items-center gap-2 focus:bg-accent/80 focus:text-accent-foreground'
+                            onClick={() =>
+                              userId &&
+                              navigate(
+                                getResearcherSupervisionDetailPath(
+                                  userId,
+                                  row.id,
+                                ),
+                              )
                             }
                           >
-                            <Pencil className="size-4" />
-                            Update
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => handleDelete(row.id)}
-                        >
-                          <Trash2 className="size-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                            <Eye className='size-4 shrink-0' />
+                            <span>{t('common.view')}</span>
+                          </DropdownMenuItem>
+                          {row.validationStatus === 'PENDING' && userId && (
+                            <DropdownMenuItem
+                              className='inline-flex items-center gap-2 focus:bg-accent/80 focus:text-accent-foreground'
+                              onClick={() =>
+                                navigate(
+                                  getResearcherReviewDetailPath(userId, row.id),
+                                )
+                              }
+                            >
+                              <BookOpen className='size-4 shrink-0' />
+                              <span>{t('researcher.reviews.openDetail')}</span>
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
       </Card>
 
-      {/* Pagination */}
       <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Items per page:</span>
-            <select
-              value={perPage}
-              onChange={(e) => {
-                setPerPage(Number(e.target.value));
-                setPage(1);
-              }}
-              className="rounded-md border bg-background px-2 py-1.5 text-sm"
-            >
-              {[5, 10, 25, 50].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-1">
+        <CardContent className='flex flex-wrap items-center justify-between gap-4 py-3'>
+          <span className='tabular text-sm text-muted-foreground'>
+            {t('supervisions.list.total', { count: total })}
+          </span>
+          <div className='flex items-center gap-1'>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage <= 1}
-              className="whitespace-nowrap shrink-0 inline-flex items-center gap-1"
+              disabled={safePage <= 1}
+              className='whitespace-nowrap shrink-0 inline-flex items-center gap-1'
             >
-              <ChevronLeft className="size-4 shrink-0" />
-              <span>Prev</span>
+              <ChevronLeft className='size-4 shrink-0' />
+              <span>{t('common.previous')}</span>
             </Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
               <Button
                 key={p}
-                variant={p === currentPage ? "secondary" : "ghost"}
-                size="sm"
-                className="min-w-8"
-                onClick={() => p !== currentPage && setPage(p)}
-                disabled={p === currentPage}
+                variant={p === safePage ? 'secondary' : 'ghost'}
+                size='sm'
+                className='min-w-8 tabular'
+                onClick={() => p !== safePage && setPage(p)}
+                disabled={p === safePage}
               >
                 {p}
               </Button>
             ))}
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage >= totalPages}
-              className="whitespace-nowrap shrink-0 inline-flex items-center gap-1"
+              disabled={safePage >= totalPages}
+              className='whitespace-nowrap shrink-0 inline-flex items-center gap-1'
             >
-              <span>Next</span>
-              <ChevronRight className="size-4 shrink-0" />
+              <span>{t('common.next')}</span>
+              <ChevronRight className='size-4 shrink-0' />
             </Button>
           </div>
-          <span className="text-sm text-muted-foreground">
-            ({currentPage} of {totalPages})
+          <span className='tabular text-sm text-muted-foreground'>
+            ({safePage} / {totalPages})
           </span>
         </CardContent>
       </Card>
 
-      {/* Filters panel (slide-over) */}
-      <div
-        className={cn(
-          "fixed inset-y-0 right-0 z-50 w-full max-w-sm border-l bg-card shadow-lg transition-transform duration-200 ease-out",
-          filtersOpen ? "translate-x-0" : "translate-x-full"
-        )}
-        style={{ visibility: filtersOpen ? "visible" : "hidden" }}
-      >
-        <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b px-4 py-3">
-            <h2 className="font-semibold">Filters</h2>
-            <Button variant="ghost" size="icon" onClick={() => setFiltersOpen(false)} aria-label="Close filters">
-              <X className="size-4" />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            <div>
-              <div className="mb-2 text-sm font-medium">Type</div>
-              <div className="space-y-2">
-                {SUPERVISION_TYPES.map((t) => (
-                  <label key={t} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={typeFilter.includes(t)}
-                      onChange={() => toggleType(t)}
-                      className="rounded border-input"
-                    />
-                    <span className="text-sm">{t}</span>
-                  </label>
-                ))}
+      {/* Filter Panel - Side Drawer */}
+      {filtersOpen && (
+        <div className='fixed inset-0 z-50 flex items-start justify-end'>
+          <button
+            type='button'
+            aria-label={t('common.close')}
+            className='absolute inset-0 bg-black/50'
+            onClick={() => setFiltersOpen(false)}
+          />
+          <div className='relative w-full max-w-sm bg-background shadow-xl animate-in slide-in-from-right-full duration-300'>
+            <div className='space-y-4 p-5'>
+              <div className='flex items-center justify-between'>
+                <h2 className='text-lg font-semibold'>{t('common.filter')}</h2>
+                <button
+                  type='button'
+                  onClick={() => setFiltersOpen(false)}
+                  className='rounded-lg hover:bg-muted p-1'
+                  aria-label={t('common.close')}
+                >
+                  <X className='size-5' />
+                </button>
               </div>
-            </div>
-            <div>
-              <div className="mb-2 text-sm font-medium">Status</div>
-              <div className="space-y-2">
-                {SUPERVISION_STATUSES.map((s) => (
-                  <label key={s} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={statusFilter.includes(s)}
-                      onChange={() => toggleStatus(s)}
-                      className="rounded border-input"
-                    />
-                    <span className="text-sm">{s.replace("_", " ")}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div className="mb-2 text-sm font-medium">Validation Status</div>
-              <div className="space-y-2">
-                {VALIDATION_STATUSES.map((v) => (
-                  <label key={v} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={validationFilter.includes(v)}
-                      onChange={() => toggleValidation(v)}
-                      className="rounded border-input"
-                    />
-                    <span className="text-sm">{v}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium">Academic Year</label>
-              <select
-                value={academicYearFilter}
-                onChange={(e) => setAcademicYearFilter(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              >
-                <option value="">All</option>
-                {ACADEMIC_YEARS.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium">Theme</label>
-              <select
-                value={themeFilter}
-                onChange={(e) => setThemeFilter(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Select theme...</option>
-                {THEMES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <div className="mb-2 text-sm font-medium">Start Date Range</div>
-              <div className="space-y-2">
+
+              <div className='space-y-3'>
                 <div>
-                  <label className="text-xs text-muted-foreground">From</label>
-                  <Input
-                    type="date"
-                    value={startDateFrom}
-                    onChange={(e) => setStartDateFrom(e.target.value)}
-                    className="mt-1"
-                  />
+                  <h3 className='mb-2 text-sm font-semibold'>
+                    {t('supervisions.filters.type')}
+                  </h3>
+                  <div className='space-y-2'>
+                    {SUPERVISION_TYPES.map((type) => (
+                      <label
+                        key={type}
+                        className='flex items-center gap-2 cursor-pointer'
+                      >
+                        <input
+                          type='checkbox'
+                          checked={typeFilter.includes(type)}
+                          onChange={() => toggleType(type)}
+                          className='rounded border-border'
+                          aria-label={TYPE_LABELS[type]}
+                        />
+                        <span className='text-sm'>{TYPE_LABELS[type]}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground">To</label>
-                  <Input
-                    type="date"
-                    value={startDateTo}
-                    onChange={(e) => setStartDateTo(e.target.value)}
-                    className="mt-1"
-                  />
+
+                <div className='border-t pt-3'>
+                  <h3 className='mb-2 text-sm font-semibold'>
+                    {t('supervisions.filters.status')}
+                  </h3>
+                  <div className='space-y-2'>
+                    {SUPERVISION_STATUSES.map((status) => (
+                      <label
+                        key={status}
+                        className='flex items-center gap-2 cursor-pointer'
+                      >
+                        <input
+                          type='checkbox'
+                          checked={statusFilter.includes(status)}
+                          onChange={() => toggleStatus(status)}
+                          className='rounded border-border'
+                          aria-label={STATUS_LABELS[status]}
+                        />
+                        <span className='text-sm'>{STATUS_LABELS[status]}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className='border-t pt-3'>
+                  <h3 className='mb-2 text-sm font-semibold'>
+                    {t('supervisions.columns.validation')}
+                  </h3>
+                  <div className='space-y-2'>
+                    {(
+                      [
+                        'PENDING',
+                        'VALIDATED',
+                        'REJECTED',
+                        'REVISED',
+                      ] as ValidationStatus[]
+                    ).map((val) => (
+                      <label
+                        key={val}
+                        className='flex items-center gap-2 cursor-pointer'
+                      >
+                        <input
+                          type='checkbox'
+                          checked={validationFilter.includes(val)}
+                          onChange={() => toggleValidation(val)}
+                          className='rounded border-border'
+                          aria-label={VALIDATION_LABELS[val]}
+                        />
+                        <span className='text-sm'>
+                          {VALIDATION_LABELS[val]}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className='border-t pt-3'>
+                  <h3 className='mb-2 text-sm font-semibold'>
+                    {t('supervisions.filters.academicYear')}
+                  </h3>
+                  <div className='space-y-2'>
+                    {ACADEMIC_YEARS.map((year) => (
+                      <label
+                        key={year}
+                        className='flex items-center gap-2 cursor-pointer'
+                      >
+                        <input
+                          type='checkbox'
+                          checked={academicYearFilter === year}
+                          onChange={() => toggleAcademicYear(year)}
+                          className='rounded border-border'
+                          aria-label={year}
+                        />
+                        <span className='text-sm'>{year}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
+
+              <div className='border-t pt-3 flex gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={clearAllFilters}
+                  className='flex-1'
+                >
+                  {t('common.reset')}
+                </Button>
+                <Button
+                  onClick={() => setFiltersOpen(false)}
+                  className='flex-1 bg-slate-900 text-white hover:bg-slate-800'
+                >
+                  {t('common.apply')}
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2 border-t p-4">
-            <Button onClick={applyFiltersFromPanel} className="flex-1 shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-2">
-              Apply Filters
-            </Button>
-            <Button variant="outline" onClick={resetPanelFilters} className="shrink-0 whitespace-nowrap">
-              Reset
-            </Button>
           </div>
         </div>
-      </div>
-
-      {/* Backdrop when filters open */}
-      {filtersOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 z-40 bg-black/20"
-          aria-label="Close filters"
-          onClick={() => setFiltersOpen(false)}
-        />
       )}
     </div>
-  );
+  )
 }
