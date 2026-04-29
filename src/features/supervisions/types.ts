@@ -31,7 +31,7 @@ export interface ChercheurInfo {
   nom_complet: string
   mails: string[]
   qualite?: string
-  equipe_id?: string | null
+  teams?: Array<{ id: string; name: string }>
 }
 
 export interface SupervisionSupervisorInfo {

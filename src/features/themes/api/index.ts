@@ -1,17 +1,11 @@
 import axiosInstance from '@/shared/lib/axios'
 
-export interface TeamRef {
-  id: string
-  name: string
-  description?: string | null
-}
-
 export interface Theme {
   id: string
   name: string
   description?: string | null
-  teamId?: string | null
-  team?: TeamRef | null
+  teams?: Array<{ id: string; name: string }>
+  _count?: { teams: number }
   createdAt: string
   updatedAt: string
 }
@@ -26,12 +20,10 @@ export interface ThemesPage {
 export interface ThemePayload {
   name: string
   description?: string
-  teamId?: string | null
 }
 
 export interface ThemesFilter {
   search?: string
-  teamId?: string
   page?: number
   limit?: number
 }

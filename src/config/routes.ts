@@ -25,6 +25,11 @@ export const ROUTES = {
   /** Assistant research themes (thématiques). */
   ASSISTANT_THEMES: '/assistant/themes',
   ADMIN_USERS: '/admin/users',
+  ADMIN_USERS_NEW: '/admin/users/new',
+  ADMIN_TEAMS: '/admin/teams',
+  ADMIN_TEAMS_NEW: '/admin/teams/new',
+  ADMIN_THEMES: '/admin/themes',
+  ADMIN_AUDIT_LOGS: '/admin/audit-logs',
   SUPERVISIONS: '/supervisions',
   STUDENTS: '/students',
   VALIDATION: '/validation',
@@ -179,6 +184,40 @@ export function getAssistantSupervisionNewPath(): string {
 
 export function getAssistantSupervisionEditPath(supervisionId: string): string {
   return `/assistant/supervisions/${supervisionId}/edit`
+}
+
+/** Admin: edit user path. */
+export function getAdminUserEditPath(userId: string): string {
+  return `/admin/users/${userId}/edit`
+}
+
+/** Admin themes (same CRUD as assistant; paths under /admin/themes). */
+export function getAdminThemesPath(): string {
+  return ROUTES.ADMIN_THEMES
+}
+
+export function getAdminThemeNewPath(): string {
+  return `${ROUTES.ADMIN_THEMES}/new`
+}
+
+export function getAdminThemeDetailPath(themeId: string): string {
+  return `${ROUTES.ADMIN_THEMES}/${themeId}`
+}
+
+export function getAdminThemeEditPath(themeId: string): string {
+  return `${ROUTES.ADMIN_THEMES}/${themeId}/edit`
+}
+
+export function getAdminTeamNewPath(): string {
+  return ROUTES.ADMIN_TEAMS_NEW
+}
+
+export function getAdminTeamDetailPath(teamId: string): string {
+  return `${ROUTES.ADMIN_TEAMS}/${teamId}`
+}
+
+export function getAdminTeamEditPath(teamId: string): string {
+  return `${ROUTES.ADMIN_TEAMS}/${teamId}/edit`
 }
 
 /** Default dashboard path for each role after login. Pass user for RESEARCHER to get /researcher/:id/dashboard. */

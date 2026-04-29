@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axiosInstance from '@/shared/lib/axios'
+import { hasRealAccessToken } from '@/shared/lib/authToken'
 
 export interface AppNotification {
   id: string
@@ -22,9 +23,12 @@ async function markRead(id: string): Promise<void> {
 }
 
 export function useNotifications() {
+  const hasRealToken = hasRealAccessToken()
   return useQuery({
     queryKey: ['notifications'],
     queryFn: fetchNotifications,
+    enabled: hasRealToken,
+    retry: false,
     refetchInterval: 30_000,
     staleTime: 15_000,
   })

@@ -11,7 +11,7 @@ import {
   BookMarked,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -28,23 +28,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import {
-  getAssistantThemeDetailPath,
-  getAssistantThemeEditPath,
-  getAssistantThemeNewPath,
-} from '@/config/routes'
+import { useThemePortalRoutes } from '@/features/themes/lib/themePortalRoutes'
 import { useThemes, useDeleteTheme } from '@/features/themes/hooks'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { QueuePagination } from '@/features/validation/components/ValidationQueueTable'
+import { AdminInsightCard } from '@/features/admin/components'
 
 const THEME_LIST_DESCRIPTION_MAX_CHARS = 60
 
 function formatThemeListDescription(
   raw: string | null | undefined,
   max: number,
+  emptyLabel: string,
 ): string {
   const s = raw?.trim()
-  if (!s) return '—'
+  if (!s) return emptyLabel
   if (s.length <= max) return s
   return `${s.slice(0, max).trimEnd()}...`
 }
@@ -52,6 +50,7 @@ function formatThemeListDescription(
 export default function ThemeManagementPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const routes = useThemePortalRoutes()
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const perPage = 10
@@ -70,6 +69,10 @@ export default function ThemeManagementPage() {
 
   const rows = pageResult?.data ?? []
   const total = pageResult?.total ?? 0
+  const withDescription = rows.filter((row) =>
+    Boolean(row.description?.trim()),
+  ).length
+  const withoutDescription = rows.length - withDescription
 
   const confirmDelete = () => {
     if (deleteTarget) deleteTheme(deleteTarget)
@@ -94,6 +97,24 @@ export default function ThemeManagementPage() {
         )}
       </div>
 
+      <div className='grid gap-3 md:grid-cols-3'>
+        <AdminInsightCard
+          title={t('themes.admin.summaryLoaded')}
+          value={rows.length}
+          subtitle={t('themes.admin.summaryLoadedSubtitle')}
+        />
+        <AdminInsightCard
+          title={t('themes.admin.summaryWithDescription')}
+          value={withDescription}
+          subtitle={t('themes.admin.summaryWithDescriptionSubtitle')}
+        />
+        <AdminInsightCard
+          title={t('themes.admin.summaryNeedDetails')}
+          value={withoutDescription}
+          subtitle={t('themes.admin.summaryNeedDetailsSubtitle')}
+        />
+      </div>
+
       <div className='flex flex-wrap items-center gap-3'>
         <div className='relative min-w-[200px] max-w-md flex-1'>
           <Search className='absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
@@ -108,7 +129,7 @@ export default function ThemeManagementPage() {
           />
         </div>
         <Link
-          to={getAssistantThemeNewPath()}
+          to={routes.themeNew}
           className={cn(
             buttonVariants(),
             'inline-flex shrink-0 items-center gap-2 whitespace-nowrap',
@@ -152,7 +173,7 @@ export default function ThemeManagementPage() {
                   <TableRow
                     key={r.id}
                     className='cursor-pointer hover:bg-muted/40'
-                    onClick={() => navigate(getAssistantThemeDetailPath(r.id))}
+                    onClick={() => navigate(routes.themeDetail(r.id))}
                   >
                     <TableCell>
                       <div className='flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary'>
@@ -175,6 +196,7 @@ export default function ThemeManagementPage() {
                         {formatThemeListDescription(
                           r.description,
                           THEME_LIST_DESCRIPTION_MAX_CHARS,
+                          t('common.notAvailable'),
                         )}
                       </p>
                     </TableCell>
@@ -183,31 +205,23 @@ export default function ThemeManagementPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <DropdownMenu>
-                        <DropdownMenuTrigger>
-                          <span className='inline-flex'>
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='size-8'
-                              type='button'
-                            >
-                              <MoreVertical className='size-4' />
-                            </Button>
-                          </span>
+                        <DropdownMenuTrigger
+                          className={cn(
+                            buttonVariants({ variant: 'ghost', size: 'icon' }),
+                            'size-8',
+                          )}
+                        >
+                          <MoreVertical className='size-4' />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align='end'>
                           <DropdownMenuItem
-                            onClick={() =>
-                              navigate(getAssistantThemeDetailPath(r.id))
-                            }
+                            onClick={() => navigate(routes.themeDetail(r.id))}
                           >
                             <Eye className='mr-2 size-4' />
                             {t('common.view')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() =>
-                              navigate(getAssistantThemeEditPath(r.id))
-                            }
+                            onClick={() => navigate(routes.themeEdit(r.id))}
                           >
                             <Pencil className='mr-2 size-4' />
                             {t('common.edit')}

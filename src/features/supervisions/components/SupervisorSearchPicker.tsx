@@ -67,7 +67,11 @@ export function SupervisorSearchPicker({
   const displayName =
     selected?.nom_complet ?? (value ? `Identifiant : ${value}` : '')
   const subline = selected
-    ? [selected.chercheur_id, selected.grade_recherche, selected.team?.name]
+    ? [
+        selected.chercheur_id,
+        selected.grade_recherche,
+        selected.teams?.map((team) => team.name).join(', '),
+      ]
         .filter(Boolean)
         .join(' · ')
     : ''
@@ -178,7 +182,9 @@ export function SupervisorSearchPicker({
                     >
                       {c.chercheur_id}
                       {c.grade_recherche ? ` · ${c.grade_recherche}` : ''}
-                      {c.team?.name ? ` · ${c.team.name}` : ''}
+                      {c.teams?.length
+                        ? ` · ${c.teams.map((team) => team.name).join(', ')}`
+                        : ''}
                     </p>
                   </div>
                 </button>

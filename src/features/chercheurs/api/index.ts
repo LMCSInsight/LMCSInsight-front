@@ -6,8 +6,7 @@ export interface ChercheurListItem {
   qualite: string
   grade_recherche: string | null
   mails: string[]
-  equipe_id: string | null
-  team: { name: string } | null
+  teams: Array<{ id: string; name: string }>
 }
 
 export interface ChercheursPage {

@@ -33,12 +33,21 @@ import ThemeDetailPage from '@/features/themes/pages/ThemeDetailPage'
 import ThemeEditPage from '@/features/themes/pages/ThemeEditPage'
 import ProfileSettingsPage from '@/features/profile/pages/ProfileSettingsPage'
 import StatisticsReportsPage from '@/features/statistics/pages/StatisticsReportsPage'
-import AdminPage from '@/features/admin/pages'
+import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage'
+import UserManagementPage from '@/features/admin/pages/UserManagementPage'
+import CreateUserPage from '@/features/admin/pages/CreateUserPage'
+import EditUserPage from '@/features/admin/pages/EditUserPage'
+import TeamManagementPage from '@/features/admin/pages/TeamManagementPage'
+import CreateTeamPage from '@/features/admin/pages/CreateTeamPage'
+import TeamDetailPage from '@/features/admin/pages/TeamDetailPage'
+import EditTeamPage from '@/features/admin/pages/EditTeamPage'
+import AuditLogPage from '@/features/admin/pages/AuditLogPage'
+import { AdminPortalLayout } from '@/layouts/AdminPortalLayout'
 import ResearcherDashboard from '@/features/dashboard/pages/ResearcherDashboard'
 import DirectorDashboard from '@/features/dashboard/pages/DirectorDashboard'
 import AssistantDashboard from '@/features/dashboard/pages/AssistantDashboard'
 import { AssistantPortalLayout } from '@/layouts/AssistantPortalLayout'
-import AdminDashboard from '@/features/dashboard/pages/AdminDashboard'
+// AdminDashboard stub replaced by AdminDashboardPage
 import TableChercheurs from '@/features/direction/TableChercheurs'
 import DetailChercheur from '@/features/direction/DetailChercheurs'
 import { DirectionPortalLayout } from '@/layouts/DirectionPortalLayout'
@@ -265,14 +274,25 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <RoleRoute allowedRoles={['ADMIN']}>
-          <DashboardLayout />
+          <AdminPortalLayout />
         </RoleRoute>
       </ProtectedRoute>
     ),
     children: [
       { index: true, element: <Navigate to='dashboard' replace /> },
-      { path: 'dashboard', element: <AdminDashboard /> },
-      { path: 'users', element: <AdminPage /> },
+      { path: 'dashboard', element: <AdminDashboardPage /> },
+      { path: 'users', element: <UserManagementPage /> },
+      { path: 'users/new', element: <CreateUserPage /> },
+      { path: 'users/:userId/edit', element: <EditUserPage /> },
+      { path: 'teams/new', element: <CreateTeamPage /> },
+      { path: 'teams/:teamId/edit', element: <EditTeamPage /> },
+      { path: 'teams/:teamId', element: <TeamDetailPage /> },
+      { path: 'teams', element: <TeamManagementPage /> },
+      { path: 'themes', element: <ThemeManagementPage /> },
+      { path: 'themes/new', element: <ThemeRegisterPage /> },
+      { path: 'themes/:themeId/edit', element: <ThemeEditPage /> },
+      { path: 'themes/:themeId', element: <ThemeDetailPage /> },
+      { path: 'audit-logs', element: <AuditLogPage /> },
     ],
   },
   { path: '*', element: <Navigate to={ROUTES.HOME} replace /> },

@@ -7,12 +7,14 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateTheme } from '@/features/themes/hooks'
-import { getAssistantThemesPath } from '@/config/routes'
+import { useThemePortalRoutes } from '@/features/themes/lib/themePortalRoutes'
 import { cn } from '@/lib/utils'
+import { AdminInsightCard } from '@/features/admin/components'
 
 export default function ThemeRegisterPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const routes = useThemePortalRoutes()
   const { mutate: createTheme, isPending } = useCreateTheme()
 
   const [name, setName] = useState('')
@@ -35,7 +37,7 @@ export default function ThemeRegisterPage() {
       {
         onSuccess: (data) => {
           setToast({ type: 'success', message: t('themes.register.success') })
-          setTimeout(() => navigate(`/assistant/themes/${data.id}`), 800)
+          setTimeout(() => navigate(routes.themeDetail(data.id)), 800)
         },
         onError: (err: unknown) => {
           const msg =
@@ -69,7 +71,7 @@ export default function ThemeRegisterPage() {
 
       <div className='flex items-center gap-3'>
         <Link
-          to={getAssistantThemesPath()}
+          to={routes.themesList}
           className={cn(
             buttonVariants({ variant: 'ghost', size: 'sm' }),
             'inline-flex items-center gap-1.5 text-muted-foreground',
@@ -134,7 +136,7 @@ export default function ThemeRegisterPage() {
             </div>
             <div className='flex justify-end gap-2 pt-2'>
               <Link
-                to={getAssistantThemesPath()}
+                to={routes.themesList}
                 className={buttonVariants({ variant: 'outline' })}
               >
                 {t('common.cancel')}
@@ -146,6 +148,19 @@ export default function ThemeRegisterPage() {
           </form>
         </CardContent>
       </Card>
+
+      <div className='grid gap-3 md:grid-cols-2'>
+        <AdminInsightCard
+          title={t('themes.admin.registrationGuideTitle')}
+          value={t('themes.admin.registrationGuideValue')}
+          subtitle={t('themes.admin.registrationGuideSubtitle')}
+        />
+        <AdminInsightCard
+          title={t('themes.admin.recommendedLengthTitle')}
+          value={t('themes.admin.recommendedLengthValue')}
+          subtitle={t('themes.admin.recommendedLengthSubtitle')}
+        />
+      </div>
     </div>
   )
 }

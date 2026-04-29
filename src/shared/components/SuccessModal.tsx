@@ -32,7 +32,7 @@ export function SuccessModal({
       centered
       width={420}
       styles={{
-        content: {
+        body: {
           background: C.bg,
           borderRadius: 12,
           padding: '32px 36px',

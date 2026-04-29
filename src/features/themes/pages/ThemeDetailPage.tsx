@@ -4,14 +4,12 @@ import { BookMarked, ArrowLeft, Pencil, Calendar, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { useTheme } from '@/features/themes/hooks'
-import {
-  getAssistantThemeEditPath,
-  getAssistantThemesPath,
-} from '@/config/routes'
+import { useThemePortalRoutes } from '@/features/themes/lib/themePortalRoutes'
 import { cn } from '@/lib/utils'
+import { AdminInsightCard } from '@/features/admin/components'
 
 function fmt(iso?: string) {
-  if (!iso) return '—'
+  if (!iso) return null
   return new Date(iso).toLocaleDateString('fr-FR', {
     day: '2-digit',
     month: 'long',
@@ -23,6 +21,7 @@ export default function ThemeDetailPage() {
   const { themeId } = useParams<{ themeId: string }>()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const routes = useThemePortalRoutes()
   const { data: theme, isLoading, isError } = useTheme(themeId)
 
   if (isLoading) {
@@ -41,10 +40,7 @@ export default function ThemeDetailPage() {
       <div className='mx-auto max-w-2xl py-16 text-center text-sm text-muted-foreground'>
         {t('themes.detail.notFound')}
         <div className='mt-4'>
-          <Button
-            variant='outline'
-            onClick={() => navigate(getAssistantThemesPath())}
-          >
+          <Button variant='outline' onClick={() => navigate(routes.themesList)}>
             {t('themes.detail.backList')}
           </Button>
         </div>
@@ -56,7 +52,7 @@ export default function ThemeDetailPage() {
     <div className='mx-auto w-full max-w-2xl space-y-4'>
       <div className='flex flex-wrap items-center gap-3'>
         <Link
-          to={getAssistantThemesPath()}
+          to={routes.themesList}
           className={cn(
             buttonVariants({ variant: 'ghost', size: 'sm' }),
             'inline-flex items-center gap-1.5 text-muted-foreground',
@@ -67,7 +63,7 @@ export default function ThemeDetailPage() {
         </Link>
         <div className='ml-auto flex gap-2'>
           <Link
-            to={getAssistantThemeEditPath(theme.id)}
+            to={routes.themeEdit(theme.id)}
             className={cn(
               buttonVariants({ size: 'default' }),
               'inline-flex items-center gap-1.5',
@@ -89,10 +85,10 @@ export default function ThemeDetailPage() {
               <h1 className='text-xl font-semibold tracking-tight text-foreground'>
                 {theme.name}
               </h1>
-              {theme.team && (
+              {(theme.teams?.length ?? 0) > 0 && (
                 <p className='mt-1 flex items-center gap-1.5 text-sm text-muted-foreground'>
                   <Users className='size-3.5' />
-                  {theme.team.name}
+                  {theme.teams?.map((team) => team.name).join(', ')}
                 </p>
               )}
             </div>
@@ -110,14 +106,33 @@ export default function ThemeDetailPage() {
           <div className='flex flex-wrap gap-6 border-t border-border pt-4 text-xs text-muted-foreground'>
             <span className='inline-flex items-center gap-1.5'>
               <Calendar className='size-3.5' />
-              {t('themes.detail.created')}: {fmt(theme.createdAt)}
+              {t('themes.detail.created')}:{' '}
+              {fmt(theme.createdAt) ?? t('common.notAvailable')}
             </span>
             <span>
-              {t('themes.detail.updated')}: {fmt(theme.updatedAt)}
+              {t('themes.detail.updated')}:{' '}
+              {fmt(theme.updatedAt) ?? t('common.notAvailable')}
             </span>
           </div>
         </CardContent>
       </Card>
+
+      <div className='grid gap-3 md:grid-cols-2'>
+        <AdminInsightCard
+          title={t('themes.admin.metadataQualityTitle')}
+          value={
+            theme.description?.trim()
+              ? t('themes.admin.metadataQualityComplete')
+              : t('themes.admin.metadataQualityIncomplete')
+          }
+          subtitle={t('themes.admin.metadataQualitySubtitle')}
+        />
+        <AdminInsightCard
+          title={t('themes.admin.lastUpdateTitle')}
+          value={fmt(theme.updatedAt) ?? t('common.notAvailable')}
+          subtitle={t('themes.admin.lastUpdateSubtitle')}
+        />
+      </div>
     </div>
   )
 }

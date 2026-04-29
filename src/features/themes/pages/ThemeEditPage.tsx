@@ -14,16 +14,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useTheme, useUpdateTheme } from '@/features/themes/hooks'
 import type { ThemePayload } from '@/features/themes/api'
-import {
-  getAssistantThemeDetailPath,
-  getAssistantThemesPath,
-} from '@/config/routes'
+import { useThemePortalRoutes } from '@/features/themes/lib/themePortalRoutes'
 import { cn } from '@/lib/utils'
+import { AdminInsightCard } from '@/features/admin/components'
 
 export default function ThemeEditPage() {
   const { themeId } = useParams<{ themeId: string }>()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const routes = useThemePortalRoutes()
   const { data: theme, isLoading } = useTheme(themeId)
   const { mutate: update, isPending } = useUpdateTheme(themeId!)
 
@@ -53,7 +52,7 @@ export default function ThemeEditPage() {
     update(form, {
       onSuccess: () => {
         setToast({ type: 'success', message: t('themes.edit.success') })
-        setTimeout(() => navigate(getAssistantThemeDetailPath(themeId!)), 800)
+        setTimeout(() => navigate(routes.themeDetail(themeId!)), 800)
       },
       onError: (err: unknown) => {
         setToast({
@@ -94,7 +93,7 @@ export default function ThemeEditPage() {
       )}
 
       <Link
-        to={getAssistantThemeDetailPath(themeId!)}
+        to={routes.themeDetail(themeId!)}
         className={cn(
           buttonVariants({ variant: 'ghost', size: 'sm' }),
           'inline-flex items-center gap-1.5 text-muted-foreground',
@@ -147,7 +146,7 @@ export default function ThemeEditPage() {
             </div>
             <div className='flex justify-end gap-2'>
               <Link
-                to={getAssistantThemesPath()}
+                to={routes.themesList}
                 className={buttonVariants({ variant: 'outline' })}
               >
                 {t('common.cancel')}
@@ -159,6 +158,19 @@ export default function ThemeEditPage() {
           </form>
         </CardContent>
       </Card>
+
+      <div className='grid gap-3 md:grid-cols-2'>
+        <AdminInsightCard
+          title={t('themes.admin.editingReminderTitle')}
+          value={t('themes.admin.editingReminderValue')}
+          subtitle={t('themes.admin.editingReminderSubtitle')}
+        />
+        <AdminInsightCard
+          title={t('themes.admin.operationalTipTitle')}
+          value={t('themes.admin.operationalTipValue')}
+          subtitle={t('themes.admin.operationalTipSubtitle')}
+        />
+      </div>
     </div>
   )
 }
