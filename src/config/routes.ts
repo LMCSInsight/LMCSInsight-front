@@ -8,11 +8,14 @@ export const ROUTES = {
   DASHBOARD_DIRECTOR: '/director/dashboard',
   DASHBOARD_ASSISTANT: '/assistant/dashboard',
   DASHBOARD_ADMIN: '/admin/dashboard',
-  DIRECTOR_SUPERVISIONS: '/director/supervisions',
-  DIRECTOR_VALIDATION: '/director/validation',
   DIRECTOR_CHERCHEURS: '/director/chercheurs',
-  DIRECTOR_STATISTICS: '/director/statistics',
+  /** Multicriteria search (director). */
+  DIRECTOR_SEARCH: '/director/search',
+  /** Reports & exports (director). */
+  DIRECTOR_REPORTS: '/director/reports',
   DIRECTOR_PROFILE: '/director/profile',
+  /** @deprecated Use {@link ROUTES.DIRECTOR_REPORTS}. */
+  DIRECTOR_STATISTICS: '/director/statistics',
   /** Primary: org-wide activity list (read-only, assistant). */
   ASSISTANT_ACTIVITY: '/assistant/activity',
   /** Legacy: redirects to {@link ROUTES.ASSISTANT_ACTIVITY}. */

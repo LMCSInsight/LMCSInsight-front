@@ -190,18 +190,24 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Researcher portal: blue theme (scoped) */
-.researcher-portal {
-  --researcher-primary: 221 83% 53%; /* blue-600 */
+/* Portals (admin, direction, assistant): single blue accent in light mode */
+.portal-shell {
+  --researcher-primary: 221 83% 53%; /* blue-600 — legacy var name for any custom use */
   --researcher-primary-foreground: 0 0% 100%;
-  --researcher-sidebar: 214 32% 98%; /* blue-50 */
-  --researcher-sidebar-foreground: 224 71% 14%; /* blue-950 */
-  --researcher-sidebar-accent: 214 32% 91%; /* blue-100 */
+  --researcher-sidebar: 214 32% 98%;
+  --researcher-sidebar-foreground: 224 71% 14%;
+  --researcher-sidebar-accent: 214 32% 91%;
   --researcher-sidebar-border: 214 32% 91%;
 }
 
-/* Researcher portal light mode: blue primary and accents */
-html:not(.dark) .researcher-portal {
+/* Light mode: align UI chrome with chart blues (hue ~260), single accent */
+html:not(.dark) .portal-shell {
+  --background: oklch(0.99 0.006 260);
+  --foreground: oklch(0.20 0.02 260);
+  --card: oklch(0.998 0.004 260);
+  --card-foreground: oklch(0.20 0.02 260);
+  --border: oklch(0.90 0.02 260);
+  --input: oklch(0.90 0.02 260);
   --primary: oklch(0.45 0.2 260);
   --primary-foreground: oklch(0.99 0 0);
   --ring: oklch(0.45 0.2 260);

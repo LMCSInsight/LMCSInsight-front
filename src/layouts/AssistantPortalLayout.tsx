@@ -160,7 +160,7 @@ export function AssistantPortalLayout() {
   const unreadCount = notifications.filter((n) => !n.readAt).length
 
   return (
-    <div className='researcher-portal flex min-h-screen bg-muted/30 dark:bg-background'>
+    <div className='portal-shell flex min-h-screen bg-muted/30 dark:bg-background'>
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}
       <aside className='fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-border bg-card bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,oklch(0.45_0.2_260_/_0.06),transparent)]'>
         <div className='flex flex-1 flex-col gap-5 overflow-y-auto p-4'>

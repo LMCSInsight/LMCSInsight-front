@@ -1,6 +1,13 @@
+import { useMemo } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LayoutDashboard, Users, BarChart3, Settings } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Users,
+  Search,
+  FileBarChart2,
+  Settings,
+} from 'lucide-react'
 import { useAuthContext } from '@/shared/context/AuthContext'
 import { useTheme } from '@/shared/context/ThemeContext'
 import { ROUTES } from '@/config/routes'
@@ -9,33 +16,6 @@ import {
   useNotifications,
   useMarkNotificationRead,
 } from '@/features/notifications/hooks/useNotifications'
-
-const DIRECTION_NAV: PortalNavItem[] = [
-  {
-    key: 'dashboard',
-    label: 'Dashboard',
-    path: ROUTES.DASHBOARD_DIRECTOR,
-    icon: LayoutDashboard,
-  },
-  {
-    key: 'chercheurs',
-    label: 'Charge d’encadrement',
-    path: ROUTES.DIRECTOR_CHERCHEURS,
-    icon: Users,
-  },
-  {
-    key: 'statistics',
-    label: 'Statistiques et rapports',
-    path: ROUTES.DIRECTOR_STATISTICS,
-    icon: BarChart3,
-  },
-  {
-    key: 'profile',
-    label: 'Profil et paramètres',
-    path: ROUTES.DIRECTOR_PROFILE,
-    icon: Settings,
-  },
-]
 
 function getInitials(
   name: string | undefined,
@@ -54,24 +34,39 @@ function getInitials(
   return '?'
 }
 
-function getSelectedKey(pathname: string): string {
-  const match = DIRECTION_NAV.find(
-    (item) => pathname === item.path || pathname.startsWith(item.path + '/'),
+function getSelectedKey(
+  pathname: string,
+  paths: Record<string, string>,
+): string {
+  if (
+    pathname.includes('/director/supervisions/') ||
+    pathname.includes('/director/students/')
+  ) {
+    return 'search'
+  }
+  const entries = Object.entries(paths)
+  const match = entries.find(
+    ([, path]) => pathname === path || pathname.startsWith(path + '/'),
   )
-  return match?.key ?? 'dashboard'
+  return match?.[0] ?? 'dashboard'
 }
 
-function getPageTitle(key: string): string {
-  switch (key) {
-    case 'chercheurs':
-      return 'Charge d’encadrement'
-    case 'statistics':
-      return 'Statistiques et rapports'
-    case 'profile':
-      return 'Profil et paramètres'
-    default:
-      return 'Dashboard'
-  }
+function getPageTitleKey(pathname: string): string {
+  if (pathname.includes('/director/supervisions/'))
+    return 'director.pageTitles.supervisionDetail'
+  if (pathname.includes('/director/students/'))
+    return 'director.pageTitles.studentDetail'
+  if (/^\/director\/chercheurs\/.+/.test(pathname))
+    return 'director.pageTitles.researcherDetail'
+  if (pathname.startsWith(ROUTES.DIRECTOR_CHERCHEURS))
+    return 'director.pageTitles.workload'
+  if (pathname.startsWith(ROUTES.DIRECTOR_SEARCH))
+    return 'director.pageTitles.search'
+  if (pathname.startsWith(ROUTES.DIRECTOR_REPORTS))
+    return 'director.pageTitles.reports'
+  if (pathname.startsWith(ROUTES.DIRECTOR_PROFILE))
+    return 'director.pageTitles.profile'
+  return 'director.pageTitles.dashboard'
 }
 
 export function DirectionPortalLayout() {
@@ -83,7 +78,56 @@ export function DirectionPortalLayout() {
 
   const { data: notifications = [] } = useNotifications()
   const { mutate: markRead } = useMarkNotificationRead()
-  const selectedKey = getSelectedKey(location.pathname)
+
+  const navPaths = useMemo(
+    () => ({
+      dashboard: ROUTES.DASHBOARD_DIRECTOR,
+      chercheurs: ROUTES.DIRECTOR_CHERCHEURS,
+      search: ROUTES.DIRECTOR_SEARCH,
+      reports: ROUTES.DIRECTOR_REPORTS,
+      profile: ROUTES.DIRECTOR_PROFILE,
+    }),
+    [],
+  )
+
+  const DIRECTION_NAV: PortalNavItem[] = useMemo(
+    () => [
+      {
+        key: 'dashboard',
+        label: t('director.nav.dashboard'),
+        path: ROUTES.DASHBOARD_DIRECTOR,
+        icon: LayoutDashboard,
+      },
+      {
+        key: 'chercheurs',
+        label: t('director.nav.workload'),
+        path: ROUTES.DIRECTOR_CHERCHEURS,
+        icon: Users,
+      },
+      {
+        key: 'search',
+        label: t('director.nav.search'),
+        path: ROUTES.DIRECTOR_SEARCH,
+        icon: Search,
+      },
+      {
+        key: 'reports',
+        label: t('director.nav.reports'),
+        path: ROUTES.DIRECTOR_REPORTS,
+        icon: FileBarChart2,
+      },
+      {
+        key: 'profile',
+        label: t('director.nav.profile'),
+        path: ROUTES.DIRECTOR_PROFILE,
+        icon: Settings,
+      },
+    ],
+    [t],
+  )
+
+  const selectedKey = getSelectedKey(location.pathname, navPaths)
+  const pageTitle = t(getPageTitleKey(location.pathname))
 
   function handleLogout() {
     logout()
@@ -93,7 +137,7 @@ export function DirectionPortalLayout() {
   return (
     <PortalShell
       portalLabel={t('common.director')}
-      pageTitle={getPageTitle(selectedKey)}
+      pageTitle={pageTitle}
       currentUserName={currentUser?.name}
       initials={getInitials(currentUser?.name, currentUser?.email)}
       navItems={DIRECTION_NAV}
@@ -105,6 +149,7 @@ export function DirectionPortalLayout() {
       onNotificationRead={(notificationId) => {
         markRead(notificationId)
       }}
+      mainClassName='min-w-0 flex-1 p-6 lg:p-8 mx-auto w-full max-w-[min(100%,90rem)]'
     >
       <Outlet />
     </PortalShell>

@@ -20,7 +20,6 @@ import SupervisionListPage from '@/features/supervisions/pages/SupervisionListPa
 import SupervisionDetailPage from '@/features/supervisions/pages/SupervisionDetailPage'
 import CreateSupervisionPage from '@/features/supervisions/pages/CreateSupervisionPage'
 import EditSupervisionPage from '@/features/supervisions/pages/EditSupervisionPage'
-import DirectorSupervisionListPage from '@/features/supervisions/pages/DirectorSupervisionListPage'
 import {
   StudentManagementPage,
   StudentDetailPage,
@@ -51,7 +50,8 @@ import { AssistantPortalLayout } from '@/layouts/AssistantPortalLayout'
 import TableChercheurs from '@/features/direction/TableChercheurs'
 import DetailChercheur from '@/features/direction/DetailChercheurs'
 import { DirectionPortalLayout } from '@/layouts/DirectionPortalLayout'
-import DirectionStatisticsPage from '@/features/direction/pages/DirectionStatisticsPage'
+import DirectionSearchPage from '@/features/direction/pages/DirectionSearchPage'
+import DirectionReportsPage from '@/features/direction/pages/DirectionReportsPage'
 import DirectionProfilePage from '@/features/direction/pages/DirectionProfilePage'
 import ValidationQueuePage from '@/features/validation/pages/ValidationQueuePage'
 import ValidationDetailPage from '@/features/validation/pages/ValidationDetailPage'
@@ -218,11 +218,27 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to='dashboard' replace /> },
       { path: 'dashboard', element: <DirectorDashboard /> },
-      { path: 'supervisions', element: <DirectorSupervisionListPage /> },
-      { path: 'validation', element: <ValidationQueuePage /> },
       { path: 'chercheurs', element: <TableChercheurs /> },
       { path: 'chercheurs/:chercheurId', element: <DetailChercheur /> },
-      { path: 'statistics', element: <DirectionStatisticsPage /> },
+      {
+        path: 'supervisions/:supervisionId',
+        element: <SupervisionDetailPage />,
+      },
+      { path: 'students/:studentId', element: <StudentDetailPage /> },
+      { path: 'search', element: <DirectionSearchPage /> },
+      { path: 'reports', element: <DirectionReportsPage /> },
+      {
+        path: 'statistics',
+        element: <Navigate to={ROUTES.DIRECTOR_REPORTS} replace />,
+      },
+      {
+        path: 'supervisions',
+        element: <Navigate to={ROUTES.DIRECTOR_SEARCH} replace />,
+      },
+      {
+        path: 'validation',
+        element: <Navigate to={ROUTES.DASHBOARD_DIRECTOR} replace />,
+      },
       { path: 'profile', element: <DirectionProfilePage /> },
     ],
   },

@@ -35,6 +35,8 @@ interface PortalShellProps {
   notifications?: AppNotification[]
   onNotificationRead?: (notificationId: string) => void
   onNotificationSelect?: (notification: AppNotification) => void
+  /** When set, replaces default main padding/width classes (e.g. director max-width) */
+  mainClassName?: string
   children: React.ReactNode
 }
 
@@ -131,6 +133,7 @@ export function PortalShell({
   notifications,
   onNotificationRead,
   onNotificationSelect,
+  mainClassName,
   children,
 }: PortalShellProps) {
   const { t } = useTranslation()
@@ -138,7 +141,7 @@ export function PortalShell({
   const unreadCount = safeNotifications.filter((n) => !n.readAt).length ?? 0
 
   return (
-    <div className='researcher-portal flex min-h-screen bg-muted/30 dark:bg-background'>
+    <div className='portal-shell flex min-h-screen bg-muted/30 dark:bg-background'>
       <aside className='fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-border bg-card bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,oklch(0.45_0.2_260_/_0.06),transparent)]'>
         <div className='flex flex-1 flex-col gap-5 overflow-y-auto p-4'>
           <div className='flex justify-center py-2'>
@@ -171,7 +174,8 @@ export function PortalShell({
                   to={item.path}
                   className={cn(
                     buttonVariants({ variant: 'ghost', size: 'default' }),
-                    'relative h-10 w-full justify-start gap-3 px-3 font-normal transition-colors',
+                    'relative h-10 w-full justify-start gap-3 px-3 font-normal transition-colors duration-200',
+                    'rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card',
                     selected
                       ? "bg-primary/8 text-primary font-medium hover:bg-primary/10 hover:text-primary before:absolute before:left-0 before:top-2 before:h-6 before:w-[3px] before:rounded-r-full before:bg-primary before:content-['']"
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -214,7 +218,7 @@ export function PortalShell({
             <Button
               variant='ghost'
               size='icon'
-              className='size-8 text-muted-foreground hover:bg-accent hover:text-foreground'
+              className='size-8 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60'
               aria-label={t('common.theme')}
               onClick={onThemeToggle}
             >
@@ -229,7 +233,7 @@ export function PortalShell({
               <DropdownMenuTrigger
                 className={cn(
                   buttonVariants({ variant: 'ghost', size: 'icon' }),
-                  'size-8 text-muted-foreground hover:bg-accent hover:text-foreground',
+                  'size-8 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60',
                 )}
                 aria-label={t('common.language')}
               >
@@ -272,7 +276,9 @@ export function PortalShell({
           </div>
         </header>
 
-        <main className='min-w-0 flex-1 p-6'>{children}</main>
+        <main className={mainClassName ?? 'min-w-0 flex-1 p-6'}>
+          {children}
+        </main>
       </div>
     </div>
   )

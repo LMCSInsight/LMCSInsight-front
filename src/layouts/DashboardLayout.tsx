@@ -37,20 +37,20 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
       label: 'Dashboard',
     },
     {
-      key: 'supervisions',
-      path: ROUTES.DIRECTOR_SUPERVISIONS,
-      label: 'Supervisions',
-    },
-    {
-      key: 'validation',
-      path: ROUTES.DIRECTOR_VALIDATION,
-      label: 'Validation queue',
-    },
-    {
       key: 'chercheurs',
       path: ROUTES.DIRECTOR_CHERCHEURS,
-      label: 'Charge D’encadrement',
+      label: 'Charge d’encadrement',
       icon: Users,
+    },
+    {
+      key: 'search',
+      path: ROUTES.DIRECTOR_SEARCH,
+      label: 'Recherche',
+    },
+    {
+      key: 'reports',
+      path: ROUTES.DIRECTOR_REPORTS,
+      label: 'Rapports',
     },
   ],
   RESEARCHER: [

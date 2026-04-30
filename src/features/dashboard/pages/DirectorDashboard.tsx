@@ -1,10 +1,19 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   BarChart3,
   Users,
   GraduationCap,
   SlidersHorizontal,
+  ArrowUpRight,
+  ClipboardClock,
+  TrendingUp,
+  PieChart as PieChartIcon,
+  ShieldCheck,
+  Layers,
+  Search,
+  FileBarChart2,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -16,660 +25,668 @@ import {
   Tooltip,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
   Legend,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { buttonVariants } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { ROUTES } from '@/config/routes'
+import { useSupervisions } from '@/features/supervisions/hooks/useSupervisions'
+import type {
+  Supervision,
+  SupervisionStatus,
+} from '@/features/supervisions/types'
+import { DIRECTOR_SUPERVISIONS_LIMIT } from '@/features/direction/lib/directorFetchLimits'
+import { AdminEmptyStatePanel } from '@/features/admin/components'
+import {
+  AdminInsightCard,
+  AdminKpiTile,
+  AdminSectionActionBar,
+} from '@/features/admin/components'
 
-// ─── Visual Identity ──────────────────────────────────────────────────────────
-const C = {
-  navy: '#21334E',
-  blue: '#11499A',
-  lightBlue: '#EBF1F9',
-  bg: '#F5F5F5',
-  white: '#FFFFFF',
-  muted: '#6b7280',
-}
-const FONT = "'Outfit', sans-serif"
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK_SUPERVISIONS = [
-  // PFE
-  ...Array.from({ length: 84 }, (_, i) => ({
-    id: `p${i}`,
-    type: 'PFE',
-    status:
-      i < 40
-        ? 'IN_PROGRESS'
-        : i < 60
-          ? 'DEFENDED'
-          : i < 70
-            ? 'EXTENSION'
-            : 'ABANDONED',
-    academicYear: `${2020 + (i % 5)}`,
-  })),
-  // Doctorat
-  ...Array.from({ length: 71 }, (_, i) => ({
-    id: `d${i}`,
-    type: 'PHD',
-    status:
-      i < 35
-        ? 'IN_PROGRESS'
-        : i < 55
-          ? 'DEFENDED'
-          : i < 65
-            ? 'EXTENSION'
-            : 'ABANDONED',
-    academicYear: `${2020 + (i % 5)}`,
-  })),
-  // Master
-  ...Array.from({ length: 52 }, (_, i) => ({
-    id: `m${i}`,
-    type: 'MASTER',
-    status:
-      i < 25
-        ? 'IN_PROGRESS'
-        : i < 40
-          ? 'DEFENDED'
-          : i < 48
-            ? 'EXTENSION'
-            : 'ABANDONED',
-    academicYear: `${2020 + (i % 5)}`,
-  })),
-  // Stage
-  ...Array.from({ length: 40 }, (_, i) => ({
-    id: `s${i}`,
-    type: 'INTERNSHIP',
-    status:
-      i < 20
-        ? 'IN_PROGRESS'
-        : i < 30
-          ? 'DEFENDED'
-          : i < 36
-            ? 'EXTENSION'
-            : 'ABANDONED',
-    academicYear: `${2020 + (i % 5)}`,
-  })),
+const CHART_COLORS = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
 ]
 
-const MOCK_RESEARCHERS = [
-  {
-    id: '1',
-    name: 'Dr.Boualem Khalouat',
-    role: 'Professeur',
-    total: 27,
-    enCours: 12,
-    enAttente: 5,
-    termine: 10,
-    pfe: 3,
-    master: 8,
-    doctorat: 2,
-    stage: 12,
-  },
-  {
-    id: '2',
-    name: 'Dr.Boualem Khalouat',
-    role: 'Professeur',
-    total: 27,
-    enCours: 12,
-    enAttente: 5,
-    termine: 10,
-    pfe: 3,
-    master: 8,
-    doctorat: 2,
-    stage: 12,
-  },
-  {
-    id: '3',
-    name: 'Dr.Boualem Khalouat',
-    role: 'Professeur',
-    total: 27,
-    enCours: 12,
-    enAttente: 5,
-    termine: 10,
-    pfe: 3,
-    master: 8,
-    doctorat: 2,
-    stage: 12,
-  },
-]
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-/** Top KPI card — plain white box */
-function KpiCard({
-  title,
-  children,
-  icon: Icon,
-  sub,
-}: {
-  title: string
-  children: React.ReactNode
-  icon?: React.ElementType
-  sub?: string
-}) {
-  return (
-    <Card
-      style={{
-        background: C.white,
-        borderRadius: 10,
-        boxShadow: '0 1px 4px rgba(33,51,78,0.07)',
-        border: 'none',
-      }}
-    >
-      <CardHeader className='pb-1 pt-4 px-4'>
-        <div className='flex items-center justify-between'>
-          <CardTitle
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: C.muted,
-              fontFamily: FONT,
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-            }}
-          >
-            {title}
-          </CardTitle>
-          {Icon && <Icon size={14} color={C.muted} />}
-        </div>
-      </CardHeader>
-      <CardContent className='px-4 pb-4 pt-0'>
-        {children}
-        {sub && (
-          <p
-            style={{
-              fontSize: 10,
-              color: C.muted,
-              marginTop: 4,
-              fontFamily: FONT,
-            }}
-          >
-            {sub}
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  )
+function countByKeys<T extends string>(keys: T[]): { key: T; count: number }[] {
+  const m = new Map<T, number>()
+  keys.forEach((k) => m.set(k, (m.get(k) ?? 0) + 1))
+  return Array.from(m.entries()).map(([key, count]) => ({ key, count }))
 }
 
-/** Researcher row card */
-function ResearcherCard({ r }: { r: (typeof MOCK_RESEARCHERS)[0] }) {
-  const initial = r.name.replace('Dr.', '').trim()[0]
-  return (
-    <Card
-      style={{
-        background: C.white,
-        border: 'none',
-        borderRadius: 10,
-        boxShadow: '0 1px 4px rgba(33,51,78,0.06)',
-      }}
-    >
-      <CardContent className='px-5 py-4'>
-        <div className='grid w-full items-center gap-4 lg:grid-cols-[minmax(220px,1.8fr)_auto_1px_auto_1px_auto] lg:gap-6'>
-          {/* Avatar + name */}
-          <div className='flex min-w-0 items-center gap-3'>
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                background: C.navy,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <span
-                style={{
-                  color: C.white,
-                  fontWeight: 700,
-                  fontSize: 16,
-                  fontFamily: FONT,
-                }}
-              >
-                {initial}
-              </span>
-            </div>
-            <div>
-              <p
-                style={{
-                  fontWeight: 600,
-                  fontSize: 13,
-                  color: C.navy,
-                  fontFamily: FONT,
-                  marginBottom: 1,
-                }}
-              >
-                {r.name}
-              </p>
-              <p style={{ fontSize: 11, color: C.muted, fontFamily: FONT }}>
-                {r.role}{' '}
-                <Link
-                  to='#'
-                  style={{
-                    color: C.blue,
-                    fontWeight: 600,
-                    fontSize: 11,
-                    textDecoration: 'none',
-                  }}
-                >
-                  Voir Profile
-                </Link>
-              </p>
-            </div>
-          </div>
+function aggregateFromApi(rows: Supervision[], apiTotal: number) {
+  const total = apiTotal
+  const defended = rows.filter((s) => s.status === 'DEFENDED').length
+  const defRate =
+    rows.length > 0 ? Math.round((defended / rows.length) * 1000) / 10 : 0
+  const pfeCount = rows.filter((s) => s.type === 'PFE').length
+  const phdCount = rows.filter((s) => s.type === 'PHD').length
+  const mastCount = rows.filter((s) => s.type === 'MASTER').length
+  const stgCount = rows.filter((s) => s.type === 'INTERNSHIP').length
 
-          {/* Total */}
-          <div className='min-w-0 text-center lg:px-2'>
-            <p
-              style={{
-                fontSize: 28,
-                fontWeight: 800,
-                color: C.navy,
-                fontFamily: FONT,
-                lineHeight: 1,
-              }}
-            >
-              {r.total}
-            </p>
-            <p
-              style={{
-                fontSize: 11,
-                color: C.muted,
-                fontFamily: FONT,
-                marginTop: 2,
-              }}
-            >
-              Encadrements totaux
-            </p>
-          </div>
+  const byYearMap: Record<string, number> = {}
+  rows.forEach((s) => {
+    byYearMap[s.academicYear] = (byYearMap[s.academicYear] ?? 0) + 1
+  })
+  const byYear = Object.entries(byYearMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([year, count]) => ({ year, count }))
 
-          {/* Divider */}
-          <div className='hidden h-12 w-px shrink-0 bg-border lg:block' />
+  const themeMap: Record<string, number> = {}
+  rows.forEach((s) => {
+    const name = s.theme?.name?.trim() || 'Sans thème'
+    themeMap[name] = (themeMap[name] ?? 0) + 1
+  })
+  const thematicData = Object.entries(themeMap)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8)
 
-          {/* Status breakdown */}
-          <div className='min-w-0 lg:px-2'>
-            {[
-              { label: 'En cours', value: r.enCours },
-              { label: 'En attent', value: r.enAttente },
-              { label: 'Terminé', value: r.termine },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className='flex items-center justify-between gap-4'
-                style={{ marginBottom: 1 }}
-              >
-                <span
-                  style={{ fontSize: 11, color: C.muted, fontFamily: FONT }}
-                >
-                  {item.label}
-                </span>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: C.navy,
-                    fontFamily: FONT,
-                  }}
-                >
-                  {item.value}
-                </span>
-              </div>
-            ))}
-          </div>
+  const activeIds = new Set<string>()
+  rows.forEach((s) => {
+    if (s.status !== 'IN_PROGRESS') return
+    s.supervisors?.forEach((sup) => {
+      if (sup.supervisorId) activeIds.add(sup.supervisorId)
+    })
+  })
+  const activeResearchers = activeIds.size
 
-          {/* Divider */}
-          <div className='hidden h-12 w-px shrink-0 bg-border lg:block' />
+  const pendingValidation = rows.filter(
+    (s) => s.validationStatus === 'PENDING',
+  ).length
 
-          {/* Type breakdown */}
-          <div className='grid min-w-0 grid-cols-4 gap-4 text-center lg:px-2'>
-            {[
-              { label: 'PFE', value: r.pfe },
-              { label: 'Master', value: r.master },
-              { label: 'Doctorat', value: r.doctorat },
-              { label: 'Stage', value: r.stage },
-            ].map((item) => (
-              <div key={item.label} className='min-w-0'>
-                <p
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 800,
-                    color: C.navy,
-                    fontFamily: FONT,
-                    lineHeight: 1,
-                  }}
-                >
-                  {item.value}
-                </p>
-                <p
-                  style={{
-                    fontSize: 10,
-                    color: C.muted,
-                    fontFamily: FONT,
-                    marginTop: 2,
-                  }}
-                >
-                  {item.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
+  const statusSlices = countByKeys(
+    rows.map((s) => s.status as SupervisionStatus),
+  ).sort((a, b) => b.count - a.count)
+
+  const validationSlices = countByKeys(
+    rows.map((s) => s.validationStatus),
+  ).sort((a, b) => b.count - a.count)
+
+  return {
+    total,
+    defRate,
+    pfeCount,
+    phdCount,
+    mastCount,
+    stgCount,
+    byYear,
+    thematicData,
+    activeResearchers,
+    pendingValidation,
+    sampleSize: rows.length,
+    statusSlices,
+    validationSlices,
+  }
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+const chartTooltip = {
+  contentStyle: {
+    fontSize: 12,
+    borderRadius: 8,
+    border: '1px solid hsl(var(--border))',
+    background: 'hsl(var(--card))',
+  },
+}
 
 export default function DirectorDashboard() {
-  const total = MOCK_SUPERVISIONS.length
-  const defended = MOCK_SUPERVISIONS.filter(
-    (s) => s.status === 'DEFENDED',
-  ).length
-  const defRate = total > 0 ? Math.round((defended / total) * 100) : 0
+  const { t } = useTranslation()
+  const {
+    data: page,
+    isLoading,
+    isError,
+  } = useSupervisions({
+    page: 1,
+    limit: DIRECTOR_SUPERVISIONS_LIMIT,
+  })
 
-  // Active researchers (mock: those with ≥1 in-progress)
-  const activeResearchers = 38
+  const rows = page?.data ?? []
+  const apiTotal = page?.total ?? 0
+  const live = !isError && page !== undefined
 
-  // Type counts for KPI card
-  const pfeCount = MOCK_SUPERVISIONS.filter((s) => s.type === 'PFE').length
-  const phdCount = MOCK_SUPERVISIONS.filter((s) => s.type === 'PHD').length
-  const mastCount = MOCK_SUPERVISIONS.filter((s) => s.type === 'MASTER').length
-  const stgCount = MOCK_SUPERVISIONS.filter(
-    (s) => s.type === 'INTERNSHIP',
-  ).length
+  const metrics = useMemo(() => {
+    const totalBasis = apiTotal > 0 ? apiTotal : rows.length
+    return aggregateFromApi(rows, totalBasis)
+  }, [rows, apiTotal])
 
-  // Line chart: total supervisions by year
-  const byYear = useMemo(() => {
-    const map: Record<string, number> = {}
-    MOCK_SUPERVISIONS.forEach((s) => {
-      map[s.academicYear] = (map[s.academicYear] ?? 0) + 1
-    })
-    return Object.entries(map)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([year, count]) => ({ year, count }))
-  }, [])
+  const {
+    total,
+    defRate,
+    pfeCount,
+    phdCount,
+    mastCount,
+    stgCount,
+    byYear,
+    thematicData,
+    activeResearchers,
+    pendingValidation,
+    sampleSize,
+    statusSlices,
+    validationSlices,
+  } = metrics
 
-  // Stacked bar: by type × status
-  const byTypeStatus = useMemo(() => {
-    const types = ['PFE', 'MASTER', 'PHD', 'INTERNSHIP']
-    const labels: Record<string, string> = {
-      PFE: 'PFE',
-      MASTER: 'Master',
-      PHD: 'Doctorat',
-      INTERNSHIP: 'Stage',
-    }
-    return types.map((t) => {
-      const subs = MOCK_SUPERVISIONS.filter((s) => s.type === t)
-      return {
-        name: labels[t],
-        'En cours': subs.filter((s) => s.status === 'IN_PROGRESS').length,
-        Soutenu: subs.filter((s) => s.status === 'DEFENDED').length,
-        Prolongation: subs.filter((s) => s.status === 'EXTENSION').length,
-        Abandonné: subs.filter((s) => s.status === 'ABANDONED').length,
-      }
-    })
-  }, [])
+  const supervisionPieData = useMemo(
+    () =>
+      statusSlices.map((s, i) => ({
+        name: t(`director.dashboard.supervisionStatus.${s.key}`),
+        value: s.count,
+        fill: CHART_COLORS[i % CHART_COLORS.length],
+      })),
+    [statusSlices, t],
+  )
 
-  return (
-    <div className='space-y-5' style={{ fontFamily: FONT }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');`}</style>
+  const validationPieData = useMemo(
+    () =>
+      validationSlices.map((s, i) => ({
+        name: t(`director.dashboard.validationStatus.${s.key}`),
+        value: s.count,
+        fill: CHART_COLORS[(i + 2) % CHART_COLORS.length],
+      })),
+    [validationSlices, t],
+  )
 
-      {/* ── Row 1: 4 KPI cards ────────────────────────────────────────────── */}
-      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4'>
-        {/* 1. Total encadrements */}
-        <KpiCard
-          title='Total encadrements'
+  const partialSample =
+    live && apiTotal > 0 && sampleSize < apiTotal && sampleSize > 0
+
+  if (!isLoading && isError) {
+    return (
+      <div className='mx-auto w-full max-w-3xl'>
+        <AdminEmptyStatePanel
+          title={t('director.dashboard.loadErrorTitle', 'Tableau indisponible')}
+          description={t(
+            'director.dashboard.loadErrorHint',
+            'Les indicateurs ne peuvent pas être calculés tant que les encadrements ne sont pas chargés.',
+          )}
           icon={BarChart3}
-          sub='Cliquez pour tout afficher'
-        >
-          <p
-            style={{
-              fontSize: 36,
-              fontWeight: 800,
-              color: C.navy,
-              fontFamily: FONT,
-              lineHeight: 1.1,
-            }}
-          >
-            {total}
-          </p>
-        </KpiCard>
+        />
+      </div>
+    )
+  }
 
-        {/* 2. Répartition par type */}
-        <KpiCard
-          title='Répartition par type'
-          icon={SlidersHorizontal}
-          sub='Cliquez pour filtrer'
-        >
-          <div className='flex items-end gap-3 mt-1'>
-            {[
-              { label: 'PFE', value: pfeCount },
-              { label: 'Doctorat', value: phdCount },
-              { label: 'Master', value: mastCount },
-              { label: 'Stage', value: stgCount },
-            ].map((item) => (
-              <div key={item.label} style={{ textAlign: 'center' }}>
-                <p
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: C.navy,
-                    fontFamily: FONT,
-                    lineHeight: 1,
-                  }}
-                >
-                  {item.value}
-                </p>
-                <p
-                  style={{
-                    fontSize: 10,
-                    color: C.muted,
-                    fontFamily: FONT,
-                    marginTop: 2,
-                  }}
-                >
-                  {item.label}
-                </p>
-              </div>
+  if (isLoading) {
+    return (
+      <div className='mx-auto w-full max-w-7xl space-y-6'>
+        <Card className='overflow-hidden border-0'>
+          <CardContent className='px-6 py-5'>
+            <div className='h-7 max-w-xs animate-pulse rounded bg-muted' />
+            <div className='mt-2 h-4 max-w-lg animate-pulse rounded bg-muted' />
+          </CardContent>
+        </Card>
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <Card>
+            <CardContent className='py-8'>
+              <div className='h-20 animate-pulse rounded-lg bg-muted' />
+            </CardContent>
+          </Card>
+          <div className='grid grid-cols-2 gap-4 lg:col-span-2'>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className='py-6'>
+                  <div className='h-12 animate-pulse rounded-lg bg-muted' />
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </KpiCard>
+        </div>
+        <div className='grid gap-4 lg:grid-cols-3'>
+          <Card>
+            <CardContent className='py-8'>
+              <div className='h-48 animate-pulse rounded-lg bg-muted' />
+            </CardContent>
+          </Card>
+          <Card className='lg:col-span-2'>
+            <CardContent className='py-8'>
+              <div className='h-48 animate-pulse rounded-lg bg-muted' />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
-        {/* 3. Enseignants actifs */}
-        <KpiCard
-          title='Enseignants actifs'
-          icon={Users}
-          sub='enseignants avec ≥1 encadrement en cours'
-        >
-          <p
-            style={{
-              fontSize: 36,
-              fontWeight: 800,
-              color: C.navy,
-              fontFamily: FONT,
-              lineHeight: 1.1,
-            }}
-          >
-            {activeResearchers}
-          </p>
-        </KpiCard>
+  const heroWatermark =
+    live && pendingValidation > 0 ? pendingValidation : total > 0 ? total : null
 
-        {/* 4. Taux de soutenance */}
-        <KpiCard
-          title='Taux de soutenance'
-          icon={GraduationCap}
-          sub='soutenances réalisées / prévues'
-        >
-          <p
-            style={{
-              fontSize: 36,
-              fontWeight: 800,
-              color: C.navy,
-              fontFamily: FONT,
-              lineHeight: 1.1,
-            }}
+  return (
+    <div className='mx-auto w-full max-w-7xl space-y-6'>
+      <Card className='relative overflow-hidden border-0 bg-linear-to-br from-primary/15 via-primary/5 to-transparent'>
+        {heroWatermark !== null ? (
+          <div
+            className='pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 select-none text-[5rem] font-black tabular-nums leading-none text-primary/6'
+            aria-hidden
           >
-            {defRate}%
-          </p>
-        </KpiCard>
+            {heroWatermark}
+          </div>
+        ) : null}
+        <CardContent className='relative flex flex-wrap items-center justify-between gap-4 px-6 py-5'>
+          <div className='max-w-2xl space-y-2'>
+            <div className='flex flex-wrap items-center gap-2'>
+              <h1 className='text-xl font-semibold text-foreground'>
+                {t('director.dashboard.pageHeading')}
+              </h1>
+              {live && partialSample ? (
+                <Badge variant='outline' className='font-normal tabular-nums'>
+                  {t('director.dashboard.partialSample', {
+                    shown: sampleSize,
+                    total: apiTotal,
+                  })}
+                </Badge>
+              ) : null}
+            </div>
+            <p className='text-sm text-muted-foreground'>
+              {t('director.dashboard.pageSubtitle')}
+            </p>
+            <p className='text-sm leading-relaxed text-muted-foreground'>
+              {t('director.dashboard.intro')}{' '}
+              <Link
+                to={ROUTES.DIRECTOR_CHERCHEURS}
+                className={cn(
+                  buttonVariants({ variant: 'link', size: 'sm' }),
+                  'h-auto p-0 align-baseline font-medium text-primary',
+                )}
+              >
+                {t('director.dashboard.linkWorkload')}
+              </Link>
+            </p>
+          </div>
+          <div className='flex flex-wrap items-center gap-2'>
+            <Link
+              to={ROUTES.DIRECTOR_REPORTS}
+              className={cn(
+                buttonVariants({ size: 'sm' }),
+                'gap-2 whitespace-nowrap shadow-primary-sm',
+              )}
+            >
+              <FileBarChart2 className='size-3.5 shrink-0' strokeWidth={1.5} />
+              {t('director.nav.reports')}
+            </Link>
+            <Link
+              to={ROUTES.DIRECTOR_SEARCH}
+              className={cn(
+                buttonVariants({ size: 'sm', variant: 'outline' }),
+                'gap-2 whitespace-nowrap',
+              )}
+            >
+              <Search className='size-3.5 shrink-0' strokeWidth={1.5} />
+              {t('director.nav.search')}
+            </Link>
+            <Link
+              to={ROUTES.DIRECTOR_CHERCHEURS}
+              className={cn(
+                buttonVariants({ size: 'sm', variant: 'outline' }),
+                'gap-2 whitespace-nowrap',
+              )}
+            >
+              <Users className='size-3.5 shrink-0' strokeWidth={1.5} />
+              {t('director.nav.workload')}
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      <AdminSectionActionBar
+        title={t('director.dashboard.quickAccess')}
+        actions={[
+          {
+            label: t('director.nav.workload'),
+            to: ROUTES.DIRECTOR_CHERCHEURS,
+          },
+          {
+            label: t('director.nav.search'),
+            to: ROUTES.DIRECTOR_SEARCH,
+          },
+          {
+            label: t('director.nav.reports'),
+            to: ROUTES.DIRECTOR_REPORTS,
+          },
+        ]}
+      />
+
+      {live && pendingValidation > 0 ? (
+        <Card className='border-border/70 shadow-none'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium text-muted-foreground'>
+              {t('director.dashboard.attentionQueue')}
+            </CardTitle>
+            <ClipboardClock
+              className='size-4 text-muted-foreground'
+              strokeWidth={1.5}
+            />
+          </CardHeader>
+          <CardContent className='flex flex-wrap items-center justify-between gap-3'>
+            <p className='text-sm text-foreground'>
+              {t('director.dashboard.pendingValidationLine', {
+                count: pendingValidation,
+              })}
+            </p>
+            <Link
+              to={ROUTES.DIRECTOR_SEARCH}
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'sm' }),
+                'gap-1 transition-[transform] duration-200 active:scale-[0.98]',
+              )}
+            >
+              {t('director.dashboard.reviewSearch')}
+              <ArrowUpRight className='size-3.5' />
+            </Link>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div className='grid gap-4 lg:grid-cols-3'>
+        <Card className='h-full border-0 bg-primary text-primary-foreground shadow-primary-sm transition-all hover:-translate-y-0.5'>
+          <CardHeader className='flex flex-row items-start justify-between pb-3'>
+            <CardTitle className='text-sm font-medium text-primary-foreground/70'>
+              {t('director.dashboard.kpiTotal')}
+            </CardTitle>
+            <div className='flex size-8 items-center justify-center rounded-lg bg-primary-foreground/15'>
+              <BarChart3
+                className='size-4 text-primary-foreground'
+                strokeWidth={1.5}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className='text-4xl font-bold tabular-nums text-primary-foreground'>
+              {total}
+            </div>
+            <p className='mt-1.5 text-xs text-primary-foreground/60'>
+              {t('director.dashboard.kpiTotalHelper')}
+            </p>
+          </CardContent>
+        </Card>
+        <div className='grid grid-cols-2 gap-4 lg:col-span-2'>
+          <AdminKpiTile
+            label={t('director.dashboard.kpiActiveTeachers')}
+            value={activeResearchers}
+            helper={t('director.dashboard.kpiActiveTeachersHelper')}
+            icon={Users}
+          />
+          <AdminKpiTile
+            label={t('director.dashboard.kpiDefenseRate')}
+            value={`${defRate}%`}
+            helper={t('director.dashboard.kpiDefenseRateHelperLive')}
+            icon={GraduationCap}
+          />
+          <Card className='border-border/70 shadow-none lg:col-span-2'>
+            <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-2'>
+              <CardTitle className='text-xs font-medium uppercase tracking-wider text-muted-foreground'>
+                {t('director.dashboard.kpiByType')}
+              </CardTitle>
+              <SlidersHorizontal
+                className='size-4 text-muted-foreground'
+                strokeWidth={1.5}
+              />
+            </CardHeader>
+            <CardContent>
+              <div className='flex flex-wrap items-end gap-4 sm:gap-6'>
+                {[
+                  { label: 'PFE', value: pfeCount },
+                  { label: t('director.dashboard.typePhd'), value: phdCount },
+                  {
+                    label: t('director.dashboard.typeMaster'),
+                    value: mastCount,
+                  },
+                  {
+                    label: t('director.dashboard.typeInternship'),
+                    value: stgCount,
+                  },
+                ].map((item) => (
+                  <div key={item.label} className='min-w-0 text-center'>
+                    <p className='tabular text-2xl font-semibold tracking-tight text-foreground'>
+                      {item.value}
+                    </p>
+                    <p className='mt-0.5 text-[11px] text-muted-foreground'>
+                      {item.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className='mt-3 text-xs text-muted-foreground'>
+                {t('director.dashboard.kpiByTypeHelper')}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* ── Row 2: 2 charts side by side ─────────────────────────────────── */}
-      <div className='grid grid-cols-1 gap-4 lg:grid-cols-2'>
-        {/* Line chart */}
-        <Card
-          style={{
-            background: C.white,
-            border: 'none',
-            borderRadius: 10,
-            boxShadow: '0 1px 4px rgba(33,51,78,0.07)',
-          }}
-        >
-          <CardHeader className='pb-0 pt-4 px-5'>
-            <CardTitle
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: C.navy,
-                fontFamily: FONT,
-              }}
-            >
-              Évolution des encadrements
+      <div className='grid gap-4 lg:grid-cols-3'>
+        <Card className='border-border/70 shadow-none'>
+          <CardHeader className='flex flex-row items-start gap-2 pb-2'>
+            <PieChartIcon
+              className='mt-0.5 size-4 shrink-0 text-muted-foreground'
+              aria-hidden
+            />
+            <CardTitle className='text-sm font-semibold'>
+              {t('director.dashboard.chartSupervisionStatus')}
             </CardTitle>
           </CardHeader>
-          <CardContent className='px-3 pb-4 pt-2'>
-            <div style={{ height: 220 }}>
+          <CardContent className='pb-3'>
+            <p className='mb-3 text-xs text-muted-foreground'>
+              {t('director.dashboard.chartSupervisionStatusSubtitle')}
+            </p>
+            <div className='h-[220px] w-full sm:h-[240px]'>
+              <ResponsiveContainer width='100%' height='100%'>
+                <PieChart>
+                  <Pie
+                    data={supervisionPieData}
+                    cx='50%'
+                    cy='48%'
+                    innerRadius={44}
+                    outerRadius={76}
+                    paddingAngle={2}
+                    dataKey='value'
+                    nameKey='name'
+                  >
+                    {supervisionPieData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip {...chartTooltip} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 11 }}
+                    formatter={(value) => (
+                      <span className='text-foreground'>{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className='border-border/70 shadow-none lg:col-span-2'>
+          <CardHeader className='flex flex-row items-start gap-2 pb-2'>
+            <TrendingUp
+              className='mt-0.5 size-4 shrink-0 text-muted-foreground'
+              aria-hidden
+            />
+            <div>
+              <CardTitle className='text-sm font-semibold'>
+                {t('director.dashboard.chartEvolution')}
+              </CardTitle>
+              <p className='text-xs text-muted-foreground'>
+                {t('director.dashboard.chartEvolutionSubtitle')}
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className='pb-3'>
+            <div className='h-[220px] w-full sm:h-[240px]'>
               <ResponsiveContainer width='100%' height='100%'>
                 <LineChart
                   data={byYear}
                   margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
+                  <CartesianGrid
+                    strokeDasharray='3 3'
+                    className='stroke-muted'
+                  />
                   <XAxis
                     dataKey='year'
-                    tick={{ fontSize: 11, fontFamily: FONT, fill: C.muted }}
+                    tick={{
+                      fontSize: 11,
+                      fill: 'hsl(var(--muted-foreground))',
+                    }}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fontFamily: FONT, fill: C.muted }}
+                    tick={{
+                      fontSize: 11,
+                      fill: 'hsl(var(--muted-foreground))',
+                    }}
                     allowDecimals={false}
                   />
-                  <Tooltip contentStyle={{ fontFamily: FONT, fontSize: 12 }} />
+                  <Tooltip {...chartTooltip} />
                   <Line
                     type='monotone'
                     dataKey='count'
-                    name='Encadrements'
-                    stroke={C.blue}
-                    strokeWidth={2.5}
-                    dot={{ r: 4, fill: C.blue }}
-                    activeDot={{ r: 6 }}
-                    isAnimationActive
-                    animationDuration={600}
+                    name={t('director.dashboard.seriesSupervisions')}
+                    stroke={CHART_COLORS[0]}
+                    strokeWidth={2}
+                    dot={{ r: 3, fill: CHART_COLORS[0] }}
+                    activeDot={{ r: 5 }}
+                    animationDuration={400}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Stacked bar chart */}
-        <Card
-          style={{
-            background: C.white,
-            border: 'none',
-            borderRadius: 10,
-            boxShadow: '0 1px 4px rgba(33,51,78,0.07)',
-          }}
-        >
-          <CardHeader className='pb-0 pt-4 px-5'>
-            <CardTitle
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: C.navy,
-                fontFamily: FONT,
-              }}
-            >
-              État d&apos;avancement par type
-            </CardTitle>
+      <div className='grid gap-4 lg:grid-cols-3'>
+        <Card className='border-border/70 shadow-none lg:col-span-2'>
+          <CardHeader className='flex flex-row items-start gap-2 pb-2'>
+            <Layers
+              className='mt-0.5 size-4 shrink-0 text-muted-foreground'
+              aria-hidden
+            />
+            <div>
+              <CardTitle className='text-sm font-semibold'>
+                {t('director.dashboard.chartThematic')}
+              </CardTitle>
+              <p className='text-xs text-muted-foreground'>
+                {t('director.dashboard.chartThematicSubtitle')}
+              </p>
+            </div>
           </CardHeader>
-          <CardContent className='px-3 pb-4 pt-2'>
-            <div style={{ height: 220 }}>
+          <CardContent className='pb-3'>
+            <div className='h-[220px] w-full sm:h-[260px]'>
               <ResponsiveContainer width='100%' height='100%'>
                 <BarChart
-                  data={byTypeStatus}
-                  margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
+                  layout='vertical'
+                  data={thematicData}
+                  margin={{ top: 4, right: 12, left: 4, bottom: 4 }}
                 >
-                  <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
+                  <CartesianGrid
+                    strokeDasharray='3 3'
+                    className='stroke-muted'
+                    horizontal
+                    vertical={false}
+                  />
                   <XAxis
-                    dataKey='name'
-                    tick={{ fontSize: 11, fontFamily: FONT, fill: C.muted }}
+                    type='number'
+                    allowDecimals={false}
+                    tick={{
+                      fontSize: 10,
+                      fill: 'hsl(var(--muted-foreground))',
+                    }}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fontFamily: FONT, fill: C.muted }}
-                    allowDecimals={false}
+                    type='category'
+                    dataKey='name'
+                    width={thematicData.length ? 140 : 118}
+                    tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }}
                   />
-                  <Tooltip contentStyle={{ fontFamily: FONT, fontSize: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 11, fontFamily: FONT }} />
+                  <Tooltip {...chartTooltip} />
                   <Bar
-                    dataKey='En cours'
-                    stackId='a'
-                    fill='#3b82f6'
-                    radius={[0, 0, 0, 0]}
-                    isAnimationActive
-                    animationDuration={600}
-                  />
-                  <Bar
-                    dataKey='Soutenu'
-                    stackId='a'
-                    fill='#22c55e'
-                    isAnimationActive
-                    animationDuration={600}
-                  />
-                  <Bar
-                    dataKey='Prolongation'
-                    stackId='a'
-                    fill='#ef4444'
-                    isAnimationActive
-                    animationDuration={600}
-                  />
-                  <Bar
-                    dataKey='Abandonné'
-                    stackId='a'
-                    fill='#eab308'
-                    radius={[4, 4, 0, 0]}
-                    isAnimationActive
-                    animationDuration={600}
+                    dataKey='count'
+                    fill={CHART_COLORS[1]}
+                    radius={[0, 6, 6, 0]}
+                    maxBarSize={22}
+                    animationDuration={400}
                   />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
+
+        <Card className='border-border/70 shadow-none'>
+          <CardHeader className='flex flex-row items-start gap-2 pb-2'>
+            <ShieldCheck
+              className='mt-0.5 size-4 shrink-0 text-muted-foreground'
+              aria-hidden
+            />
+            <CardTitle className='text-sm font-semibold'>
+              {t('director.dashboard.chartValidationPipeline')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='pb-3'>
+            <p className='mb-3 text-xs text-muted-foreground'>
+              {t('director.dashboard.chartValidationPipelineSubtitle')}
+            </p>
+            <div className='h-[220px] w-full sm:h-[260px]'>
+              <ResponsiveContainer width='100%' height='100%'>
+                <PieChart>
+                  <Pie
+                    data={validationPieData}
+                    cx='50%'
+                    cy='48%'
+                    innerRadius={44}
+                    outerRadius={76}
+                    paddingAngle={2}
+                    dataKey='value'
+                    nameKey='name'
+                  >
+                    {validationPieData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip {...chartTooltip} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 11 }}
+                    formatter={(value) => (
+                      <span className='text-foreground'>{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* ── Row 3: Researcher table ───────────────────────────────────────── */}
-      <div>
-        <h2
-          style={{
-            fontSize: 20,
-            fontWeight: 700,
-            color: C.navy,
-            fontFamily: FONT,
-            marginBottom: 16,
-          }}
-        >
-          Tableaux Des Encadrants :
-        </h2>
-        <div className='space-y-3'>
-          {MOCK_RESEARCHERS.map((r) => (
-            <ResearcherCard key={r.id} r={r} />
-          ))}
-        </div>
-      </div>
+      <section className='grid gap-4 lg:grid-cols-3'>
+        <AdminInsightCard
+          title={t('director.dashboard.kpiActiveTeachers')}
+          value={activeResearchers}
+          subtitle={t('director.dashboard.kpiActiveTeachersHelper')}
+          actionLabel={t('director.nav.workload')}
+          actionTo={ROUTES.DIRECTOR_CHERCHEURS}
+        />
+        <AdminInsightCard
+          title={t('director.dashboard.chartValidationPipeline')}
+          value={pendingValidation}
+          subtitle={t('director.dashboard.chartValidationPipelineSubtitle')}
+          actionLabel={t('director.dashboard.reviewSearch')}
+          actionTo={ROUTES.DIRECTOR_SEARCH}
+        />
+        <AdminInsightCard
+          title={t('director.dashboard.kpiDefenseRate')}
+          value={`${defRate}%`}
+          subtitle={t('director.dashboard.linkReportsAnalytics')}
+          actionLabel={t('director.nav.reports')}
+          actionTo={ROUTES.DIRECTOR_REPORTS}
+        />
+      </section>
     </div>
   )
 }
