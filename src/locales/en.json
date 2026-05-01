@@ -7,6 +7,13 @@
     "themeManagement": "Theme management",
     "statisticsReports": "Statistics & Reports",
     "profileSettings": "Profile & Settings",
+    "steps": {
+      "general": "General",
+      "student": "Student",
+      "theme": "Theme",
+      "dates": "Dates",
+      "supervisors": "Supervisors"
+    },
     "researcher": "Researcher",
     "assistant": "Assistant",
     "theme": "Theme",
@@ -343,6 +350,7 @@
       "section2": "2. Academic information",
       "firstName": "First name",
       "lastName": "Last name",
+      "emailPlaceholder": "user@esi.dz",
       "institution": "Institution",
       "level": "Level",
       "specialty": "Specialty",
@@ -357,9 +365,18 @@
       "changesCount_one": "{{count}} field modified",
       "changesCount_other": "{{count}} fields modified",
       "noChanges": "No changes",
+      "emailPlaceholder": "user@esi.dz",
       "submit": "Save changes",
       "success": "Student updated successfully!",
       "error": "Error while updating student"
+    },
+    "institution": {
+      "ESI": "ESI",
+      "EXTERNE": "External"
+    },
+    "level": {
+      "MASTER": "Master",
+      "DOCTORANT": "Doctoral"
     }
   },
   "themes": {
@@ -492,6 +509,7 @@
         "validatedOn": "Validated on",
         "createdOn": "Created on",
         "updatedOn": "Updated on",
+        "id": "ID",
         "main": "Main",
         "coSup": "Co-supervisor",
         "external": "External",
@@ -523,7 +541,9 @@
       "themeLabel": "Research theme",
       "themeSearch": "Search by theme name…",
       "themeRequired": "Select a research theme",
-      "noThemeMatch": "No theme found for"
+      "noThemeMatch": "No theme found for",
+      "selectYear": "Select a year",
+      "selectStudent": "Please select a student"
     },
     "filters": {
       "type": "Type",
@@ -551,6 +571,12 @@
       "VALIDATED": "Validated",
       "REJECTED": "Rejected",
       "REVISED": "Revised"
+    },
+    "filters": {
+      "type": "Type",
+      "status": "Status",
+      "validation": "Validation",
+      "academicYear": "Academic year"
     }
   },
   "researcher": {
@@ -1074,6 +1100,87 @@
       "deleteTitle": "Delete this supervision?",
       "deleteDescription": "This cannot be undone. Only supervisions that are already validated cannot be deleted.",
       "deleteError": "Could not delete (locked record or server error)."
+    }
+  },
+  "statistics": {
+    "pageTitle": "Statistics & Reports",
+    "pageSubtitle": "Multi-criteria analysis of your supervisions and students.",
+    "filters": {
+      "academicYear": "Academic year",
+      "allYears": "All years",
+      "allYearsSlug": "all-years"
+    },
+    "kpis": {
+      "totalSupervisions": "Total supervisions",
+      "inProgress": "In progress",
+      "defended": "Defended",
+      "defenseRate": "Defense rate",
+      "defenseRateSub": "{{defended}} / {{total}} defended",
+      "pendingValidation": "Pending validation",
+      "totalStudents": "Total students"
+    },
+    "charts": {
+      "byType": "Breakdown by type",
+      "byYear": "Trend by academic year",
+      "byStatus": "Breakdown by status",
+      "byValidation": "Validation status",
+      "studentsByInstitution": "Students by institution",
+      "studentsByLevel": "Students by level"
+    },
+    "series": {
+      "supervisions": "Supervisions",
+      "students": "Students"
+    },
+    "exports": {
+      "pdf": {
+        "button": "PDF report",
+        "title": "Supervision Report - LMCS",
+        "generatedOn": "Generated on",
+        "summary": "Summary",
+        "totalSupervisions": "Total supervisions",
+        "inProgress": "In progress",
+        "defended": "Defended",
+        "defenseRate": "Defense rate",
+        "pendingValidation": "Pending validation",
+        "totalStudents": "Total students"
+      },
+      "supervisions": {
+        "button": "Supervisions",
+        "sheetName": "Supervisions",
+        "title": "Title",
+        "student": "Student",
+        "type": "Type",
+        "status": "Status",
+        "validation": "Validation",
+        "academicYear": "Academic year",
+        "startDate": "Start date",
+        "expectedEndDate": "Expected end date",
+        "actualEndDate": "Actual end date",
+        "keywords": "Keywords"
+      },
+      "students": {
+        "button": "Students",
+        "sheetName": "Students",
+        "fileName": "students",
+        "lastName": "Last name",
+        "firstName": "First name",
+        "email": "Email",
+        "institution": "Institution",
+        "level": "Level",
+        "specialty": "Specialty"
+      }
+    },
+    "table": {
+      "title": "Supervisions table",
+      "empty": "No supervision found.",
+      "titleColumn": "Title",
+      "studentColumn": "Student",
+      "typeColumn": "Type",
+      "statusColumn": "Status",
+      "validationColumn": "Validation",
+      "yearColumn": "Academic year",
+      "of": "of",
+      "page": "Page {{page}} / {{totalPages}}"
     }
   }
 }

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   BarChart3,
   Clock,
@@ -41,29 +42,6 @@ import { Badge } from '@/components/ui/badge'
 import { useSupervisions } from '@/features/supervisions/hooks/useSupervisions'
 import { useStudents } from '@/features/students/hooks'
 
-// ─── Label maps ───────────────────────────────────────────────────────────────
-
-const STATUS_LABELS: Record<string, string> = {
-  IN_PROGRESS: 'En cours',
-  DEFENDED: 'Soutenu',
-  ABANDONED: 'Abandonné',
-  EXTENSION: 'Prolongation',
-  SUSPENDED: 'Suspendu',
-}
-const TYPE_LABELS: Record<string, string> = {
-  PFE: 'PFE',
-  MASTER: 'Master',
-  PHD: 'Doctorat',
-  INTERNSHIP: 'Stage (SPE)',
-  PROJECT: 'Projet de recherche',
-}
-const VALIDATION_LABELS: Record<string, string> = {
-  PENDING: 'En attente',
-  VALIDATED: 'Validé',
-  REJECTED: 'Refusé',
-  REVISED: 'Révisé',
-}
-
 const CHART_COLORS = [
   'var(--chart-1)',
   'var(--chart-2)',
@@ -90,9 +68,9 @@ const VALIDATION_BADGE: Record<
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function fmt(iso?: string | null): string {
+function fmt(iso?: string | null, locale?: string): string {
   if (!iso) return ''
-  return new Date(iso).toLocaleDateString('fr-DZ')
+  return new Date(iso).toLocaleDateString(locale || undefined)
 }
 
 function countBy(arr: string[]): { name: string; value: number }[] {
@@ -155,6 +133,7 @@ function KpiCard({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StatisticsReportsPage() {
+  const { t, i18n } = useTranslation()
   const { data: supPage, isLoading: loadingSup } = useSupervisions({
     limit: 500,
   })
@@ -163,8 +142,42 @@ export default function StatisticsReportsPage() {
   const allSupervisions = supPage?.data ?? []
   const allStudents = studPage?.data ?? []
 
+  const STATUS_LABELS = useMemo(
+    () => ({
+      IN_PROGRESS: t('supervisions.status.IN_PROGRESS'),
+      DEFENDED: t('supervisions.status.DEFENDED'),
+      ABANDONED: t('supervisions.status.ABANDONED'),
+      EXTENSION: t('supervisions.status.EXTENSION'),
+      SUSPENDED: t('supervisions.status.SUSPENDED'),
+    }),
+    [t],
+  )
+
+  const TYPE_LABELS = useMemo(
+    () => ({
+      PFE: t('supervisions.type.PFE'),
+      MASTER: t('supervisions.type.MASTER'),
+      PHD: t('supervisions.type.PHD'),
+      INTERNSHIP: t('supervisions.type.INTERNSHIP'),
+      PROJECT: t('supervisions.type.PROJECT'),
+    }),
+    [t],
+  )
+
+  const VALIDATION_LABELS = useMemo(
+    () => ({
+      PENDING: t('supervisions.validation.PENDING'),
+      VALIDATED: t('supervisions.validation.VALIDATED'),
+      REJECTED: t('supervisions.validation.REJECTED'),
+      REVISED: t('supervisions.validation.REVISED'),
+    }),
+    [t],
+  )
+
   // ── Academic year filter ────────────────────────────────────────────────────
   const [selectedYear, setSelectedYear] = useState<string>('')
+  const [tablePage, setTablePage] = useState(1)
+  const TABLE_PAGE_SIZE = 10
 
   const academicYears = useMemo(() => {
     const years = [
@@ -180,6 +193,21 @@ export default function StatisticsReportsPage() {
         : allSupervisions,
     [allSupervisions, selectedYear],
   )
+
+  useEffect(() => {
+    setTablePage(1)
+  }, [selectedYear])
+
+  const totalTablePages = Math.max(
+    1,
+    Math.ceil(filtered.length / TABLE_PAGE_SIZE),
+  )
+  const safeTablePage = Math.min(tablePage, totalTablePages)
+
+  const paginatedFiltered = useMemo(() => {
+    const start = (safeTablePage - 1) * TABLE_PAGE_SIZE
+    return filtered.slice(start, start + TABLE_PAGE_SIZE)
+  }, [filtered, safeTablePage])
 
   // ── KPI computations ───────────────────────────────────────────────────────
   const total = filtered.length
@@ -238,39 +266,65 @@ export default function StatisticsReportsPage() {
   // ── Export: Excel supervisions ──────────────────────────────────────────────
   function handleExportSupervisionsXlsx() {
     const rows = filtered.map((s) => ({
-      Titre: s.title,
-      Étudiant: s.student
+      [t('statistics.exports.supervisions.title')]: s.title,
+      [t('statistics.exports.supervisions.student')]: s.student
         ? `${s.student.lastName} ${s.student.firstName}`
         : s.studentId,
-      Type: TYPE_LABELS[s.type] ?? s.type,
-      Statut: STATUS_LABELS[s.status] ?? s.status,
-      Validation: VALIDATION_LABELS[s.validationStatus] ?? s.validationStatus,
-      'Année univ.': s.academicYear,
-      'Date début': fmt(s.startDate),
-      'Date fin prévue': fmt(s.expectedEndDate),
-      'Date fin réelle': fmt(s.actualEndDate),
-      'Mots-clés': s.keywords?.join(', ') ?? '',
+      [t('statistics.exports.supervisions.type')]:
+        TYPE_LABELS[s.type] ?? s.type,
+      [t('statistics.exports.supervisions.status')]:
+        STATUS_LABELS[s.status] ?? s.status,
+      [t('statistics.exports.supervisions.validation')]:
+        VALIDATION_LABELS[s.validationStatus] ?? s.validationStatus,
+      [t('statistics.exports.supervisions.academicYear')]: s.academicYear,
+      [t('statistics.exports.supervisions.startDate')]: fmt(
+        s.startDate,
+        i18n.language || undefined,
+      ),
+      [t('statistics.exports.supervisions.expectedEndDate')]: fmt(
+        s.expectedEndDate,
+        i18n.language || undefined,
+      ),
+      [t('statistics.exports.supervisions.actualEndDate')]: fmt(
+        s.actualEndDate,
+        i18n.language || undefined,
+      ),
+      [t('statistics.exports.supervisions.keywords')]:
+        s.keywords?.join(', ') ?? '',
     }))
     const ws = XLSX.utils.json_to_sheet(rows)
     const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Encadrements')
-    XLSX.writeFile(wb, `encadrements_${selectedYear || 'tous'}.xlsx`)
+    XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      t('statistics.exports.supervisions.sheetName'),
+    )
+    XLSX.writeFile(
+      wb,
+      `encadrements_${
+        selectedYear || t('statistics.filters.allYearsSlug')
+      }.xlsx`,
+    )
   }
 
   // ── Export: Excel students ──────────────────────────────────────────────────
   function handleExportStudentsXlsx() {
     const rows = allStudents.map((s) => ({
-      Nom: s.lastName,
-      Prénom: s.firstName,
-      Email: s.email,
-      Établissement: s.institution,
-      Niveau: s.level,
-      Spécialité: s.specialty ?? '',
+      [t('statistics.exports.students.lastName')]: s.lastName,
+      [t('statistics.exports.students.firstName')]: s.firstName,
+      [t('statistics.exports.students.email')]: s.email,
+      [t('statistics.exports.students.institution')]: s.institution,
+      [t('statistics.exports.students.level')]: s.level,
+      [t('statistics.exports.students.specialty')]: s.specialty ?? '',
     }))
     const ws = XLSX.utils.json_to_sheet(rows)
     const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Étudiants')
-    XLSX.writeFile(wb, 'etudiants.xlsx')
+    XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      t('statistics.exports.students.sheetName'),
+    )
+    XLSX.writeFile(wb, `${t('statistics.exports.students.fileName')}.xlsx`)
   }
 
   // ── Export: PDF report ──────────────────────────────────────────────────────
@@ -279,27 +333,38 @@ export default function StatisticsReportsPage() {
 
     doc.setFontSize(18)
     doc.setTextColor(33, 51, 78)
-    doc.text("Rapport d'Encadrements — LMCS", 14, 18)
+    doc.text(t('statistics.pdf.title'), 14, 18)
 
     doc.setFontSize(10)
     doc.setTextColor(107, 114, 128)
-    doc.text(`Généré le : ${new Date().toLocaleDateString('fr-DZ')}`, 14, 26)
-    if (selectedYear) doc.text(`Année universitaire : ${selectedYear}`, 14, 32)
+    doc.text(
+      `${t('statistics.pdf.generatedOn')} : ${new Date().toLocaleDateString(
+        i18n.language || undefined,
+      )}`,
+      14,
+      26,
+    )
+    if (selectedYear)
+      doc.text(
+        `${t('statistics.filters.academicYear')} : ${selectedYear}`,
+        14,
+        32,
+      )
 
     doc.setFontSize(11)
     doc.setTextColor(33, 51, 78)
     const kpiY = selectedYear ? 42 : 36
-    doc.text('Résumé :', 14, kpiY)
+    doc.text(t('statistics.pdf.summary'), 14, kpiY)
     doc.setFontSize(10)
     doc.setTextColor(60, 60, 60)
     doc.text(
       [
-        `• Total encadrements : ${total}`,
-        `• En cours : ${inProgress}`,
-        `• Soutenus : ${defended}`,
-        `• Taux de soutenance : ${defenseRate}%`,
-        `• En attente de validation : ${pendingValidation}`,
-        `• Total étudiants : ${allStudents.length}`,
+        `• ${t('statistics.pdf.totalSupervisions')}: ${total}`,
+        `• ${t('statistics.pdf.inProgress')}: ${inProgress}`,
+        `• ${t('statistics.pdf.defended')}: ${defended}`,
+        `• ${t('statistics.pdf.defenseRate')}: ${defenseRate}%`,
+        `• ${t('statistics.pdf.pendingValidation')}: ${pendingValidation}`,
+        `• ${t('statistics.pdf.totalStudents')}: ${allStudents.length}`,
       ],
       14,
       kpiY + 8,
@@ -307,7 +372,16 @@ export default function StatisticsReportsPage() {
 
     autoTable(doc, {
       startY: kpiY + 60,
-      head: [['Titre', 'Étudiant', 'Type', 'Statut', 'Validation', 'Année']],
+      head: [
+        [
+          t('statistics.exports.supervisions.title'),
+          t('statistics.exports.supervisions.student'),
+          t('statistics.exports.supervisions.type'),
+          t('statistics.exports.supervisions.status'),
+          t('statistics.exports.supervisions.validation'),
+          t('statistics.exports.supervisions.academicYear'),
+        ],
+      ],
       body: filtered.map((s) => [
         s.title,
         s.student
@@ -323,7 +397,11 @@ export default function StatisticsReportsPage() {
       alternateRowStyles: { fillColor: [245, 245, 245] },
     })
 
-    doc.save(`rapport_encadrements_${selectedYear || 'tous'}.pdf`)
+    doc.save(
+      `rapport_encadrements_${
+        selectedYear || t('statistics.filters.allYearsSlug')
+      }.pdf`,
+    )
   }
 
   const isLoading = loadingSup || loadingStud
@@ -334,10 +412,10 @@ export default function StatisticsReportsPage() {
       <div className='flex flex-wrap items-start justify-between gap-4'>
         <div>
           <h1 className='text-2xl font-semibold tracking-tight'>
-            Statistiques &amp; Rapports
+            {t('statistics.pageTitle')}
           </h1>
           <p className='text-sm text-muted-foreground mt-1'>
-            Analyse multi-critères de vos encadrements et étudiants.
+            {t('statistics.pageSubtitle')}
           </p>
         </div>
 
@@ -351,7 +429,7 @@ export default function StatisticsReportsPage() {
             disabled={isLoading || total === 0}
           >
             <FileSpreadsheet className='size-3.5' />
-            Encadrements
+            {t('statistics.exports.supervisions.button')}
           </Button>
           <div className='h-4 w-px bg-border' />
           <Button
@@ -362,7 +440,7 @@ export default function StatisticsReportsPage() {
             disabled={isLoading || allStudents.length === 0}
           >
             <FileSpreadsheet className='size-3.5' />
-            Étudiants
+            {t('statistics.exports.students.button')}
           </Button>
           <div className='h-4 w-px bg-border' />
           <Button
@@ -373,7 +451,7 @@ export default function StatisticsReportsPage() {
             disabled={isLoading || total === 0}
           >
             <FileText className='size-3.5' />
-            PDF
+            {t('statistics.exports.pdf.button')}
           </Button>
         </div>
       </div>
@@ -381,24 +459,32 @@ export default function StatisticsReportsPage() {
       {/* ── Year filter ────────────────────────────────────────────────────── */}
       <div className='flex flex-wrap items-center gap-3'>
         <Filter className='size-4 text-muted-foreground shrink-0' />
-        <span className='text-sm font-medium'>Année universitaire :</span>
+        <span className='text-sm font-medium'>
+          {t('statistics.filters.academicYear')}:
+        </span>
         <div className='flex flex-wrap gap-2'>
           <button
             type='button'
-            onClick={() => setSelectedYear('')}
+            onClick={() => {
+              setSelectedYear('')
+              setTablePage(1)
+            }}
             className={`rounded-full border px-3 py-1 text-xs font-medium transition-all duration-150 ${
               selectedYear === ''
                 ? 'bg-primary text-primary-foreground border-primary shadow-primary-sm scale-[1.02]'
                 : 'bg-card text-muted-foreground hover:bg-muted'
             }`}
           >
-            Toutes les années
+            {t('statistics.filters.allYears')}
           </button>
           {academicYears.map((y) => (
             <button
               key={y}
               type='button'
-              onClick={() => setSelectedYear(y)}
+              onClick={() => {
+                setSelectedYear(y)
+                setTablePage(1)
+              }}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition-all duration-150 ${
                 selectedYear === y
                   ? 'bg-primary text-primary-foreground border-primary shadow-primary-sm scale-[1.02]'
@@ -413,29 +499,37 @@ export default function StatisticsReportsPage() {
 
       {isLoading ? (
         <div className='py-16 text-center text-sm text-muted-foreground'>
-          Chargement des données...
+          {t('common.loading')}
         </div>
       ) : (
         <>
           {/* ── KPI Cards — featured + 2×2 secondary ────────────────────────── */}
           <div className='grid gap-4 lg:grid-cols-3'>
             <KpiCard
-              title='Total encadrements'
+              title={t('statistics.kpis.totalSupervisions')}
               value={total}
               icon={BarChart3}
               featured
             />
             <div className='grid grid-cols-2 gap-4 lg:col-span-2'>
-              <KpiCard title='En cours' value={inProgress} icon={Hourglass} />
-              <KpiCard title='Soutenus' value={defended} icon={GraduationCap} />
               <KpiCard
-                title='Taux de soutenance'
-                value={`${defenseRate}%`}
-                icon={TrendingUp}
-                sub={`${defended} / ${total}`}
+                title={t('statistics.kpis.inProgress')}
+                value={inProgress}
+                icon={Hourglass}
               />
               <KpiCard
-                title='Validation en attente'
+                title={t('statistics.kpis.defended')}
+                value={defended}
+                icon={GraduationCap}
+              />
+              <KpiCard
+                title={t('statistics.kpis.defenseRate')}
+                value={`${defenseRate}%`}
+                icon={TrendingUp}
+                sub={t('statistics.kpis.defenseRateSub', { defended, total })}
+              />
+              <KpiCard
+                title={t('statistics.kpis.pendingValidation')}
                 value={pendingValidation}
                 icon={Clock}
               />
@@ -443,7 +537,7 @@ export default function StatisticsReportsPage() {
           </div>
           <div className='grid gap-4 sm:grid-cols-2'>
             <KpiCard
-              title='Total étudiants'
+              title={t('statistics.kpis.totalStudents')}
               value={allStudents.length}
               icon={Users}
             />
@@ -453,12 +547,12 @@ export default function StatisticsReportsPage() {
           <div className='grid gap-4 lg:grid-cols-3'>
             <Card className='lg:col-span-1'>
               <CardHeader>
-                <CardTitle>Répartition par type</CardTitle>
+                <CardTitle>{t('statistics.charts.byType')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {byType.length === 0 ? (
                   <div className='h-65 flex items-center justify-center text-sm text-muted-foreground'>
-                    Aucune donnée
+                    {t('common.noData')}
                   </div>
                 ) : (
                   <>
@@ -484,7 +578,7 @@ export default function StatisticsReportsPage() {
                               />
                             ))}
                           </Pie>
-                          <Tooltip formatter={(v) => [String(v ?? ''), '']} />
+                          <Tooltip />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
@@ -508,12 +602,12 @@ export default function StatisticsReportsPage() {
 
             <Card className='lg:col-span-2'>
               <CardHeader>
-                <CardTitle>Évolution par année universitaire</CardTitle>
+                <CardTitle>{t('statistics.charts.byYear')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {byYear.length === 0 ? (
                   <div className='h-65 flex items-center justify-center text-sm text-muted-foreground'>
-                    Aucune donnée
+                    {t('common.noData')}
                   </div>
                 ) : (
                   <div className='h-65'>
@@ -531,7 +625,7 @@ export default function StatisticsReportsPage() {
                         <Tooltip />
                         <Bar
                           dataKey='count'
-                          name='Encadrements'
+                          name={t('statistics.series.supervisions')}
                           fill='var(--chart-1)'
                           radius={[4, 4, 0, 0]}
                         />
@@ -547,12 +641,12 @@ export default function StatisticsReportsPage() {
           <div className='grid gap-4 lg:grid-cols-2'>
             <Card>
               <CardHeader>
-                <CardTitle>Répartition par statut</CardTitle>
+                <CardTitle>{t('statistics.charts.byStatus')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {byStatus.length === 0 ? (
                   <div className='h-60 flex items-center justify-center text-sm text-muted-foreground'>
-                    Aucune donnée
+                    {t('common.noData')}
                   </div>
                 ) : (
                   <div className='h-60'>
@@ -581,7 +675,7 @@ export default function StatisticsReportsPage() {
                         <Tooltip />
                         <Bar
                           dataKey='value'
-                          name='Encadrements'
+                          name={t('statistics.series.supervisions')}
                           fill='var(--chart-2)'
                           radius={[0, 4, 4, 0]}
                         />
@@ -594,12 +688,12 @@ export default function StatisticsReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Statut de validation</CardTitle>
+                <CardTitle>{t('statistics.charts.byValidation')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {byValidation.length === 0 ? (
                   <div className='h-60 flex items-center justify-center text-sm text-muted-foreground'>
-                    Aucune donnée
+                    {t('common.noData')}
                   </div>
                 ) : (
                   <>
@@ -643,12 +737,14 @@ export default function StatisticsReportsPage() {
           <div className='grid gap-4 lg:grid-cols-2'>
             <Card>
               <CardHeader>
-                <CardTitle>Étudiants par établissement</CardTitle>
+                <CardTitle>
+                  {t('statistics.charts.studentsByInstitution')}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {studentsByInstitution.length === 0 ? (
                   <div className='h-55 flex items-center justify-center text-sm text-muted-foreground'>
-                    Aucune donnée
+                    {t('common.noData')}
                   </div>
                 ) : (
                   <div className='h-55'>
@@ -666,7 +762,7 @@ export default function StatisticsReportsPage() {
                         <Tooltip />
                         <Bar
                           dataKey='value'
-                          name='Étudiants'
+                          name={t('statistics.series.students')}
                           fill='var(--chart-3)'
                           radius={[4, 4, 0, 0]}
                         />
@@ -679,12 +775,12 @@ export default function StatisticsReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Étudiants par niveau</CardTitle>
+                <CardTitle>{t('statistics.charts.studentsByLevel')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {studentsByLevel.length === 0 ? (
                   <div className='h-55 flex items-center justify-center text-sm text-muted-foreground'>
-                    Aucune donnée
+                    {t('common.noData')}
                   </div>
                 ) : (
                   <>
@@ -737,7 +833,7 @@ export default function StatisticsReportsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                Tableau des encadrements
+                {t('statistics.table.title')}
                 {selectedYear && (
                   <span className='ml-2 text-sm font-normal text-muted-foreground'>
                     — {selectedYear}
@@ -748,23 +844,35 @@ export default function StatisticsReportsPage() {
             <CardContent className='p-0'>
               {filtered.length === 0 ? (
                 <div className='py-10 text-center text-sm text-muted-foreground'>
-                  Aucun encadrement trouvé.
+                  {t('statistics.table.empty')}
                 </div>
               ) : (
                 <div className='overflow-x-auto'>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Titre</TableHead>
-                        <TableHead>Étudiant</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead>Validation</TableHead>
-                        <TableHead>Année</TableHead>
+                        <TableHead>
+                          {t('statistics.table.titleColumn')}
+                        </TableHead>
+                        <TableHead>
+                          {t('statistics.table.studentColumn')}
+                        </TableHead>
+                        <TableHead>
+                          {t('statistics.table.typeColumn')}
+                        </TableHead>
+                        <TableHead>
+                          {t('statistics.table.statusColumn')}
+                        </TableHead>
+                        <TableHead>
+                          {t('statistics.table.validationColumn')}
+                        </TableHead>
+                        <TableHead>
+                          {t('statistics.table.yearColumn')}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filtered.map((s) => (
+                      {paginatedFiltered.map((s) => (
                         <TableRow key={s.id}>
                           <TableCell className='font-medium max-w-50 truncate'>
                             {s.title}
@@ -794,6 +902,51 @@ export default function StatisticsReportsPage() {
                       ))}
                     </TableBody>
                   </Table>
+                </div>
+              )}
+              {filtered.length > TABLE_PAGE_SIZE && (
+                <div className='flex items-center justify-between gap-3 border-t border-border px-4 py-3'>
+                  <p className='text-xs text-muted-foreground'>
+                    {Math.min(
+                      (safeTablePage - 1) * TABLE_PAGE_SIZE + 1,
+                      filtered.length,
+                    )}
+                    -
+                    {Math.min(safeTablePage * TABLE_PAGE_SIZE, filtered.length)}{' '}
+                    {t('statistics.table.of')} {filtered.length}
+                  </p>
+                  <div className='flex items-center gap-2'>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      disabled={safeTablePage === 1}
+                      onClick={() =>
+                        setTablePage((prev) => Math.max(1, prev - 1))
+                      }
+                    >
+                      {t('common.previous')}
+                    </Button>
+                    <span className='text-xs text-muted-foreground'>
+                      {t('statistics.table.page', {
+                        page: safeTablePage,
+                        totalPages: totalTablePages,
+                      })}
+                    </span>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      disabled={safeTablePage === totalTablePages}
+                      onClick={() =>
+                        setTablePage((prev) =>
+                          Math.min(totalTablePages, prev + 1),
+                        )
+                      }
+                    >
+                      {t('common.next')}
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

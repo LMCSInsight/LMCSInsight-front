@@ -62,7 +62,7 @@ const SEARCH_SUP_TYPES: SupervisionType[] = [
 ]
 
 /** Max characters shown in the sujet / titre column; full title stays in the tooltip. */
-const SUPERVISION_TITLE_TABLE_MAX = 64
+const SUPERVISION_TITLE_TABLE_MAX = 44
 
 function chercheurWorkload(r: ChercheurRow): number {
   return r.pfe + r.master + r.doctorat + r.stage
@@ -517,7 +517,7 @@ export default function DirectionSearchPage() {
                       r.theme,
                       searchRowBadgeLabel(r),
                     ])
-                    const csv = buildCsv(headers, rows)
+                    const csv = buildCsv(headers, rows, ',')
                     downloadBlob(
                       csv,
                       `lmcs-recherche-encadrements-${new Date()
@@ -550,7 +550,7 @@ export default function DirectionSearchPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className='hover:bg-transparent'>
-                      <TableHead>
+                      <TableHead className='w-48'>
                         <button
                           type='button'
                           className='rounded-md px-1 py-0.5 font-semibold transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55'
@@ -577,7 +577,7 @@ export default function DirectionSearchPage() {
                           {t('director.search.colType')}
                         </button>
                       </TableHead>
-                      <TableHead className='min-w-[140px]'>
+                      <TableHead className='min-w-35'>
                         {t('director.search.colSupervisors')}
                       </TableHead>
                       <TableHead>{t('director.search.colTheme')}</TableHead>
@@ -608,11 +608,11 @@ export default function DirectionSearchPage() {
                           key={r.id}
                           className='cursor-pointer transition-colors hover:bg-muted/45'
                         >
-                          <TableCell className='max-w-[min(280px,32vw)] font-medium'>
+                          <TableCell className='w-48 max-w-48 font-medium'>
                             <Link
                               to={`/director/supervisions/${r.id}`}
                               title={r.title}
-                              className='block max-w-full wrap-break-word font-medium text-primary underline-offset-4 transition-colors hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55'
+                              className='block truncate font-medium text-primary underline-offset-4 transition-colors hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55'
                             >
                               {truncateWithEllipsis(
                                 r.title,
@@ -634,7 +634,7 @@ export default function DirectionSearchPage() {
                           <TableCell className='text-sm text-muted-foreground'>
                             {r.supervisors}
                           </TableCell>
-                          <TableCell className='max-w-[200px] text-sm'>
+                          <TableCell className='max-w-50 text-sm'>
                             {r.theme}
                           </TableCell>
                           <TableCell>

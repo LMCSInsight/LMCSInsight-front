@@ -79,6 +79,7 @@ export default function ValidationQueuePage() {
   }
 
   const hasActiveFilters = !!type || !!search.trim()
+  const typeLabel = (value: string) => t(`supervisions.type.${value}`)
 
   return (
     <div className='flex flex-col gap-5 py-6 max-w-7xl'>
@@ -153,7 +154,7 @@ export default function ValidationQueuePage() {
                       : 'border-border bg-card hover:border-primary/40 hover:bg-primary/5',
                   )}
                 >
-                  <span className='text-muted-foreground'>{tp}</span>
+                  <span className='text-muted-foreground'>{typeLabel(tp)}</span>
                   <span className='font-bold tabular-nums text-foreground'>
                     {count}
                   </span>
@@ -219,7 +220,7 @@ export default function ValidationQueuePage() {
             </span>
             {type && (
               <span className='inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/8 px-2 py-0.5 text-xs text-primary'>
-                {type}
+                {typeLabel(type)}
                 <button
                   type='button'
                   onClick={() => setType(undefined)}

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import {
   getAssistantStudentsPath,
@@ -30,9 +31,9 @@ function getInitials(first?: string, last?: string): string {
   return f || l ? `${f}${l}` : '?'
 }
 
-function fmt(iso?: string | null): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('fr-DZ', {
+function fmt(iso?: string | null, locale?: string, fallback = '—'): string {
+  if (!iso) return fallback
+  return new Date(iso).toLocaleDateString(locale || undefined, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -50,6 +51,7 @@ function InfoField({
   value?: string | null
   icon?: React.ElementType
 }) {
+  const { t } = useTranslation()
   return (
     <div className='flex flex-col gap-0.5'>
       <span className='text-xs font-semibold text-muted-foreground'>
@@ -57,7 +59,7 @@ function InfoField({
       </span>
       <span className='flex items-center gap-1.5 text-sm font-medium text-foreground'>
         {Icon && <Icon className='size-3.5 text-muted-foreground shrink-0' />}
-        {value ?? '—'}
+        {value ?? t('common.notAvailable')}
       </span>
     </div>
   )
@@ -70,23 +72,29 @@ const LEVEL_COLORS: Record<string, string> = {
     'bg-violet-100/80 text-violet-900 border border-violet-200/50 dark:bg-violet-900/30 dark:text-violet-200',
 }
 
-const INSTITUTION_LABEL: Record<string, string> = {
-  ESI: 'ESI',
-  EXTERNE: 'Extérieur',
-}
-
-const LEVEL_LABEL: Record<string, string> = {
-  MASTER: 'Master',
-  DOCTORANT: 'Doctorant',
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StudentDetailPage() {
   const { studentId } = useParams<{ studentId: string }>()
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { data: student, isLoading, isError } = useStudent(studentId)
+
+  const INSTITUTION_LABEL = useMemo(
+    () => ({
+      ESI: t('students.institution.ESI'),
+      EXTERNE: t('students.institution.EXTERNE'),
+    }),
+    [t],
+  )
+
+  const LEVEL_LABEL = useMemo(
+    () => ({
+      MASTER: t('students.level.MASTER'),
+      DOCTORANT: t('students.level.DOCTORANT'),
+    }),
+    [t],
+  )
 
   if (isLoading) {
     return (
@@ -198,7 +206,7 @@ export default function StudentDetailPage() {
                   <Building2 className='size-3' />
                   {(INSTITUTION_LABEL[student.institution] ??
                     student.institution) ||
-                    '—'}
+                    t('common.notAvailable')}
                 </span>
                 <span
                   className={cn(
@@ -206,7 +214,8 @@ export default function StudentDetailPage() {
                     levelColorClass,
                   )}
                 >
-                  {(LEVEL_LABEL[student.level] ?? student.level) || '—'}
+                  {(LEVEL_LABEL[student.level] ?? student.level) ||
+                    t('common.notAvailable')}
                 </span>
                 <Badge variant='secondary' className='gap-1 tabular'>
                   <BookOpen className='size-3' />
@@ -253,7 +262,11 @@ export default function StudentDetailPage() {
               </div>
               <InfoField
                 label={t('students.detail.addedOn')}
-                value={fmt(student.createdAt)}
+                value={fmt(
+                  student.createdAt,
+                  i18n.language || undefined,
+                  t('common.notAvailable'),
+                )}
                 icon={Calendar}
               />
               <InfoField
@@ -293,7 +306,7 @@ export default function StudentDetailPage() {
             <div className='h-px bg-border' />
             <InfoField
               label={t('students.detail.specialty')}
-              value={student.specialty || '—'}
+              value={student.specialty || t('common.notAvailable')}
             />
             <div className='h-px bg-border' />
             <div className='flex flex-col gap-0.5'>

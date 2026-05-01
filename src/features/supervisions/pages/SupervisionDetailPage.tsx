@@ -1,7 +1,7 @@
 import { useNavigate, useParams, Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ROUTES, getAssistantSupervisionEditPath } from '@/config/routes'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   Pencil,
@@ -32,26 +32,8 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // ─── Label / color maps ──────────────────────────────────────────────────────
 
-const STATUS_LABELS: Record<string, string> = {
-  IN_PROGRESS: 'En cours',
-  DEFENDED: 'Soutenu',
-  ABANDONED: 'Abandonné',
-  EXTENSION: 'Prolongation',
-  SUSPENDED: 'Suspendu',
-}
-const TYPE_LABELS: Record<string, string> = {
-  PFE: 'PFE',
-  MASTER: 'Master',
-  PHD: 'Doctorat',
-  INTERNSHIP: 'Stage (SPE)',
-  PROJECT: 'Projet de recherche',
-}
-const VALIDATION_LABELS: Record<string, string> = {
-  PENDING: 'En attente',
-  VALIDATED: 'Validé',
-  REJECTED: 'Refusé',
-  REVISED: 'À réviser',
-}
+// Note: textual labels (types/statuses) are resolved inside the component
+// using `t()` so they follow the active language.
 
 // Status hero card accent (left-border + bg tint)
 const STATUS_ACCENT: Record<
@@ -113,9 +95,9 @@ const VALIDATION_BADGE_STYLE: Record<string, string> = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function fmt(iso?: string | null): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('fr-DZ', {
+function fmt(iso?: string | null, locale?: string, fallback = '—'): string {
+  if (!iso) return fallback
+  return new Date(iso).toLocaleDateString(locale || undefined, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -135,13 +117,14 @@ function getInitials(name?: string): string {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
+  const { t } = useTranslation()
   return (
     <div className='flex flex-col gap-0.5'>
       <span className='text-xs font-semibold text-muted-foreground'>
         {label}
       </span>
       <span className='text-sm font-medium text-foreground'>
-        {value ?? '—'}
+        {value ?? t('common.notAvailable')}
       </span>
     </div>
   )
@@ -170,7 +153,7 @@ function SkeletonPage() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SupervisionDetailPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const { id, supervisionId, userId } = useParams<{
@@ -179,6 +162,39 @@ export default function SupervisionDetailPage() {
     userId?: string
   }>()
   const resolvedId = supervisionId ?? id
+
+  // Localized label maps
+  const STATUS_LABELS = useMemo(
+    () => ({
+      IN_PROGRESS: t('supervisions.status.IN_PROGRESS'),
+      DEFENDED: t('supervisions.status.DEFENDED'),
+      ABANDONED: t('supervisions.status.ABANDONED'),
+      EXTENSION: t('supervisions.status.EXTENSION'),
+      SUSPENDED: t('supervisions.status.SUSPENDED'),
+    }),
+    [t],
+  )
+
+  const TYPE_LABELS = useMemo(
+    () => ({
+      PFE: t('supervisions.type.PFE'),
+      MASTER: t('supervisions.type.MASTER'),
+      PHD: t('supervisions.type.PHD'),
+      INTERNSHIP: t('supervisions.type.INTERNSHIP'),
+      PROJECT: t('supervisions.type.PROJECT'),
+    }),
+    [t],
+  )
+
+  const VALIDATION_LABELS = useMemo(
+    () => ({
+      PENDING: t('supervisions.validation.PENDING'),
+      VALIDATED: t('supervisions.validation.VALIDATED'),
+      REJECTED: t('supervisions.validation.REJECTED'),
+      REVISED: t('supervisions.validation.REVISED'),
+    }),
+    [t],
+  )
 
   const { data, isLoading, isError } = useSupervision(resolvedId)
   const { mutate: deleteSupervision, isPending: isDeleting } =
@@ -205,11 +221,11 @@ export default function SupervisionDetailPage() {
               <BookOpen className='size-6 text-destructive' />
             </div>
             <p className='text-sm font-medium text-destructive'>
-              Impossible de charger cet encadrement.
+              {t('supervisions.detail.error')}
             </p>
             <Button variant='outline' size='sm' onClick={() => navigate(-1)}>
               <ArrowLeft className='mr-2 size-4' />
-              Retour
+              {t('common.back')}
             </Button>
           </CardContent>
         </Card>
@@ -289,7 +305,7 @@ export default function SupervisionDetailPage() {
       {/* ── Breadcrumb ───────────────────────────────────────────────── */}
       <nav className='flex items-center gap-1.5 text-xs text-muted-foreground'>
         <Link to={basePath} className='hover:text-foreground transition-colors'>
-          Encadrements
+          {t('common.supervisions')}
         </Link>
         <ChevronRight className='size-3 shrink-0' />
         <span className='text-foreground font-medium truncate max-w-xs'>
@@ -351,7 +367,7 @@ export default function SupervisionDetailPage() {
                 <GraduationCap className='size-4 text-primary' />
               </div>
               <span className='text-sm font-semibold text-foreground'>
-                Étudiant
+                {t('supervisions.detail.labels.student')}
               </span>
             </div>
           </CardHeader>
@@ -376,15 +392,18 @@ export default function SupervisionDetailPage() {
                 <div className='h-px bg-border' />
                 <div className='grid grid-cols-1 gap-3'>
                   <InfoRow
-                    label='Établissement'
+                    label={t('supervisions.detail.labels.institution')}
                     value={data.student.institution}
                   />
-                  <InfoRow label='Email' value={data.student.email} />
+                  <InfoRow
+                    label={t('common.email')}
+                    value={data.student.email}
+                  />
                 </div>
               </div>
             ) : (
               <p className='text-sm text-muted-foreground italic'>
-                Étudiant non renseigné
+                {t('supervisions.detail.labels.noStudent')}
               </p>
             )}
           </CardContent>
@@ -408,7 +427,7 @@ export default function SupervisionDetailPage() {
                 <CheckCircle2 className='size-4 text-primary' />
               </div>
               <span className='text-sm font-semibold text-foreground'>
-                Validation
+                {t('supervisions.detail.labels.validation')}
               </span>
             </div>
           </CardHeader>
@@ -424,12 +443,19 @@ export default function SupervisionDetailPage() {
                 data.validationStatus}
             </div>
             {data.validatedAt && (
-              <InfoRow label='Validé le' value={fmt(data.validatedAt)} />
+              <InfoRow
+                label={t('supervisions.detail.labels.validatedOn')}
+                value={fmt(
+                  data.validatedAt,
+                  i18n.language || undefined,
+                  t('common.notAvailable'),
+                )}
+              />
             )}
             {data.validationNotes && (
               <div className='flex flex-col gap-0.5'>
                 <span className='text-xs font-semibold text-muted-foreground'>
-                  Notes
+                  {t('supervisions.detail.labels.notes')}
                 </span>
                 <p className='text-sm text-foreground leading-relaxed'>
                   {data.validationNotes}
@@ -438,7 +464,7 @@ export default function SupervisionDetailPage() {
             )}
             {!data.validatedAt && !data.validationNotes && (
               <p className='text-xs text-muted-foreground italic'>
-                Aucune note de validation
+                {t('supervisions.detail.labels.noValidationNotes')}
               </p>
             )}
           </CardContent>
@@ -453,7 +479,7 @@ export default function SupervisionDetailPage() {
               <Tag className='size-4 text-primary' />
             </div>
             <span className='text-sm font-semibold text-foreground'>
-              Thématique
+              {t('supervisions.detail.labels.researchTheme')}
             </span>
           </div>
         </CardHeader>
@@ -472,7 +498,7 @@ export default function SupervisionDetailPage() {
             </div>
           ) : (
             <p className='text-xs text-muted-foreground italic'>
-              Aucun mot-clé
+              {t('supervisions.detail.labels.noKeywords')}
             </p>
           )}
           {/* Description */}
@@ -481,7 +507,7 @@ export default function SupervisionDetailPage() {
               <div className='h-px bg-border' />
               <div className='flex flex-col gap-1'>
                 <span className='text-xs font-semibold text-muted-foreground'>
-                  Description
+                  {t('supervisions.detail.labels.description')}
                 </span>
                 <p className='text-sm leading-relaxed text-foreground'>
                   {data.description}
@@ -493,7 +519,10 @@ export default function SupervisionDetailPage() {
           {data.theme && (
             <>
               <div className='h-px bg-border' />
-              <InfoRow label='Thème de recherche' value={data.theme.name} />
+              <InfoRow
+                label={t('supervisions.detail.labels.researchTheme')}
+                value={data.theme.name}
+              />
             </>
           )}
         </CardContent>
@@ -507,7 +536,7 @@ export default function SupervisionDetailPage() {
               <Calendar className='size-4 text-primary' />
             </div>
             <span className='text-sm font-semibold text-foreground'>
-              Calendrier
+              {t('supervisions.detail.labels.calendar')}
             </span>
           </div>
         </CardHeader>
@@ -522,37 +551,63 @@ export default function SupervisionDetailPage() {
                 />
               </div>
               <div className='flex justify-between text-xs text-muted-foreground'>
-                <span>{fmt(data.startDate)}</span>
-                <span className='tabular font-medium text-foreground'>
-                  {progressPct}% écoulé
+                <span>
+                  {fmt(
+                    data.startDate,
+                    i18n.language || undefined,
+                    t('common.notAvailable'),
+                  )}
                 </span>
-                <span>{fmt(data.expectedEndDate)}</span>
+                <span className='tabular font-medium text-foreground'>
+                  {t('supervisions.detail.labels.elapsed', {
+                    pct: progressPct,
+                  })}
+                </span>
+                <span>
+                  {fmt(
+                    data.expectedEndDate,
+                    i18n.language || undefined,
+                    t('common.notAvailable'),
+                  )}
+                </span>
               </div>
             </div>
           )}
           <div className='grid grid-cols-3 gap-4'>
             <div className='flex flex-col gap-0.5'>
               <span className='text-xs font-semibold text-muted-foreground'>
-                Début
+                {t('supervisions.detail.labels.start')}
               </span>
               <span className='text-sm font-medium text-foreground'>
-                {fmt(data.startDate)}
+                {fmt(
+                  data.startDate,
+                  i18n.language || undefined,
+                  t('common.notAvailable'),
+                )}
               </span>
             </div>
             <div className='flex flex-col gap-0.5'>
               <span className='text-xs font-semibold text-muted-foreground'>
-                Fin prévue
+                {t('supervisions.detail.labels.expectedEnd')}
               </span>
               <span className='text-sm font-medium text-foreground'>
-                {fmt(data.expectedEndDate)}
+                {fmt(
+                  data.expectedEndDate,
+                  i18n.language || undefined,
+                  t('common.notAvailable'),
+                )}
               </span>
             </div>
             <div className='flex flex-col gap-0.5'>
               <span className='text-xs font-semibold text-muted-foreground'>
-                Fin réelle
+                {t('supervisions.detail.labels.actualEnd')}
               </span>
               <span className='text-sm font-medium text-foreground'>
-                {fmt(data.actualEndDate)}
+                {fmt(
+                  data.actualEndDate,
+                  i18n.language || undefined,
+                  t('common.notAvailable'),
+                )}
               </span>
             </div>
           </div>
@@ -567,7 +622,7 @@ export default function SupervisionDetailPage() {
               <UserCheck className='size-4 text-primary' />
             </div>
             <span className='text-sm font-semibold text-foreground'>
-              Encadrants
+              {t('supervisions.detail.labels.supervisors')}
             </span>
             <Badge variant='secondary' className='ml-auto text-xs'>
               {data.supervisors.length}
@@ -577,7 +632,7 @@ export default function SupervisionDetailPage() {
         <CardContent>
           {data.supervisors.length === 0 ? (
             <p className='text-sm text-muted-foreground italic'>
-              Aucun encadrant assigné
+              {t('supervisions.detail.labels.noSupervisors')}
             </p>
           ) : (
             <div className='space-y-3'>
@@ -610,14 +665,16 @@ export default function SupervisionDetailPage() {
                         variant={s.isMainSupervisor ? 'default' : 'secondary'}
                         className='h-4 px-1.5 text-[10px]'
                       >
-                        {s.isMainSupervisor ? 'Principal' : 'CO-Encadrant'}
+                        {s.isMainSupervisor
+                          ? t('supervisions.detail.labels.main')
+                          : t('supervisions.detail.labels.coSup')}
                       </Badge>
                       {s.isExternal && (
                         <Badge
                           variant='outline'
                           className='h-4 px-1.5 text-[10px]'
                         >
-                          Externe
+                          {t('supervisions.detail.labels.external')}
                         </Badge>
                       )}
                     </div>
@@ -650,11 +707,25 @@ export default function SupervisionDetailPage() {
       {/* ── Metadata ─────────────────────────────────────────────────── */}
       <Card>
         <CardContent className='grid grid-cols-2 gap-4 pt-4 sm:grid-cols-3'>
-          <InfoRow label='Créé le' value={fmt(data.createdAt)} />
-          <InfoRow label='Mis à jour le' value={fmt(data.updatedAt)} />
+          <InfoRow
+            label={t('supervisions.detail.labels.createdOn')}
+            value={fmt(
+              data.createdAt,
+              i18n.language || undefined,
+              t('common.notAvailable'),
+            )}
+          />
+          <InfoRow
+            label={t('supervisions.detail.labels.updatedOn')}
+            value={fmt(
+              data.updatedAt,
+              i18n.language || undefined,
+              t('common.notAvailable'),
+            )}
+          />
           <div className='flex flex-col gap-0.5 sm:col-span-1 col-span-2'>
             <span className='text-xs font-semibold text-muted-foreground'>
-              ID
+              {t('supervisions.detail.labels.id')}
             </span>
             <span
               className='flex items-center gap-1 text-xs font-mono text-muted-foreground truncate'
@@ -671,7 +742,7 @@ export default function SupervisionDetailPage() {
       <div className='flex flex-wrap items-center gap-3 pt-1'>
         <Button variant='ghost' onClick={() => navigate(-1)} className='gap-2'>
           <ArrowLeft className='size-4' />
-          Retour
+          {t('common.back')}
         </Button>
         <div className='flex-1' />
         {showEditButton && editPath && (
@@ -683,7 +754,7 @@ export default function SupervisionDetailPage() {
             )}
           >
             <Pencil className='size-4' />
-            Modifier
+            {t('common.edit')}
           </Link>
         )}
         {showDeleteAsAssistant && (

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -71,20 +71,8 @@ const ACADEMIC_YEARS = [
   '2025-2026',
 ]
 
-const TYPE_LABELS: Record<SupervisionType, string> = {
-  PFE: 'PFE',
-  MASTER: 'Master',
-  PHD: 'Doctorat',
-  INTERNSHIP: 'Stage',
-  PROJECT: 'Projet',
-}
-const STATUS_LABELS: Record<SupervisionStatus, string> = {
-  IN_PROGRESS: 'En cours',
-  DEFENDED: 'Soutenu',
-  ABANDONED: 'Abandonné',
-  EXTENSION: 'Prolongation',
-  SUSPENDED: 'Suspendu',
-}
+// Note: textual labels (types/statuses) are resolved inside the component
+// using `t()` so they follow the active language.
 
 const STATUS_DOT: Record<string, string> = {
   IN_PROGRESS: 'bg-blue-500',
@@ -128,18 +116,44 @@ const TYPE_COLOR: Record<string, string> = {
     'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
 }
 
-const VALIDATION_LABELS: Record<ValidationStatus, string> = {
-  PENDING: 'En attente',
-  VALIDATED: 'Validé',
-  REJECTED: 'Refusé',
-  REVISED: 'Révisé',
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SupervisionListPage() {
   const { userId } = useParams<{ userId: string }>()
   const { t } = useTranslation()
+
+  // Localized label maps
+  const TYPE_LABELS = useMemo(
+    () => ({
+      PFE: t('supervisions.type.PFE'),
+      MASTER: t('supervisions.type.MASTER'),
+      PHD: t('supervisions.type.PHD'),
+      INTERNSHIP: t('supervisions.type.INTERNSHIP'),
+      PROJECT: t('supervisions.type.PROJECT'),
+    }),
+    [t],
+  )
+
+  const STATUS_LABELS = useMemo(
+    () => ({
+      IN_PROGRESS: t('supervisions.status.IN_PROGRESS'),
+      DEFENDED: t('supervisions.status.DEFENDED'),
+      ABANDONED: t('supervisions.status.ABANDONED'),
+      EXTENSION: t('supervisions.status.EXTENSION'),
+      SUSPENDED: t('supervisions.status.SUSPENDED'),
+    }),
+    [t],
+  )
+
+  const VALIDATION_LABELS = useMemo(
+    () => ({
+      PENDING: t('supervisions.validation.PENDING'),
+      VALIDATED: t('supervisions.validation.VALIDATED'),
+      REJECTED: t('supervisions.validation.REJECTED'),
+      REVISED: t('supervisions.validation.REVISED'),
+    }),
+    [t],
+  )
 
   const [searchQuery, setSearchQuery] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -211,25 +225,25 @@ export default function SupervisionListPage() {
   typeFilter.forEach((t) =>
     activeFilterLabels.push({
       key: `type-${t}`,
-      label: `Type: ${TYPE_LABELS[t]}`,
+      label: `${t('supervisions.filters.type')}: ${TYPE_LABELS[t]}`,
     }),
   )
   statusFilter.forEach((s) =>
     activeFilterLabels.push({
       key: `status-${s}`,
-      label: `Statut: ${STATUS_LABELS[s]}`,
+      label: `${t('supervisions.filters.status')}: ${STATUS_LABELS[s]}`,
     }),
   )
   validationFilter.forEach((v) =>
     activeFilterLabels.push({
       key: `val-${v}`,
-      label: `Validation: ${VALIDATION_LABELS[v]}`,
+      label: `${t('supervisions.filters.validation')}: ${VALIDATION_LABELS[v]}`,
     }),
   )
   if (academicYearFilter)
     activeFilterLabels.push({
       key: 'year',
-      label: `Année: ${academicYearFilter}`,
+      label: `${t('supervisions.filters.academicYear')}: ${academicYearFilter}`,
     })
 
   const removeFilter = (key: string) => {

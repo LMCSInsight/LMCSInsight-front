@@ -370,7 +370,7 @@ export default function AssistantDashboard() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(v) => [`${v}`, '']} />
+                      <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>

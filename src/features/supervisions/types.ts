@@ -150,6 +150,7 @@ export interface SupervisionsFilter {
   status?: SupervisionStatus
   validationStatus?: ValidationStatus
   academicYear?: string
+  studentId?: string
   supervisorId?: string
   search?: string
   page?: number

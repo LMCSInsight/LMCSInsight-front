@@ -37,7 +37,7 @@ function formatChanges(changes: unknown): { key: string; value: string }[] {
 }
 
 export default function AuditLogPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
@@ -68,6 +68,10 @@ export default function AuditLogPage() {
     DIRECTOR: t('admin.users.roles.director'),
     RESEARCHER: t('admin.users.roles.researcher'),
     ASSISTANT: t('admin.users.roles.assistant'),
+  }
+
+  function formatTimestamp(iso: string) {
+    return new Date(iso).toLocaleString(i18n.language || undefined)
   }
 
   function resetFilters() {
@@ -179,7 +183,7 @@ export default function AuditLogPage() {
                 setEntityType(e.target.value)
                 setPage(1)
               }}
-              className='h-10 min-w-[10rem] rounded-lg border border-input bg-background px-3 text-sm shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              className='h-10 min-w-40 rounded-lg border border-input bg-background px-3 text-sm shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
               aria-label={t('admin.auditLogs.entityType')}
             >
               <option value=''>{t('admin.auditLogs.allEntities')}</option>
@@ -306,7 +310,7 @@ export default function AuditLogPage() {
                             ) : null}
                           </TableCell>
                           <TableCell className='whitespace-nowrap text-sm tabular text-muted-foreground'>
-                            {new Date(log.createdAt).toLocaleString()}
+                            {formatTimestamp(log.createdAt)}
                           </TableCell>
                           <TableCell>
                             {log.user ? (
@@ -352,11 +356,11 @@ export default function AuditLogPage() {
                             >
                               {log.entityId
                                 ? `${log.entityId.slice(0, 8)}…`
-                                : '—'}
+                                : t('common.notAvailable')}
                             </span>
                           </TableCell>
                           <TableCell className='hidden text-xs tabular text-muted-foreground xl:table-cell'>
-                            {log.ipAddress ?? '—'}
+                            {log.ipAddress ?? t('common.notAvailable')}
                           </TableCell>
                         </TableRow>
 

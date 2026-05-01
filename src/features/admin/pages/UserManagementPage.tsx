@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { MoreHorizontal, UserPlus, Search } from 'lucide-react'
 import { toast } from 'sonner'
@@ -42,8 +42,9 @@ import {
 const LIMIT = 20
 
 export default function UserManagementPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { currentUser } = useAuthContext()
 
   const [search, setSearch] = useState('')
@@ -61,6 +62,28 @@ export default function UserManagementPage() {
     name: string
   } | null>(null)
   const [newPassword, setNewPassword] = useState('')
+
+  useEffect(() => {
+    const nextSearch = searchParams.get('search') ?? ''
+    const nextRole = searchParams.get('role')
+    const nextIsActive = searchParams.get('isActive')
+
+    const roleValue: UserRole | '' =
+      nextRole === 'ADMIN' ||
+      nextRole === 'DIRECTOR' ||
+      nextRole === 'RESEARCHER' ||
+      nextRole === 'ASSISTANT'
+        ? nextRole
+        : ''
+
+    const activeValue: '' | 'true' | 'false' =
+      nextIsActive === 'true' || nextIsActive === 'false' ? nextIsActive : ''
+
+    setSearch(nextSearch)
+    setRole(roleValue)
+    setIsActive(activeValue)
+    setPage(1)
+  }, [searchParams])
 
   const filters = {
     search: search || undefined,
@@ -298,7 +321,7 @@ export default function UserManagementPage() {
                         <TableCell className='font-medium'>
                           {user.firstName} {user.lastName}
                         </TableCell>
-                        <TableCell className='max-w-[14rem] truncate text-muted-foreground'>
+                        <TableCell className='max-w-56 truncate text-muted-foreground'>
                           {user.email}
                         </TableCell>
                         <TableCell>
@@ -317,7 +340,9 @@ export default function UserManagementPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className='hidden tabular text-muted-foreground text-sm md:table-cell'>
-                          {new Date(user.createdAt).toLocaleDateString()}
+                          {new Date(user.createdAt).toLocaleDateString(
+                            i18n.language || undefined,
+                          )}
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
@@ -436,7 +461,7 @@ export default function UserManagementPage() {
             }}
             aria-hidden
           />
-          <div className='relative z-[51] w-full max-w-sm space-y-4 rounded-2xl border border-border/80 bg-card p-6 shadow-lg'>
+          <div className='relative z-51 w-full max-w-sm space-y-4 rounded-2xl border border-border/80 bg-card p-6 shadow-lg'>
             <h2 className='text-base font-semibold text-foreground'>
               {t('admin.users.confirmResetTitle')}
             </h2>

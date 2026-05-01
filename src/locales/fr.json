@@ -7,6 +7,13 @@
     "themeManagement": "Gestion des thèmes",
     "statisticsReports": "Statistiques et rapports",
     "profileSettings": "Profil et paramètres",
+    "steps": {
+      "general": "Général",
+      "student": "Étudiant",
+      "theme": "Thématique",
+      "dates": "Dates",
+      "supervisors": "Encadrants"
+    },
     "researcher": "Chercheur",
     "assistant": "Assistant",
     "theme": "Thème",
@@ -343,6 +350,7 @@
       "section2": "2. Informations académiques",
       "firstName": "Prénom",
       "lastName": "Nom",
+      "emailPlaceholder": "utilisateur@esi.dz",
       "institution": "Établissement",
       "level": "Niveau",
       "specialty": "Spécialité",
@@ -357,9 +365,18 @@
       "changesCount_one": "{{count}} champ modifié",
       "changesCount_other": "{{count}} champs modifiés",
       "noChanges": "Aucune modification",
+      "emailPlaceholder": "utilisateur@esi.dz",
       "submit": "Enregistrer les modifications",
       "success": "Étudiant modifié avec succès !",
       "error": "Erreur lors de la modification"
+    },
+    "institution": {
+      "ESI": "ESI",
+      "EXTERNE": "Extérieur"
+    },
+    "level": {
+      "MASTER": "Master",
+      "DOCTORANT": "Doctorant"
     }
   },
   "themes": {
@@ -492,6 +509,7 @@
         "validatedOn": "Validé le",
         "createdOn": "Créé le",
         "updatedOn": "Mis à jour le",
+        "id": "ID",
         "main": "Principal",
         "coSup": "CO-Encadrant",
         "external": "Externe",
@@ -523,7 +541,9 @@
       "themeLabel": "Thématique de recherche",
       "themeSearch": "Rechercher un thème par nom…",
       "themeRequired": "Sélectionnez une thématique de recherche",
-      "noThemeMatch": "Aucun thème pour"
+      "noThemeMatch": "Aucun thème pour",
+      "selectYear": "Sélectionner une année",
+      "selectStudent": "Veuillez sélectionner un étudiant"
     },
     "filters": {
       "type": "Type",
@@ -551,6 +571,12 @@
       "VALIDATED": "Validé",
       "REJECTED": "Refusé",
       "REVISED": "Révisé"
+    },
+    "filters": {
+      "type": "Type",
+      "status": "Statut",
+      "validation": "Validation",
+      "academicYear": "Année universitaire"
     }
   },
   "researcher": {
@@ -1074,6 +1100,87 @@
       "deleteTitle": "Supprimer cet encadrement ?",
       "deleteDescription": "Cette action est irréversible. Seuls les encadrements déjà validés ne peuvent pas être supprimés.",
       "deleteError": "Suppression impossible (fiche verrouillée ou erreur serveur)."
+    }
+  },
+  "statistics": {
+    "pageTitle": "Statistiques & Rapports",
+    "pageSubtitle": "Analyse multicritère de vos encadrements et étudiants.",
+    "filters": {
+      "academicYear": "Année universitaire",
+      "allYears": "Toutes les années",
+      "allYearsSlug": "toutes-les-annees"
+    },
+    "kpis": {
+      "totalSupervisions": "Total encadrements",
+      "inProgress": "En cours",
+      "defended": "Soutenus",
+      "defenseRate": "Taux de soutenance",
+      "defenseRateSub": "{{defended}} / {{total}} soutenus",
+      "pendingValidation": "Validation en attente",
+      "totalStudents": "Total étudiants"
+    },
+    "charts": {
+      "byType": "Répartition par type",
+      "byYear": "Évolution par année universitaire",
+      "byStatus": "Répartition par statut",
+      "byValidation": "Statut de validation",
+      "studentsByInstitution": "Étudiants par établissement",
+      "studentsByLevel": "Étudiants par niveau"
+    },
+    "series": {
+      "supervisions": "Encadrements",
+      "students": "Étudiants"
+    },
+    "exports": {
+      "pdf": {
+        "button": "Rapport PDF",
+        "title": "Rapport d'encadrements - LMCS",
+        "generatedOn": "Généré le",
+        "summary": "Résumé",
+        "totalSupervisions": "Total encadrements",
+        "inProgress": "En cours",
+        "defended": "Soutenus",
+        "defenseRate": "Taux de soutenance",
+        "pendingValidation": "Validation en attente",
+        "totalStudents": "Total étudiants"
+      },
+      "supervisions": {
+        "button": "Encadrements",
+        "sheetName": "Encadrements",
+        "title": "Titre",
+        "student": "Étudiant",
+        "type": "Type",
+        "status": "Statut",
+        "validation": "Validation",
+        "academicYear": "Année universitaire",
+        "startDate": "Date de début",
+        "expectedEndDate": "Fin prévue",
+        "actualEndDate": "Fin réelle",
+        "keywords": "Mots-clés"
+      },
+      "students": {
+        "button": "Étudiants",
+        "sheetName": "Étudiants",
+        "fileName": "etudiants",
+        "lastName": "Nom",
+        "firstName": "Prénom",
+        "email": "Email",
+        "institution": "Établissement",
+        "level": "Niveau",
+        "specialty": "Spécialité"
+      }
+    },
+    "table": {
+      "title": "Tableau des encadrements",
+      "empty": "Aucun encadrement trouvé.",
+      "titleColumn": "Titre",
+      "studentColumn": "Étudiant",
+      "typeColumn": "Type",
+      "statusColumn": "Statut",
+      "validationColumn": "Validation",
+      "yearColumn": "Année",
+      "of": "sur",
+      "page": "Page {{page}} / {{totalPages}}"
     }
   }
 }

@@ -507,66 +507,6 @@ export default function ProfileSettingsPage() {
         </CardContent>
       </Card>
 
-      {activeTab === 'security' && (
-        <Card className='hover:shadow-sm transition-shadow'>
-          <CardContent className='space-y-4 px-5 py-4'>
-            <div className='space-y-1 border-b border-border pb-3'>
-              <h2 className='text-sm font-semibold text-foreground'>
-                {t('profile.securityNotifications.title')}
-              </h2>
-              <p className='text-xs text-muted-foreground'>
-                {t('profile.securityNotifications.subtitle')}
-              </p>
-            </div>
-            <div className='space-y-3'>
-              <label className='flex items-center justify-between gap-3 text-sm text-foreground'>
-                <span>{t('profile.securityNotifications.loginAlert')}</span>
-                <input
-                  type='checkbox'
-                  checked={securityForm.loginAlert}
-                  onChange={(e) =>
-                    updateSecurityField('loginAlert', e.target.checked)
-                  }
-                  aria-label={t('profile.securityNotifications.loginAlert')}
-                  className='size-4 accent-primary'
-                />
-              </label>
-              <label className='flex items-center justify-between gap-3 text-sm text-foreground'>
-                <span>{t('profile.securityNotifications.passwordChange')}</span>
-                <input
-                  type='checkbox'
-                  checked={securityForm.passwordChange}
-                  onChange={(e) =>
-                    updateSecurityField('passwordChange', e.target.checked)
-                  }
-                  aria-label={t('profile.securityNotifications.passwordChange')}
-                  className='size-4 accent-primary'
-                />
-              </label>
-              <label className='flex items-center justify-between gap-3 text-sm text-foreground'>
-                <span>
-                  {t('profile.securityNotifications.suspiciousActivity')}
-                </span>
-                <input
-                  type='checkbox'
-                  checked={securityForm.suspiciousActivity}
-                  onChange={(e) =>
-                    updateSecurityField('suspiciousActivity', e.target.checked)
-                  }
-                  aria-label={t(
-                    'profile.securityNotifications.suspiciousActivity',
-                  )}
-                  className='size-4 accent-primary'
-                />
-              </label>
-            </div>
-            <Button onClick={handleSaveSection} size='sm'>
-              {t('profile.actions.confirm')}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
       {/* ── Unsaved changes ribbon ────────────────────────────────────────── */}
       {isDirty && (
         <div className='fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-primary text-sm'>

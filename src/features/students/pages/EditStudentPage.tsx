@@ -23,14 +23,6 @@ import type {
 } from '@/features/students/api'
 import { cn } from '@/lib/utils'
 
-const INSTITUTION_OPTIONS: { value: Institution; label: string }[] = [
-  { value: 'ESI', label: 'ESI' },
-  { value: 'EXTERNE', label: 'Extérieur' },
-]
-const LEVEL_OPTIONS: { value: StudentLevel; label: string }[] = [
-  { value: 'MASTER', label: 'Master' },
-  { value: 'DOCTORANT', label: 'Doctorant' },
-]
 const SPECIALTY_OPTIONS: Specialty[] = ['SIL', 'SID', 'SIT', 'SIQ']
 
 const SELECT_CLASS =
@@ -50,6 +42,28 @@ export default function EditStudentPage() {
   const { studentId } = useParams<{ studentId: string }>()
   const navigate = useNavigate()
   const { t } = useTranslation()
+
+  const INSTITUTION_OPTIONS = useMemo(
+    () => [
+      { value: 'ESI' as Institution, label: t('students.institution.ESI') },
+      {
+        value: 'EXTERNE' as Institution,
+        label: t('students.institution.EXTERNE'),
+      },
+    ],
+    [t],
+  )
+
+  const LEVEL_OPTIONS = useMemo(
+    () => [
+      { value: 'MASTER' as StudentLevel, label: t('students.level.MASTER') },
+      {
+        value: 'DOCTORANT' as StudentLevel,
+        label: t('students.level.DOCTORANT'),
+      },
+    ],
+    [t],
+  )
 
   const { data: student, isLoading } = useStudent(studentId)
   const { mutate: updateStudent, isPending } = useUpdateStudent(studentId!)
@@ -286,7 +300,7 @@ export default function EditStudentPage() {
                   type='email'
                   value={form.email ?? ''}
                   onChange={(e) => set('email', e.target.value)}
-                  placeholder='utilisateur@esi.dz'
+                  placeholder={t('students.edit.emailPlaceholder')}
                   className={cn('h-9 transition-all', dirtyInputClass('email'))}
                 />
               </div>
@@ -326,7 +340,7 @@ export default function EditStudentPage() {
                         'ring-1 ring-amber-400/60 bg-amber-50/40 dark:bg-amber-950/20',
                     )}
                   >
-                    <option value=''>Sélectionner...</option>
+                    <option value=''>{t('common.select')}</option>
                     {INSTITUTION_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
                         {o.label}
@@ -358,7 +372,7 @@ export default function EditStudentPage() {
                         'ring-1 ring-amber-400/60 bg-amber-50/40 dark:bg-amber-950/20',
                     )}
                   >
-                    <option value=''>Sélectionner...</option>
+                    <option value=''>{t('common.select')}</option>
                     {LEVEL_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
                         {o.label}

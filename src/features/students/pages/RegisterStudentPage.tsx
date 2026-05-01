@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -26,14 +26,6 @@ import { cn } from '@/lib/utils'
 
 // ─── Options ─────────────────────────────────────────────────────────────────
 
-const INSTITUTION_OPTIONS: { value: Institution; label: string }[] = [
-  { value: 'ESI', label: 'ESI' },
-  { value: 'EXTERNE', label: 'Extérieur' },
-]
-const LEVEL_OPTIONS: { value: StudentLevel; label: string }[] = [
-  { value: 'MASTER', label: 'Master' },
-  { value: 'DOCTORANT', label: 'Doctorant' },
-]
 const SPECIALTY_OPTIONS: Specialty[] = ['SIL', 'SID', 'SIT', 'SIQ']
 
 const SELECT_CLASS =
@@ -74,6 +66,28 @@ export default function RegisterStudentPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { mutate: createStudent, isPending } = useCreateStudent()
+
+  const INSTITUTION_OPTIONS = useMemo(
+    () => [
+      { value: 'ESI' as Institution, label: t('students.institution.ESI') },
+      {
+        value: 'EXTERNE' as Institution,
+        label: t('students.institution.EXTERNE'),
+      },
+    ],
+    [t],
+  )
+
+  const LEVEL_OPTIONS = useMemo(
+    () => [
+      { value: 'MASTER' as StudentLevel, label: t('students.level.MASTER') },
+      {
+        value: 'DOCTORANT' as StudentLevel,
+        label: t('students.level.DOCTORANT'),
+      },
+    ],
+    [t],
+  )
 
   const [form, setForm] = useState<StudentPayload>({
     firstName: '',
@@ -290,7 +304,7 @@ export default function RegisterStudentPage() {
                   value={form.email ?? ''}
                   onChange={(e) => set('email', e.target.value)}
                   onBlur={() => touch('email')}
-                  placeholder='utilisateur@esi.dz'
+                  placeholder={t('students.register.emailPlaceholder')}
                   className={cn(
                     'h-9',
                     isValid('email') && 'border-green-500/60 pr-8',
@@ -333,7 +347,7 @@ export default function RegisterStudentPage() {
                     (errors.institution ? ' border-destructive' : '')
                   }
                 >
-                  <option value=''>Sélectionner...</option>
+                  <option value=''>{t('common.select')}</option>
                   {INSTITUTION_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
@@ -363,7 +377,7 @@ export default function RegisterStudentPage() {
                     SELECT_CLASS + (errors.level ? ' border-destructive' : '')
                   }
                 >
-                  <option value=''>Sélectionner...</option>
+                  <option value=''>{t('common.select')}</option>
                   {LEVEL_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}

@@ -71,22 +71,6 @@ const CHART_COLORS = [
   'var(--chart-5)',
 ]
 
-const TYPE_LABELS: Record<string, string> = {
-  PFE: 'PFE',
-  MASTER: 'Master',
-  PHD: 'Doctorat',
-  INTERNSHIP: 'Stage',
-  PROJECT: 'Projet',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  IN_PROGRESS: 'En cours',
-  DEFENDED: 'Soutenu',
-  ABANDONED: 'Abandonné',
-  EXTENSION: 'Prolongation',
-  SUSPENDED: 'Suspendu',
-}
-
 const STATUS_BAR_COLOR: Record<string, string> = {
   IN_PROGRESS: 'bg-blue-500',
   DEFENDED: 'bg-green-500',
@@ -113,12 +97,8 @@ const VALIDATION_BADGE: Record<
   REVISED: 'secondary',
 }
 
-const VALIDATION_LABELS: Record<string, string> = {
-  PENDING: 'En attente',
-  VALIDATED: 'Validé',
-  REJECTED: 'Refusé',
-  REVISED: 'À réviser',
-}
+// Note: textual labels (types/statuses) are resolved inside the component
+// using `t()` so they follow the active language.
 
 // ─── Featured KPI Card ────────────────────────────────────────────────────────
 
@@ -212,7 +192,40 @@ export default function ResearcherDashboard() {
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
   const { currentUser } = useAuthContext()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+
+  // Localized label maps
+  const TYPE_LABELS = useMemo(
+    () => ({
+      PFE: t('supervisions.type.PFE'),
+      MASTER: t('supervisions.type.MASTER'),
+      PHD: t('supervisions.type.PHD'),
+      INTERNSHIP: t('supervisions.type.INTERNSHIP'),
+      PROJECT: t('supervisions.type.PROJECT'),
+    }),
+    [t],
+  )
+
+  const STATUS_LABELS = useMemo(
+    () => ({
+      IN_PROGRESS: t('supervisions.status.IN_PROGRESS'),
+      DEFENDED: t('supervisions.status.DEFENDED'),
+      ABANDONED: t('supervisions.status.ABANDONED'),
+      EXTENSION: t('supervisions.status.EXTENSION'),
+      SUSPENDED: t('supervisions.status.SUSPENDED'),
+    }),
+    [t],
+  )
+
+  const VALIDATION_LABELS = useMemo(
+    () => ({
+      PENDING: t('supervisions.validation.PENDING'),
+      VALIDATED: t('supervisions.validation.VALIDATED'),
+      REJECTED: t('supervisions.validation.REJECTED'),
+      REVISED: t('supervisions.validation.REVISED'),
+    }),
+    [t],
+  )
 
   const { data: supPage, isLoading } = useSupervisions({ limit: 200 })
   const { data: reviewStats } = useValidationStats()
@@ -268,7 +281,7 @@ export default function ResearcherDashboard() {
   const reviewsPath = userId ? getResearcherReviewsPath(userId) : '#'
   const studPath = userId ? getResearcherStudentsPath(userId) : '#'
   const myReviewCount = reviewStats?.pending ?? pending
-  const today = new Date().toLocaleDateString('fr-DZ', {
+  const today = new Date().toLocaleDateString(i18n.language || undefined, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -430,7 +443,7 @@ export default function ResearcherDashboard() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(v) => [`${v ?? ''}`, '']} />
+                      <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -479,7 +492,7 @@ export default function ResearcherDashboard() {
                     <Tooltip />
                     <Bar
                       dataKey='count'
-                      name='Encadrements'
+                      name={t('common.supervisions')}
                       fill='var(--chart-1)'
                       radius={[4, 4, 0, 0]}
                       isAnimationActive
@@ -560,10 +573,13 @@ export default function ResearcherDashboard() {
                       </Badge>
                     </TableCell>
                     <TableCell className='hidden sm:table-cell text-xs text-muted-foreground'>
-                      {new Date(entry.createdAt).toLocaleString('fr-FR', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                      })}
+                      {new Date(entry.createdAt).toLocaleString(
+                        i18n.language || undefined,
+                        {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                        },
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -638,7 +654,7 @@ export default function ResearcherDashboard() {
                     <TableCell className='text-muted-foreground text-sm'>
                       {row.student
                         ? `${row.student.lastName} ${row.student.firstName}`
-                        : '—'}
+                        : t('common.notAvailable')}
                     </TableCell>
                     <TableCell>
                       <span className='rounded-md bg-muted px-2 py-0.5 text-xs font-medium'>
@@ -680,7 +696,7 @@ export default function ResearcherDashboard() {
                             className='inline-flex items-center gap-2 whitespace-nowrap'
                           >
                             <List className='size-4 shrink-0' />
-                            <span>Voir</span>
+                            <span>{t('common.view')}</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
@@ -691,7 +707,7 @@ export default function ResearcherDashboard() {
                             className='inline-flex items-center gap-2 whitespace-nowrap'
                           >
                             <Pencil className='size-4 shrink-0' />
-                            <span>Modifier</span>
+                            <span>{t('common.edit')}</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className='inline-flex items-center gap-2 whitespace-nowrap text-destructive focus:text-destructive'

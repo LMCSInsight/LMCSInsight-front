@@ -17,7 +17,6 @@ import {
 } from 'recharts'
 import {
   Download,
-  FileSpreadsheet,
   FileText,
   BarChart3,
   Building2,
@@ -55,7 +54,6 @@ import {
 } from '@/features/direction/lib/supervisionUi'
 import { DIRECTOR_SUPERVISIONS_LIMIT } from '@/features/direction/lib/directorFetchLimits'
 import {
-  downloadDirectionAnalyticsExcel,
   downloadDirectionAnalyticsPdf,
   downloadDirectionPreviewExcel,
   downloadDirectionPreviewPdf,
@@ -108,15 +106,6 @@ function selectFieldClassName(extra?: string) {
   )
 }
 
-const chartTooltip = {
-  contentStyle: {
-    fontSize: 12,
-    borderRadius: 8,
-    border: '1px solid hsl(var(--border))',
-    background: 'hsl(var(--card))',
-  },
-}
-
 /** Shared surfaces — tinted shadow on hover, no extra accent colors */
 const reportSurfaceCard =
   'rounded-xl border border-border/60 bg-card shadow-none transition-[box-shadow] duration-200 hover:shadow-md dark:border-border/50'
@@ -131,7 +120,6 @@ export default function DirectionReportsPage() {
   const [type, setType] = useState<(typeof REPORT_TYPE_VALUES)[number]>('Tous')
   const [statut, setStatut] =
     useState<(typeof REPORT_STATUT_VALUES)[number]>('Tous')
-  const [exportFormat, setExportFormat] = useState<'pdf' | 'excel'>('pdf')
   const [reportFormat, setReportFormat] = useState<'pdf' | 'excel'>('pdf')
   const [showPreview, setShowPreview] = useState(false)
 
@@ -291,32 +279,22 @@ export default function DirectionReportsPage() {
   function handleQuickDownload() {
     void toast.promise(
       Promise.resolve().then(() => {
-        if (exportFormat === 'excel') {
-          downloadDirectionAnalyticsExcel({
-            totals: analyticsTotals,
-            thematicBarsData,
-            evolutionByYear,
-            typePieData,
-            statusChartData,
-          })
-        } else {
-          downloadDirectionAnalyticsPdf({
-            title: t(
-              'director.reports.analyticsExportTitle',
-              'Rapport analytique — Direction',
-            ),
-            generatedLine: `${t(
-              'director.reports.generatedOn',
-              'Généré le',
-            )} : ${new Date().toLocaleString('fr-FR')}`,
-            totals: analyticsTotals,
-            thematicBarsData,
-            evolutionByYear,
-            typePieData,
-            statusChartData,
-            evolutionSeriesName: t('director.dashboard.seriesSupervisions'),
-          })
-        }
+        downloadDirectionAnalyticsPdf({
+          title: t(
+            'director.reports.analyticsExportTitle',
+            'Rapport analytique — Direction',
+          ),
+          generatedLine: `${t(
+            'director.reports.generatedOn',
+            'Généré le',
+          )} : ${new Date().toLocaleString('fr-FR')}`,
+          totals: analyticsTotals,
+          thematicBarsData,
+          evolutionByYear,
+          typePieData,
+          statusChartData,
+          evolutionSeriesName: t('director.dashboard.seriesSupervisions'),
+        })
       }),
       {
         loading: t('director.reports.exportRunning', 'Export en cours…'),
@@ -451,7 +429,7 @@ export default function DirectionReportsPage() {
             </CardHeader>
             <CardContent className='pb-4'>
               <div ref={thematicExportRef} className={chartInset}>
-                <div className='h-[260px] w-full'>
+                <div className='h-65 w-full'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <BarChart
                       layout='vertical'
@@ -482,7 +460,7 @@ export default function DirectionReportsPage() {
                           fill: 'hsl(var(--foreground))',
                         }}
                       />
-                      <Tooltip {...chartTooltip} />
+                      <Tooltip />
                       <Bar
                         dataKey='count'
                         fill='var(--chart-1)'
@@ -525,7 +503,7 @@ export default function DirectionReportsPage() {
             </CardHeader>
             <CardContent className='pb-4'>
               <div ref={pieExportRef} className={chartInset}>
-                <div className='h-[280px] w-full'>
+                <div className='h-70 w-full'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <PieChart>
                       <Pie
@@ -542,7 +520,7 @@ export default function DirectionReportsPage() {
                           <Cell key={entry.name} fill={entry.fill} />
                         ))}
                       </Pie>
-                      <Tooltip {...chartTooltip} />
+                      <Tooltip />
                       <Legend
                         wrapperStyle={{ fontSize: 11 }}
                         formatter={(value) => (
@@ -587,7 +565,7 @@ export default function DirectionReportsPage() {
             </CardHeader>
             <CardContent className='pb-4'>
               <div ref={evolutionExportRef} className={chartInset}>
-                <div className='h-[280px] w-full'>
+                <div className='h-70 w-full'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <LineChart
                       data={evolutionByYear}
@@ -611,7 +589,7 @@ export default function DirectionReportsPage() {
                           fill: 'hsl(var(--muted-foreground))',
                         }}
                       />
-                      <Tooltip {...chartTooltip} />
+                      <Tooltip />
                       <Line
                         type='monotone'
                         dataKey='total'
@@ -659,7 +637,7 @@ export default function DirectionReportsPage() {
             </CardHeader>
             <CardContent className='pb-4'>
               <div ref={statusExportRef} className={chartInset}>
-                <div className='h-[280px] w-full'>
+                <div className='h-70 w-full'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <BarChart
                       data={statusChartData}
@@ -688,7 +666,7 @@ export default function DirectionReportsPage() {
                           fill: 'hsl(var(--muted-foreground))',
                         }}
                       />
-                      <Tooltip {...chartTooltip} />
+                      <Tooltip />
                       <Bar
                         dataKey='count'
                         radius={[6, 6, 0, 0]}
@@ -753,30 +731,12 @@ export default function DirectionReportsPage() {
                 {t('director.reports.quickDesc')}
               </p>
               <div className='flex flex-wrap items-center gap-2'>
-                <label className='sr-only' htmlFor='fmt-quick'>
-                  {t('director.reports.labelFormat')}
-                </label>
-                <select
-                  id='fmt-quick'
-                  className={cn(selectFieldClassName(), 'w-32')}
-                  value={exportFormat}
-                  onChange={(e) =>
-                    setExportFormat(e.target.value as 'pdf' | 'excel')
-                  }
-                >
-                  <option value='pdf'>PDF</option>
-                  <option value='excel'>Excel</option>
-                </select>
                 <Button
                   type='button'
                   className='transition-[transform,box-shadow] duration-200 active:scale-[0.98]'
                   onClick={handleQuickDownload}
                 >
-                  {exportFormat === 'pdf' ? (
-                    <FileText className='mr-2 size-4' aria-hidden />
-                  ) : (
-                    <FileSpreadsheet className='mr-2 size-4' aria-hidden />
-                  )}
+                  <FileText className='mr-2 size-4' aria-hidden />
                   {t('director.reports.download')}
                 </Button>
               </div>
@@ -971,7 +931,7 @@ export default function DirectionReportsPage() {
                               <TableCell className='tabular-nums'>
                                 {r.type}
                               </TableCell>
-                              <TableCell className='max-w-[200px] text-sm'>
+                              <TableCell className='max-w-50 text-sm'>
                                 {r.thematique}
                               </TableCell>
                               <TableCell className='tabular-nums'>

@@ -28,6 +28,10 @@ function buildSupervisionsQueryParams(
     out.academicYear = filters.academicYear
     out.academic_year = filters.academicYear
   }
+  if (filters.studentId) {
+    out.studentId = filters.studentId
+    out.student_id = filters.studentId
+  }
   if (filters.supervisorId) {
     out.supervisorId = filters.supervisorId
   }

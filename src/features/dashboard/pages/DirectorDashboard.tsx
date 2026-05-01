@@ -128,15 +128,6 @@ function aggregateFromApi(rows: Supervision[], apiTotal: number) {
   }
 }
 
-const chartTooltip = {
-  contentStyle: {
-    fontSize: 12,
-    borderRadius: 8,
-    border: '1px solid hsl(var(--border))',
-    background: 'hsl(var(--card))',
-  },
-}
-
 export default function DirectorDashboard() {
   const { t } = useTranslation()
   const {
@@ -473,7 +464,7 @@ export default function DirectorDashboard() {
             <p className='mb-3 text-xs text-muted-foreground'>
               {t('director.dashboard.chartSupervisionStatusSubtitle')}
             </p>
-            <div className='h-[220px] w-full sm:h-[240px]'>
+            <div className='h-55 w-full sm:h-60'>
               <ResponsiveContainer width='100%' height='100%'>
                 <PieChart>
                   <Pie
@@ -490,7 +481,7 @@ export default function DirectorDashboard() {
                       <Cell key={entry.name} fill={entry.fill} />
                     ))}
                   </Pie>
-                  <Tooltip {...chartTooltip} />
+                  <Tooltip />
                   <Legend
                     wrapperStyle={{ fontSize: 11 }}
                     formatter={(value) => (
@@ -519,7 +510,7 @@ export default function DirectorDashboard() {
             </div>
           </CardHeader>
           <CardContent className='pb-3'>
-            <div className='h-[220px] w-full sm:h-[240px]'>
+            <div className='h-55 w-full sm:h-60'>
               <ResponsiveContainer width='100%' height='100%'>
                 <LineChart
                   data={byYear}
@@ -543,7 +534,7 @@ export default function DirectorDashboard() {
                     }}
                     allowDecimals={false}
                   />
-                  <Tooltip {...chartTooltip} />
+                  <Tooltip />
                   <Line
                     type='monotone'
                     dataKey='count'
@@ -578,7 +569,7 @@ export default function DirectorDashboard() {
             </div>
           </CardHeader>
           <CardContent className='pb-3'>
-            <div className='h-[220px] w-full sm:h-[260px]'>
+            <div className='h-55 w-full sm:h-65'>
               <ResponsiveContainer width='100%' height='100%'>
                 <BarChart
                   layout='vertical'
@@ -605,7 +596,7 @@ export default function DirectorDashboard() {
                     width={thematicData.length ? 140 : 118}
                     tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }}
                   />
-                  <Tooltip {...chartTooltip} />
+                  <Tooltip />
                   <Bar
                     dataKey='count'
                     fill={CHART_COLORS[1]}
@@ -633,7 +624,7 @@ export default function DirectorDashboard() {
             <p className='mb-3 text-xs text-muted-foreground'>
               {t('director.dashboard.chartValidationPipelineSubtitle')}
             </p>
-            <div className='h-[220px] w-full sm:h-[260px]'>
+            <div className='h-55 w-full sm:h-65'>
               <ResponsiveContainer width='100%' height='100%'>
                 <PieChart>
                   <Pie
@@ -650,7 +641,7 @@ export default function DirectorDashboard() {
                       <Cell key={entry.name} fill={entry.fill} />
                     ))}
                   </Pie>
-                  <Tooltip {...chartTooltip} />
+                  <Tooltip />
                   <Legend
                     wrapperStyle={{ fontSize: 11 }}
                     formatter={(value) => (

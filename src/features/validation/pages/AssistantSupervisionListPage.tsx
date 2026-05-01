@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
@@ -59,17 +59,21 @@ const STATUS_DOT: Record<string, string> = {
 export default function AssistantSupervisionListPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [search, setSearch] = useState('')
   const [statusTab, setStatusTab] = useState<ValidationStatus | 'ALL'>('ALL')
   const [type, setType] = useState<string | undefined>(undefined)
   const [page, setPage] = useState(1)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const studentId =
+    searchParams.get('student') ?? searchParams.get('studentId') ?? undefined
 
   const { data, isLoading } = useSupervisions({
     search: search.trim() || undefined,
     validationStatus:
       statusTab !== 'ALL' ? (statusTab as ValidationStatus) : undefined,
     type: type as never,
+    studentId,
     page,
     limit: 20,
   })
@@ -94,36 +98,41 @@ export default function AssistantSupervisionListPage() {
   return (
     <div className='mx-auto flex w-full max-w-7xl flex-col gap-5 py-2'>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className='flex items-start justify-between gap-4'>
-        <div>
-          <h1 className='text-2xl font-semibold tracking-tight text-foreground'>
-            {t('common.supervisions')}
-          </h1>
-          <p className='mt-1 text-sm text-muted-foreground'>
+      <div className='space-y-3'>
+        <div className='flex items-start justify-between gap-4'>
+          <div>
+            <h1 className='text-2xl font-semibold tracking-tight text-foreground'>
+              {t('common.supervisions')}
+            </h1>
+          </div>
+          {/* Status legend */}
+          <div className='hidden sm:flex flex-wrap gap-x-4 gap-y-1.5 pt-1'>
+            {(['PENDING', 'VALIDATED', 'REJECTED', 'REVISED'] as const).map(
+              (s) => (
+                <div
+                  key={s}
+                  className='flex items-center gap-1.5 text-xs text-muted-foreground'
+                >
+                  <span className={cn('size-2 rounded-sm', STATUS_DOT[s])} />
+                  {t(`assistant.status.${s.toLowerCase()}`)}
+                </div>
+              ),
+            )}
+          </div>
+        </div>
+
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+          <p className='text-sm text-muted-foreground'>
             {t('assistant.supervisions.subtitle', { count: total })}
           </p>
-        </div>
-        <Button
-          type='button'
-          onClick={() => navigate(getAssistantSupervisionNewPath())}
-          className='shrink-0 gap-1.5'
-        >
-          <Plus className='size-4' />
-          {t('assistant.supervisions.new')}
-        </Button>
-        {/* Status legend */}
-        <div className='hidden sm:flex flex-wrap gap-x-4 gap-y-1.5 pt-1'>
-          {(['PENDING', 'VALIDATED', 'REJECTED', 'REVISED'] as const).map(
-            (s) => (
-              <div
-                key={s}
-                className='flex items-center gap-1.5 text-xs text-muted-foreground'
-              >
-                <span className={cn('size-2 rounded-sm', STATUS_DOT[s])} />
-                {t(`assistant.status.${s.toLowerCase()}`)}
-              </div>
-            ),
-          )}
+          <Button
+            type='button'
+            onClick={() => navigate(getAssistantSupervisionNewPath())}
+            className='shrink-0 gap-1.5 self-start sm:self-auto'
+          >
+            <Plus className='size-4' />
+            {t('assistant.supervisions.new')}
+          </Button>
         </div>
       </div>
 

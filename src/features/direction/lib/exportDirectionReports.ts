@@ -25,49 +25,7 @@ export type AnalyticsExportTotals = {
   avgPerTeam: number
 }
 
-export function downloadDirectionAnalyticsExcel(payload: {
-  totals: AnalyticsExportTotals
-  thematicBarsData: { name: string; count: number }[]
-  evolutionByYear: { year: string; total: number }[]
-  typePieData: { name: string; value: number }[]
-  statusChartData: { name: string; count: number }[]
-}): void {
-  const wb = XLSX.utils.book_new()
-  const ws0 = XLSX.utils.json_to_sheet([
-    {
-      'Total encadrements': payload.totals.totalSupervisions,
-      Équipes: payload.totals.teamCount,
-      'Moyenne / équipe': payload.totals.avgPerTeam,
-    },
-  ])
-  XLSX.utils.book_append_sheet(wb, ws0, 'Résumé')
-  const ws1 = XLSX.utils.json_to_sheet(
-    payload.thematicBarsData.map((d) => ({
-      Thématique: d.name,
-      Encadrements: d.count,
-    })),
-  )
-  XLSX.utils.book_append_sheet(wb, ws1, 'Thématiques')
-  const ws2 = XLSX.utils.json_to_sheet(
-    payload.evolutionByYear.map((d) => ({
-      'Année universitaire': d.year,
-      Total: d.total,
-    })),
-  )
-  XLSX.utils.book_append_sheet(wb, ws2, 'Par année')
-  const ws3 = XLSX.utils.json_to_sheet(
-    payload.typePieData.map((d) => ({ Type: d.name, Nombre: d.value })),
-  )
-  XLSX.utils.book_append_sheet(wb, ws3, 'Par type')
-  const ws4 = XLSX.utils.json_to_sheet(
-    payload.statusChartData.map((d) => ({
-      Indicateur: d.name,
-      Nombre: d.count,
-    })),
-  )
-  XLSX.utils.book_append_sheet(wb, ws4, 'Statuts')
-  XLSX.writeFile(wb, `lmcs-analytics-direction-${dateSlug()}.xlsx`)
-}
+// Note: analytics Excel export removed. Use PDF export only via `downloadDirectionAnalyticsPdf`.
 
 export function downloadDirectionAnalyticsPdf(payload: {
   title: string
@@ -139,9 +97,15 @@ export function downloadDirectionPreviewExcel(
   const rows = supervisions.map((s) => ({
     Titre: s.title,
     Étudiant: studentDisplayName(s),
+    'Email étudiant': s.student?.email ?? '',
     Type: SUPERVISION_TYPE_LABEL_FR[s.type],
     Encadrants: supervisorsDisplayLine(s),
+    'Emails encadrants': (s.supervisors ?? [])
+      .flatMap((sup) => sup.supervisor?.mails ?? [])
+      .filter(Boolean)
+      .join(', '),
     Thème: themeDisplay(s),
+    'Mots-clés': (s.keywords ?? []).join(', '),
     'Année univ.': s.academicYear,
     Statut: supervisionStatusBadgeLabel(s),
   }))

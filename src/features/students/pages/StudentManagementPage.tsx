@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -48,15 +48,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // ─── Filter constants ─────────────────────────────────────────────────────────
 
-const ETABLISSEMENTS: { value: Institution; label: string }[] = [
-  { value: 'ESI', label: 'ESI' },
-  { value: 'EXTERNE', label: 'Extérieur' },
-]
-const NIVEAUX: { value: StudentLevel; label: string }[] = [
-  { value: 'MASTER', label: 'Master' },
-  { value: 'DOCTORANT', label: 'Doctorant' },
-]
-const SPECIALITES: Specialty[] = ['SIL', 'SID', 'SIT', 'SIQ']
+// Note: textual labels are resolved inside the component using `t()` so they follow the active language.
 
 const LEVEL_BADGE: Record<string, string> = {
   DOCTORANT:
@@ -70,6 +62,31 @@ const LEVEL_BADGE: Record<string, string> = {
 export default function StudentManagementPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
+
+  // Localized filter options
+  const ETABLISSEMENTS = useMemo(
+    () => [
+      { value: 'ESI' as Institution, label: t('students.institution.ESI') },
+      {
+        value: 'EXTERNE' as Institution,
+        label: t('students.institution.EXTERNE'),
+      },
+    ],
+    [t],
+  )
+
+  const NIVEAUX = useMemo(
+    () => [
+      { value: 'MASTER' as StudentLevel, label: t('students.level.MASTER') },
+      {
+        value: 'DOCTORANT' as StudentLevel,
+        label: t('students.level.DOCTORANT'),
+      },
+    ],
+    [t],
+  )
+
+  const SPECIALITES: Specialty[] = ['SIL', 'SID', 'SIT', 'SIQ']
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -394,15 +411,11 @@ export default function StudentManagementPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <DropdownMenu>
-                        <DropdownMenuTrigger>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            className='size-8'
-                            aria-label='Actions'
-                          >
-                            <MoreVertical className='size-4' />
-                          </Button>
+                        <DropdownMenuTrigger
+                          className='inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted'
+                          aria-label='Actions'
+                        >
+                          <MoreVertical className='size-4' />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align='end'>
                           <DropdownMenuItem

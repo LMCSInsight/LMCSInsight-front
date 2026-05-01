@@ -166,15 +166,7 @@ export default function ValidationHistoryPage() {
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: 12,
-                      borderRadius: '0.5rem',
-                      border: '1px solid var(--border)',
-                      background: 'var(--card)',
-                      color: 'var(--foreground)',
-                    }}
-                  />
+                  <Tooltip />
                   <Bar
                     dataKey='count'
                     name={t('assistant.historyTitle')}

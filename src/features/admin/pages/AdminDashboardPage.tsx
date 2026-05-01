@@ -302,7 +302,7 @@ export default function AdminDashboardPage() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(v) => [`${v}`, '']} />
+                      <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -417,7 +417,7 @@ export default function AdminDashboardPage() {
                       <span className='min-w-0 shrink truncate font-medium text-foreground'>
                         {log.user
                           ? `${log.user.firstName} ${log.user.lastName}`
-                          : '—'}
+                          : t('common.notAvailable')}
                       </span>
                       <span
                         className={cn(

@@ -2,7 +2,7 @@
 export function buildCsv(
   headers: string[],
   rows: string[][],
-  separator = ';',
+  separator = ',',
 ): string {
   const esc = (cell: string) => {
     const s = String(cell ?? '')

@@ -95,7 +95,7 @@ function getInitialUser(): User | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(getInitialUser)
 
-  const isAuthenticated = env.AUTH_BYPASS ? true : !!currentUser
+  const isAuthenticated = !!currentUser
 
   const login = useCallback(
     (user: User, token: string, refreshToken?: string) => {
@@ -116,12 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const logout = useCallback(() => {
-    if (env.AUTH_BYPASS) {
-      const fallbackUser = saveBypassUser(resolveBypassRole())
-      setCurrentUser(fallbackUser)
-      return
-    }
-
     setCurrentUser(null)
     localStorage.removeItem(APP_CONSTANTS.STORAGE_KEYS.USER)
     localStorage.removeItem(APP_CONSTANTS.STORAGE_KEYS.TOKEN)

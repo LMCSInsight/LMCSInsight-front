@@ -539,7 +539,7 @@ export default function EditSupervisionPage() {
                         (errors.type ? ' border-destructive' : '')
                       }
                     >
-                      <option value=''>Sélectionner...</option>
+                      <option value=''>{t('common.select')}</option>
                       {TYPE_OPTIONS.map((o) => (
                         <option key={o.value} value={o.value}>
                           {o.label}
@@ -587,7 +587,9 @@ export default function EditSupervisionPage() {
                       (errors.academicYear ? ' border-destructive' : '')
                     }
                   >
-                    <option value=''>Sélectionner une année</option>
+                    <option value=''>
+                      {t('supervisions.form.selectYear')}
+                    </option>
                     {Array.from({ length: 11 }, (_, i) => {
                       const start = new Date().getFullYear() - 2 + i
                       const label = `${start}-${start + 1}`
@@ -655,7 +657,7 @@ export default function EditSupervisionPage() {
                 )}
                 {errors.studentId && (
                   <p className='text-xs text-destructive'>
-                    Veuillez sélectionner un étudiant
+                    {t('supervisions.form.selectStudent')}
                   </p>
                 )}
                 {studentId &&

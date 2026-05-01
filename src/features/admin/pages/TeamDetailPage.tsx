@@ -19,18 +19,11 @@ import {
 import { useTeam } from '@/features/admin/hooks/useTeams'
 import { AdminInsightCard } from '@/features/admin/components'
 
-function fmt(iso?: string) {
-  if (!iso) return null
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
-}
+// moved into component to use i18n locale
 
 export default function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { data: team, isLoading, isError } = useTeam(teamId)
 
@@ -59,6 +52,19 @@ export default function TeamDetailPage() {
         </div>
       </div>
     )
+  }
+
+  function fmt(iso?: string) {
+    if (!iso) return null
+    try {
+      return new Date(iso).toLocaleDateString(i18n.language || undefined, {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+    } catch {
+      return new Date(iso).toLocaleDateString(i18n.language || undefined)
+    }
   }
 
   const memberCount = team._count?.members ?? team.members?.length ?? 0
@@ -116,12 +122,12 @@ export default function TeamDetailPage() {
           />
           <AdminInsightCard
             title={t('admin.teams.themes')}
-            value={team.theme?.name ?? '—'}
+            value={team.theme?.name ?? t('common.notAvailable')}
             subtitle={t('admin.teams.detailThemeSubtitle')}
           />
           <AdminInsightCard
             title={t('admin.teams.updated')}
-            value={fmt(team.updatedAt) ?? '—'}
+            value={fmt(team.updatedAt) ?? t('common.notAvailable')}
             subtitle={t('admin.teams.detailUpdatedSubtitle')}
           />
         </CardContent>
