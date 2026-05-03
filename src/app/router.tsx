@@ -49,6 +49,7 @@ import ValidationDetailPage from '@/features/validation/pages/ValidationDetailPa
 import ValidationHistoryPage from '@/features/validation/pages/ValidationHistoryPage'
 import AssistantSupervisionListPage from '@/features/validation/pages/AssistantSupervisionListPage'
 import AssistantProfilePage from '@/features/validation/pages/AssistantProfilePage'
+import LandingPage from '@/features/Landing/LandingPage'
 
 /** Guard: ensure current user is the researcher for :userId, then render ResearcherPortalLayout (with Outlet). */
 function ResearcherPortalGuard() {
@@ -126,9 +127,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.HOME,
     element: <MainLayout />,
-    children: [
-      { index: true, element: <Navigate to={ROUTES.LOGIN} replace /> },
-    ],
+    children: [{ index: true, element: <LandingPage /> }],
   },
   {
     path: ROUTES.AUTH,
