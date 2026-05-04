@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -111,7 +110,7 @@
 
 @theme inline {
 
-    --font-sans: 'Geist Variable', system-ui, sans-serif;
+    --font-sans: 'DM Sans Variable', system-ui, sans-serif;
 
     --color-sidebar-ring: var(--sidebar-ring);
 
@@ -229,11 +228,22 @@ html:not(.dark) .portal-shell {
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body,
+  #root,
+  .font-dm-sans,
+  .portal-shell,
+  button,
+  input,
+  textarea,
+  select {
+    font-family: 'DM Sans Variable', 'DM Sans', system-ui, sans-serif;
+  }
   body {
     @apply bg-background text-foreground;
+    --ant-font-family: 'DM Sans Variable', 'DM Sans', system-ui, sans-serif;
   }
   html {
-    @apply font-sans;
     scroll-behavior: smooth;
   }
 }

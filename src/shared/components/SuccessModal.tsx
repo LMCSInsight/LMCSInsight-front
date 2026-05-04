@@ -9,7 +9,7 @@ const C = {
   bg: '#EBF1F9',
   white: '#FFFFFF',
 }
-const FONT = "'Outfit', sans-serif"
+const FONT = "'DM Sans Variable', system-ui, sans-serif"
 
 interface SuccessModalProps {
   open: boolean

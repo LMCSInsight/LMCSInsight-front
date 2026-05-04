@@ -30,10 +30,7 @@ export function ValidationStatsCard({
         {icon && <span className='text-muted-foreground'>{icon}</span>}
       </div>
       <div className='flex items-end justify-between gap-2'>
-        <span
-          className='text-3xl font-semibold tracking-tight text-foreground'
-          style={{ fontFamily: "'Geist', system-ui, sans-serif" }}
-        >
+        <span className='text-3xl font-semibold tracking-tight text-foreground'>
           {value}
         </span>
         {sub && (

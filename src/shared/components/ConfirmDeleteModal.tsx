@@ -10,7 +10,7 @@ const C = {
   white: '#FFFFFF',
   border: '#d9d9d9',
 }
-const FONT = "'Outfit', sans-serif"
+const FONT = "'DM Sans Variable', system-ui, sans-serif"
 
 interface ConfirmDeleteModalProps {
   open: boolean
