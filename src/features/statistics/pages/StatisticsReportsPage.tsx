@@ -39,8 +39,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { useAuthContext } from '@/shared/context/AuthContext'
 import { useSupervisions } from '@/features/supervisions/hooks/useSupervisions'
-import { useStudents } from '@/features/students/hooks'
 
 const CHART_COLORS = [
   'var(--chart-1)',
@@ -134,13 +134,26 @@ function KpiCard({
 
 export default function StatisticsReportsPage() {
   const { t, i18n } = useTranslation()
-  const { data: supPage, isLoading: loadingSup } = useSupervisions({
-    limit: 500,
-  })
-  const { data: studPage, isLoading: loadingStud } = useStudents({ limit: 500 })
+  const { currentUser } = useAuthContext()
+  const researcherMatricule = currentUser?.matricule?.trim() ?? ''
+  const supervisionFilters = researcherMatricule
+    ? { limit: 500, supervisorId: researcherMatricule }
+    : { limit: 500 }
+  const { data: supPage, isLoading: loadingSup } =
+    useSupervisions(supervisionFilters)
 
   const allSupervisions = supPage?.data ?? []
-  const allStudents = studPage?.data ?? []
+  const supervisedStudents = useMemo(() => {
+    const byId = new Map<
+      string,
+      NonNullable<(typeof allSupervisions)[number]['student']>
+    >()
+    allSupervisions.forEach((supervision) => {
+      if (!supervision.student) return
+      byId.set(supervision.student.id, supervision.student)
+    })
+    return [...byId.values()]
+  }, [allSupervisions])
 
   const STATUS_LABELS = useMemo(
     () => ({
@@ -254,13 +267,13 @@ export default function StatisticsReportsPage() {
   )
 
   const studentsByInstitution = useMemo(
-    () => countBy(allStudents.map((s) => s.institution).filter(Boolean)),
-    [allStudents],
+    () => countBy(supervisedStudents.map((s) => s.institution).filter(Boolean)),
+    [supervisedStudents],
   )
 
   const studentsByLevel = useMemo(
-    () => countBy(allStudents.map((s) => s.level).filter(Boolean)),
-    [allStudents],
+    () => countBy(supervisedStudents.map((s) => s.level).filter(Boolean)),
+    [supervisedStudents],
   )
 
   // ── Export: Excel supervisions ──────────────────────────────────────────────
@@ -309,7 +322,7 @@ export default function StatisticsReportsPage() {
 
   // ── Export: Excel students ──────────────────────────────────────────────────
   function handleExportStudentsXlsx() {
-    const rows = allStudents.map((s) => ({
+    const rows = supervisedStudents.map((s) => ({
       [t('statistics.exports.students.lastName')]: s.lastName,
       [t('statistics.exports.students.firstName')]: s.firstName,
       [t('statistics.exports.students.email')]: s.email,
@@ -329,18 +342,18 @@ export default function StatisticsReportsPage() {
 
   // ── Export: PDF report ──────────────────────────────────────────────────────
   function handleExportPDF() {
-    const doc = new jsPDF()
+    const doc = new jsPDF({ orientation: 'landscape' })
 
     doc.setFontSize(18)
     doc.setTextColor(33, 51, 78)
-    doc.text(t('statistics.pdf.title'), 14, 18)
+    doc.text(t('statistics.exports.pdf.title'), 14, 18)
 
     doc.setFontSize(10)
     doc.setTextColor(107, 114, 128)
     doc.text(
-      `${t('statistics.pdf.generatedOn')} : ${new Date().toLocaleDateString(
-        i18n.language || undefined,
-      )}`,
+      `${t(
+        'statistics.exports.pdf.generatedOn',
+      )} : ${new Date().toLocaleDateString(i18n.language || undefined)}`,
       14,
       26,
     )
@@ -354,17 +367,21 @@ export default function StatisticsReportsPage() {
     doc.setFontSize(11)
     doc.setTextColor(33, 51, 78)
     const kpiY = selectedYear ? 42 : 36
-    doc.text(t('statistics.pdf.summary'), 14, kpiY)
+    doc.text(t('statistics.exports.pdf.summary'), 14, kpiY)
     doc.setFontSize(10)
     doc.setTextColor(60, 60, 60)
     doc.text(
       [
-        `• ${t('statistics.pdf.totalSupervisions')}: ${total}`,
-        `• ${t('statistics.pdf.inProgress')}: ${inProgress}`,
-        `• ${t('statistics.pdf.defended')}: ${defended}`,
-        `• ${t('statistics.pdf.defenseRate')}: ${defenseRate}%`,
-        `• ${t('statistics.pdf.pendingValidation')}: ${pendingValidation}`,
-        `• ${t('statistics.pdf.totalStudents')}: ${allStudents.length}`,
+        `• ${t('statistics.exports.pdf.totalSupervisions')}: ${total}`,
+        `• ${t('statistics.exports.pdf.inProgress')}: ${inProgress}`,
+        `• ${t('statistics.exports.pdf.defended')}: ${defended}`,
+        `• ${t('statistics.exports.pdf.defenseRate')}: ${defenseRate}%`,
+        `• ${t(
+          'statistics.exports.pdf.pendingValidation',
+        )}: ${pendingValidation}`,
+        `• ${t('statistics.exports.pdf.totalStudents')}: ${
+          supervisedStudents.length
+        }`,
       ],
       14,
       kpiY + 8,
@@ -392,9 +409,17 @@ export default function StatisticsReportsPage() {
         VALIDATION_LABELS[s.validationStatus] ?? s.validationStatus,
         s.academicYear,
       ]),
-      styles: { fontSize: 8, cellPadding: 3 },
+      styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
       headStyles: { fillColor: [33, 51, 78], textColor: 255 },
       alternateRowStyles: { fillColor: [245, 245, 245] },
+      columnStyles: {
+        0: { cellWidth: 58 },
+        1: { cellWidth: 36 },
+        2: { cellWidth: 22 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 24 },
+        5: { cellWidth: 28 },
+      },
     })
 
     doc.save(
@@ -404,7 +429,7 @@ export default function StatisticsReportsPage() {
     )
   }
 
-  const isLoading = loadingSup || loadingStud
+  const isLoading = loadingSup
 
   return (
     <div className='space-y-6'>
@@ -437,7 +462,7 @@ export default function StatisticsReportsPage() {
             size='sm'
             className='gap-2 text-xs whitespace-nowrap'
             onClick={handleExportStudentsXlsx}
-            disabled={isLoading || allStudents.length === 0}
+            disabled={isLoading || supervisedStudents.length === 0}
           >
             <FileSpreadsheet className='size-3.5' />
             {t('statistics.exports.students.button')}
@@ -538,7 +563,7 @@ export default function StatisticsReportsPage() {
           <div className='grid gap-4 sm:grid-cols-2'>
             <KpiCard
               title={t('statistics.kpis.totalStudents')}
-              value={allStudents.length}
+              value={supervisedStudents.length}
               icon={Users}
             />
           </div>

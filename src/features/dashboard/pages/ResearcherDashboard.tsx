@@ -497,6 +497,11 @@ export default function ResearcherDashboard() {
                       radius={[4, 4, 0, 0]}
                       isAnimationActive
                       animationDuration={600}
+                      activeShape={{
+                        fill: 'var(--chart-1)',
+                        stroke: 'var(--chart-1)',
+                        strokeWidth: 2,
+                      }}
                     />
                   </BarChart>
                 </ResponsiveContainer>

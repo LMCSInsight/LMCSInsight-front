@@ -296,6 +296,12 @@
     "orContinueWith": "or continue with",
     "googleSignIn": "Sign in with Google @esi.dz",
     "devMode": "Development mode",
+    "layout": {
+      "title": "LMCS Supervision Tracking System",
+      "subtitle": "Laboratory of Methods for System Design — ESI Algiers",
+      "logoAlt": "ESI logo",
+      "illustrationAlt": "Login illustration"
+    },
     "errors": {
       "invalidCredentials": "Incorrect email or password.",
       "serverError": "An error occurred. Please try again."
@@ -822,6 +828,7 @@
       "role": "Role",
       "phoneNumber": "Phone Number",
       "phoneNumberOptional": "Phone Number (optional)",
+      "researcherProfileHelper": "Selecting Researcher also creates the linked researcher profile used by supervision assignment.",
       "password": "Password",
       "confirmPassword": "Confirm Password",
       "status": "Status",
@@ -845,6 +852,7 @@
       "loadError": "Error loading users.",
       "createSuccess": "User created successfully.",
       "createError": "Could not create user.",
+      "emailAlreadyExists": "A user with this email already exists.",
       "updateSuccess": "User updated successfully.",
       "updateError": "Could not update user.",
       "toggleSuccess": "User status updated.",
@@ -1285,7 +1293,7 @@
       "headline": "Built by ESI students.",
       "subheading": "2CP project — Academic year 2025–2026, LMCS Laboratory.",
       "member1_name": "LARIBI Abderrahim",
-      "member2_name": "Gulalta Anouar",
+      "member2_name": "GuelaltaAnouar",
       "member3_name": "Amerlkhedoud Youcef",
       "member4_name": "Hebabcha Riadh",
       "member5_name": "Beghernaout Mohamed El Amine",

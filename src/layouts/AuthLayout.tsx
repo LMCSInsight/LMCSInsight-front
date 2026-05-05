@@ -1,6 +1,9 @@
 import { Outlet } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export function AuthLayout() {
+  const { t } = useTranslation()
+
   return (
     <div className='min-h-screen flex flex-col lg:flex-row bg-background'>
       {/* Left column: form */}
@@ -8,7 +11,7 @@ export function AuthLayout() {
         <div className='mb-12'>
           <img
             src='/logo-esi.png'
-            alt='ESI'
+            alt={t('auth.layout.logoAlt')}
             className='h-16 w-auto object-contain object-left'
             onError={(e) => {
               const target = e.currentTarget
@@ -32,18 +35,18 @@ export function AuthLayout() {
       <div className='hidden lg:flex lg:w-1/2 min-h-screen flex-col items-center justify-center px-12 py-16 bg-foreground text-background relative overflow-hidden'>
         {/* Decorative radial glow */}
         <div
-          className='absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_oklch(0.45_0.2_260_/_0.35)_0%,_transparent_60%)]'
+          className='absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,oklch(0.45_0.2_260/0.35)_0%,transparent_60%)]'
           aria-hidden
         />
         <div
-          className='absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_oklch(0.45_0.2_260_/_0.2)_0%,_transparent_60%)]'
+          className='absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,oklch(0.45_0.2_260/0.2)_0%,transparent_60%)]'
           aria-hidden
         />
 
         {/* Illustration */}
         <img
           src='/login-illustration.png'
-          alt=''
+          alt={t('auth.layout.illustrationAlt')}
           className='relative z-10 w-72 h-72 xl:w-96 xl:h-96 object-contain mb-10'
           onError={(e) => {
             const target = e.currentTarget
@@ -66,10 +69,10 @@ export function AuthLayout() {
 
         <div className='relative z-10 text-center max-w-sm space-y-3'>
           <p className='text-2xl font-bold leading-snug text-balance'>
-            Portail de gestion des encadrements
+            {t('auth.layout.title')}
           </p>
           <p className='text-sm text-background/60 text-balance'>
-            Laboratoire des Méthodes de Conception de Systèmes — ESI Alger
+            {t('auth.layout.subtitle')}
           </p>
         </div>
       </div>

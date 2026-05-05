@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import axios from 'axios'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -70,7 +71,19 @@ export default function CreateUserPage() {
           toast.success(t('admin.users.createSuccess'))
           navigate(ROUTES.ADMIN_USERS)
         },
-        onError: () => {
+        onError: (err) => {
+          if (axios.isAxiosError(err)) {
+            const apiError = err.response?.data as
+              | { error?: string }
+              | undefined
+            if (
+              err.response?.status === 409 &&
+              apiError?.error === 'EMAIL_ALREADY_EXISTS'
+            ) {
+              toast.error(t('admin.users.emailAlreadyExists'))
+              return
+            }
+          }
           toast.error(t('admin.users.createError'))
         },
       },
@@ -169,6 +182,9 @@ export default function CreateUserPage() {
               {errors.role && (
                 <p className='text-xs text-destructive'>{errors.role}</p>
               )}
+              <p className='text-xs leading-relaxed text-muted-foreground'>
+                {t('admin.users.researcherProfileHelper')}
+              </p>
             </div>
 
             <div className='max-w-[65ch] space-y-2'>

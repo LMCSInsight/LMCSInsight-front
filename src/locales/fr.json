@@ -296,6 +296,12 @@
     "orContinueWith": "ou continuer avec",
     "googleSignIn": "Connexion avec Google @esi.dz",
     "devMode": "Mode développement",
+    "layout": {
+      "title": "Système de suivi des encadrements LMCS",
+      "subtitle": "Laboratoire des Méthodes de Conception de Systèmes — ESI Alger",
+      "logoAlt": "Logo ESI",
+      "illustrationAlt": "Illustration de connexion"
+    },
     "errors": {
       "invalidCredentials": "Email ou mot de passe incorrect.",
       "serverError": "Une erreur est survenue. Veuillez réessayer."
@@ -822,6 +828,7 @@
       "role": "Rôle",
       "phoneNumber": "Téléphone",
       "phoneNumberOptional": "Téléphone (optionnel)",
+      "researcherProfileHelper": "Le rôle Chercheur crée aussi le profil chercheur lié utilisé pour l'affectation des encadrants.",
       "password": "Mot de passe",
       "confirmPassword": "Confirmer le mot de passe",
       "status": "Statut",
@@ -845,6 +852,7 @@
       "loadError": "Erreur lors du chargement des utilisateurs.",
       "createSuccess": "Utilisateur créé avec succès.",
       "createError": "Impossible de créer l'utilisateur.",
+      "emailAlreadyExists": "Un utilisateur avec cet email existe déjà.",
       "updateSuccess": "Utilisateur mis à jour.",
       "updateError": "Impossible de mettre à jour l'utilisateur.",
       "toggleSuccess": "Statut mis à jour.",
@@ -1285,7 +1293,7 @@
       "headline": "Conçu par des étudiants de l'ESI.",
       "subheading": "Projet 2CP — Année universitaire 2025–2026, Laboratoire LMCS.",
       "member1_name": "LARIBI Abderrahim",
-      "member2_name": "Gulalta Anouar",
+      "member2_name": "GuelaltaAnouar",
       "member3_name": "Amerlkhedoud Youcef",
       "member4_name": "Hebabcha Riadh",
       "member5_name": "Beghernaout Mohamed El Amine",

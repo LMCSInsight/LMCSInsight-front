@@ -37,6 +37,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import { truncateWithEllipsis } from '@/lib/truncateText'
 import { AdminKpiTile, AdminEmptyStatePanel } from '@/features/admin/components'
 import { downloadDomAsPng } from '@/lib/exportDomImage'
 import { useSupervisions } from '@/features/supervisions/hooks/useSupervisions'
@@ -931,8 +932,10 @@ export default function DirectionReportsPage() {
                               <TableCell className='tabular-nums'>
                                 {r.type}
                               </TableCell>
-                              <TableCell className='max-w-50 text-sm'>
-                                {r.thematique}
+                              <TableCell className='text-sm'>
+                                <span title={r.thematique}>
+                                  {truncateWithEllipsis(r.thematique, 30)}
+                                </span>
                               </TableCell>
                               <TableCell className='tabular-nums'>
                                 {r.annee}

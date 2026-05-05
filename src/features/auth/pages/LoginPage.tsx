@@ -6,22 +6,12 @@ import { useAuthContext } from '@/shared/context/AuthContext'
 import { authApi } from '@/features/auth/api/authApi'
 import { extractMatriculeFromAccessToken } from '@/features/auth/extractMatricule'
 import { mapBackendUserToDisplayUser } from '@/features/auth/types'
-import { DEV_ACCOUNTS } from '@/features/auth/devAccounts'
 import { getDashboardPath } from '@/config/routes'
 import { ROUTES } from '@/config/routes'
 import { APP_CONSTANTS } from '@/config/constants'
-import { env } from '@/config/env'
-import type { AppRole } from '@/config/routes'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-
-const DEV_ROLE_LABELS: Record<AppRole, string> = {
-  ADMIN: 'Admin',
-  DIRECTOR: 'Directeur',
-  RESEARCHER: 'Chercheur',
-  ASSISTANT: 'Assistant',
-}
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -73,12 +63,6 @@ export default function LoginPage() {
     }
   }
 
-  function handleDevAccountLogin(role: AppRole) {
-    const devUser = DEV_ACCOUNTS[role]
-    login(devUser, `dev-token-${role.toLowerCase()}`)
-    navigate(getDashboardPath(devUser.role, devUser), { replace: true })
-  }
-
   return (
     <div className='flex flex-col gap-10 w-full max-w-sm'>
       <div className='space-y-1.5'>
@@ -89,27 +73,6 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-        {/* Dev mode quick-login */}
-        {env.AUTH_BYPASS && (
-          <div className='rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30'>
-            <p className='mb-3 text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide'>
-              {t('auth.devMode')}
-            </p>
-            <div className='grid grid-cols-2 gap-2'>
-              {Object.values(DEV_ACCOUNTS).map((account) => (
-                <button
-                  key={account.role}
-                  type='button'
-                  onClick={() => handleDevAccountLogin(account.role)}
-                  className='h-9 rounded-md border border-amber-200 bg-background px-3 text-xs font-medium text-left hover:bg-amber-50 transition-colors dark:border-amber-800 dark:hover:bg-amber-950/50'
-                >
-                  {DEV_ROLE_LABELS[account.role]}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Error message */}
         {error && (
           <div
