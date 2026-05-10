@@ -1,217 +1,220 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
 /* Global styles */
 
 :root {
+  --background: oklch(1 0 0);
 
-    --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
 
-    --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
 
-    --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
 
-    --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
 
-    --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
 
-    --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
 
-    --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
 
-    --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
 
-    --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
 
-    --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
 
-    --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
 
-    --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
 
-    --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
 
-    --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
 
-    --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
 
-    --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
 
-    --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
 
-    --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.809 0.105 251.813);
 
-    --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
 
-    --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
 
-    --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
 
-    --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
 
-    --chart-5: oklch(0.424 0.199 265.638);
+  --radius: 0.625rem;
 
-    --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
 
-    --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
 
-    --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
 
-    --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
 
-    --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
 
-    --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
 
-    --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
 
-    --sidebar-border: oklch(0.922 0 0);
-
-    --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 /* Dark theme: blue-tinted slate for cohesive look with researcher portal */
 .dark {
-    --background: oklch(0.16 0.02 260);
-    --foreground: oklch(0.95 0.01 260);
-    --card: oklch(0.20 0.02 260);
-    --card-foreground: oklch(0.95 0.01 260);
-    --popover: oklch(0.22 0.02 260);
-    --popover-foreground: oklch(0.95 0.01 260);
-    --primary: oklch(0.55 0.22 260);
-    --primary-foreground: oklch(0.99 0 0);
-    --secondary: oklch(0.26 0.02 260);
-    --secondary-foreground: oklch(0.95 0.01 260);
-    --muted: oklch(0.26 0.02 260);
-    --muted-foreground: oklch(0.65 0.02 260);
-    --accent: oklch(0.30 0.06 260);
-    --accent-foreground: oklch(0.95 0.01 260);
-    --destructive: oklch(0.55 0.22 25);
-    --border: oklch(0.32 0.02 260);
-    --input: oklch(0.32 0.02 260);
-    --ring: oklch(0.55 0.22 260);
-    --chart-1: oklch(0.65 0.2 260);
-    --chart-2: oklch(0.55 0.22 260);
-    --chart-3: oklch(0.50 0.18 260);
-    --chart-4: oklch(0.45 0.15 260);
-    --chart-5: oklch(0.40 0.12 260);
-    --sidebar: oklch(0.20 0.02 260);
-    --sidebar-foreground: oklch(0.95 0.01 260);
-    --sidebar-primary: oklch(0.55 0.22 260);
-    --sidebar-primary-foreground: oklch(0.99 0 0);
-    --sidebar-accent: oklch(0.28 0.04 260);
-    --sidebar-accent-foreground: oklch(0.95 0.01 260);
-    --sidebar-border: oklch(0.32 0.02 260);
-    --sidebar-ring: oklch(0.55 0.22 260);
+  --background: oklch(0.16 0.02 260);
+  --foreground: oklch(0.95 0.01 260);
+  --card: oklch(0.2 0.02 260);
+  --card-foreground: oklch(0.95 0.01 260);
+  --popover: oklch(0.22 0.02 260);
+  --popover-foreground: oklch(0.95 0.01 260);
+  --primary: oklch(0.55 0.22 260);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.26 0.02 260);
+  --secondary-foreground: oklch(0.95 0.01 260);
+  --muted: oklch(0.26 0.02 260);
+  --muted-foreground: oklch(0.65 0.02 260);
+  --accent: oklch(0.3 0.06 260);
+  --accent-foreground: oklch(0.95 0.01 260);
+  --destructive: oklch(0.55 0.22 25);
+  --border: oklch(0.32 0.02 260);
+  --input: oklch(0.32 0.02 260);
+  --ring: oklch(0.55 0.22 260);
+  --chart-1: oklch(0.65 0.2 260);
+  --chart-2: oklch(0.55 0.22 260);
+  --chart-3: oklch(0.5 0.18 260);
+  --chart-4: oklch(0.45 0.15 260);
+  --chart-5: oklch(0.4 0.12 260);
+  --sidebar: oklch(0.2 0.02 260);
+  --sidebar-foreground: oklch(0.95 0.01 260);
+  --sidebar-primary: oklch(0.55 0.22 260);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.28 0.04 260);
+  --sidebar-accent-foreground: oklch(0.95 0.01 260);
+  --sidebar-border: oklch(0.32 0.02 260);
+  --sidebar-ring: oklch(0.55 0.22 260);
 }
 
 @theme inline {
+  --font-sans: 'DM Sans Variable', system-ui, sans-serif;
 
-    --font-sans: 'Outfit', 'Geist Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
 
-    --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
 
-    --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
 
-    --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
 
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
 
-    --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
 
-    --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
 
-    --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
 
-    --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
 
-    --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
 
-    --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
 
-    --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
 
-    --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
 
-    --color-ring: var(--ring);
+  --color-input: var(--input);
 
-    --color-input: var(--input);
+  --color-border: var(--border);
 
-    --color-border: var(--border);
+  --color-destructive: var(--destructive);
 
-    --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
 
-    --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
 
-    --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
 
-    --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
 
-    --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
 
-    --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
 
-    --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
 
-    --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
 
-    --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
 
-    --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
 
-    --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
 
-    --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
 
-    --color-card: var(--card);
+  --color-foreground: var(--foreground);
 
-    --color-foreground: var(--foreground);
+  --color-background: var(--background);
 
-    --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
 
-    --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
 
-    --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
 
-    --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
 
-    --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 
-    --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
 
-    --radius-3xl: calc(var(--radius) * 2.2);
-
-    --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Researcher portal: blue theme (scoped) */
-.researcher-portal {
-  --researcher-primary: 221 83% 53%; /* blue-600 */
+/* Portals (admin, direction, assistant): single blue accent in light mode */
+.portal-shell {
+  --researcher-primary: 221 83% 53%; /* blue-600 — legacy var name for any custom use */
   --researcher-primary-foreground: 0 0% 100%;
-  --researcher-sidebar: 214 32% 98%; /* blue-50 */
-  --researcher-sidebar-foreground: 224 71% 14%; /* blue-950 */
-  --researcher-sidebar-accent: 214 32% 91%; /* blue-100 */
+  --researcher-sidebar: 214 32% 98%;
+  --researcher-sidebar-foreground: 224 71% 14%;
+  --researcher-sidebar-accent: 214 32% 91%;
   --researcher-sidebar-border: 214 32% 91%;
 }
 
-/* Researcher portal light mode: blue primary and accents */
-html:not(.dark) .researcher-portal {
+/* Light mode: align UI chrome with chart blues (hue ~260), single accent */
+html:not(.dark) .portal-shell {
+  --background: oklch(0.99 0.006 260);
+  --foreground: oklch(0.2 0.02 260);
+  --card: oklch(0.998 0.004 260);
+  --card-foreground: oklch(0.2 0.02 260);
+  --border: oklch(0.9 0.02 260);
+  --input: oklch(0.9 0.02 260);
   --primary: oklch(0.45 0.2 260);
   --primary-foreground: oklch(0.99 0 0);
   --ring: oklch(0.45 0.2 260);
   --accent: oklch(0.92 0.04 260);
   --accent-foreground: oklch(0.25 0.12 260);
   --chart-1: oklch(0.55 0.22 260);
-  --chart-2: oklch(0.50 0.18 260);
+  --chart-2: oklch(0.5 0.18 260);
   --chart-3: oklch(0.45 0.15 260);
-  --chart-4: oklch(0.40 0.12 260);
-  --chart-5: oklch(0.35 0.10 260);
+  --chart-4: oklch(0.4 0.12 260);
+  --chart-5: oklch(0.35 0.1 260);
   --sidebar-primary: oklch(0.45 0.2 260);
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.92 0.04 260);
@@ -223,10 +226,53 @@ html:not(.dark) .researcher-portal {
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body,
+  #root,
+  .font-dm-sans,
+  .portal-shell,
+  button,
+  input,
+  textarea,
+  select {
+    font-family: 'DM Sans Variable', 'DM Sans', system-ui, sans-serif;
+  }
   body {
     @apply bg-background text-foreground;
+    --ant-font-family: 'DM Sans Variable', 'DM Sans', system-ui, sans-serif;
   }
   html {
-    @apply font-sans;
+    scroll-behavior: smooth;
   }
+}
+
+/* ── Tabular numbers — use on any numeric data to prevent layout shift ── */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* ── Grain texture overlay — breaks flat sterility ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+
+/* ── Tinted primary shadows — shadows carry the brand hue ── */
+.shadow-primary {
+  box-shadow: 0 4px 24px -4px oklch(0.45 0.2 260 / 0.2);
+}
+.shadow-primary-sm {
+  box-shadow: 0 2px 8px -2px oklch(0.45 0.2 260 / 0.15);
+}
+
+/* ── Press feedback — subtle physical click sensation ── */
+button:active:not(:disabled),
+[role='button']:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
 }

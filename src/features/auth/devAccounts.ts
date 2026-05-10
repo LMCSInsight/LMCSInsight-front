@@ -5,6 +5,8 @@ export interface DevAccount {
   email: string
   name: string
   role: AppRole
+  /** Dev-only matricule for assign-supervisor when testing researcher flows. */
+  matricule?: string
 }
 
 export const DEFAULT_DEV_ROLE: AppRole = 'RESEARCHER'
@@ -27,6 +29,7 @@ export const DEV_ACCOUNTS: Record<AppRole, DevAccount> = {
     email: 'researcher@lmcs.dev',
     name: 'Dev Researcher',
     role: 'RESEARCHER',
+    matricule: '10001',
   },
   ASSISTANT: {
     id: 'dev-assistant-001',

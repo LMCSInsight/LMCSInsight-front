@@ -1,5 +1,13 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom'
 import { Layout, Menu, Button } from 'antd'
+import {
+  LayoutDashboard,
+  ClipboardCheck,
+  ListOrdered,
+  History,
+  Settings,
+  Users,
+} from 'lucide-react'
 import { useAuthContext } from '@/shared/context/AuthContext'
 import { ROUTES, getResearcherDashboardPath } from '@/config/routes'
 import type { AppRole } from '@/config/routes'
@@ -10,6 +18,7 @@ interface NavItem {
   key: string
   path: string
   label: string
+  icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>
 }
 
 const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
@@ -28,14 +37,20 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
       label: 'Dashboard',
     },
     {
-      key: 'supervisions',
-      path: ROUTES.DIRECTOR_SUPERVISIONS,
-      label: 'Supervisions',
+      key: 'chercheurs',
+      path: ROUTES.DIRECTOR_CHERCHEURS,
+      label: 'Charge d’encadrement',
+      icon: Users,
     },
     {
-      key: 'validation',
-      path: ROUTES.DIRECTOR_VALIDATION,
-      label: 'Validation queue',
+      key: 'search',
+      path: ROUTES.DIRECTOR_SEARCH,
+      label: 'Recherche',
+    },
+    {
+      key: 'reports',
+      path: ROUTES.DIRECTOR_REPORTS,
+      label: 'Rapports',
     },
   ],
   RESEARCHER: [
@@ -55,11 +70,31 @@ const NAV_BY_ROLE: Record<AppRole, NavItem[]> = {
       key: 'assistant-dashboard',
       path: ROUTES.DASHBOARD_ASSISTANT,
       label: 'Dashboard',
+      icon: LayoutDashboard,
     },
     {
-      key: 'validation',
-      path: ROUTES.ASSISTANT_VALIDATION,
-      label: 'Validation queue',
+      key: 'activity',
+      path: ROUTES.ASSISTANT_ACTIVITY,
+      label: 'Activity',
+      icon: ClipboardCheck,
+    },
+    {
+      key: 'supervisions',
+      path: ROUTES.ASSISTANT_SUPERVISIONS,
+      label: 'Supervisions',
+      icon: ListOrdered,
+    },
+    {
+      key: 'history',
+      path: ROUTES.ASSISTANT_HISTORY,
+      label: 'History',
+      icon: History,
+    },
+    {
+      key: 'profile',
+      path: ROUTES.ASSISTANT_PROFILE,
+      label: 'Profile & Settings',
+      icon: Settings,
     },
   ],
 }
@@ -81,7 +116,17 @@ export function DashboardLayout() {
 
   const menuItems = navItems.map((item) => ({
     key: item.key,
-    label: <Link to={getPath(item)}>{item.label}</Link>,
+    label: (
+      <Link
+        to={getPath(item)}
+        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+      >
+        {item.icon && (
+          <item.icon className='size-4 shrink-0' strokeWidth={1.5} />
+        )}
+        {item.label}
+      </Link>
+    ),
   }))
 
   const selectedKey =
