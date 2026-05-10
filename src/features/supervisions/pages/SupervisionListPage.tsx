@@ -222,10 +222,10 @@ export default function SupervisionListPage() {
     academicYearFilter !== ''
 
   const activeFilterLabels: { key: string; label: string }[] = []
-  typeFilter.forEach((t) =>
+  typeFilter.forEach((typeVal) =>
     activeFilterLabels.push({
-      key: `type-${t}`,
-      label: `${t('supervisions.filters.type')}: ${TYPE_LABELS[t]}`,
+      key: `type-${typeVal}`,
+      label: `${t('supervisions.filters.type')}: ${TYPE_LABELS[typeVal]}`,
     }),
   )
   statusFilter.forEach((s) =>

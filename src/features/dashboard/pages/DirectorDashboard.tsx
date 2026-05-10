@@ -603,7 +603,7 @@ export default function DirectorDashboard() {
                     radius={[0, 6, 6, 0]}
                     maxBarSize={22}
                     animationDuration={400}
-                    activeShape={{
+                    activeBar={{
                       fill: CHART_COLORS[1],
                       stroke: CHART_COLORS[1],
                       strokeWidth: 2,

@@ -355,7 +355,7 @@ export default function AdminDashboardPage() {
                       radius={[4, 4, 0, 0]}
                       isAnimationActive
                       animationDuration={600}
-                      activeShape={{
+                      activeBar={{
                         fill: 'var(--chart-1)',
                         stroke: 'var(--chart-1)',
                         strokeWidth: 2,

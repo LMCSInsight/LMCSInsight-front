@@ -260,7 +260,8 @@ export default function StatisticsReportsPage() {
     () =>
       countBy(filtered.map((s) => s.validationStatus)).map((d) => ({
         ...d,
-        name: VALIDATION_LABELS[d.name] ?? d.name,
+        name:
+          VALIDATION_LABELS[d.name as keyof typeof VALIDATION_LABELS] ?? d.name,
         key: d.name,
       })),
     [filtered],

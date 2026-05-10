@@ -252,11 +252,11 @@ export default function ResearcherDashboard() {
       map[s.type] = (map[s.type] ?? 0) + 1
     })
     return Object.entries(map).map(([k, v]) => ({
-      name: TYPE_LABELS[k] ?? k,
+      name: TYPE_LABELS[k as keyof typeof TYPE_LABELS] ?? k,
       value: v,
       pct: total > 0 ? Math.round((v / total) * 100) : 0,
     }))
-  }, [supervisions, total])
+  }, [supervisions, total, TYPE_LABELS])
 
   const byYear = useMemo(() => {
     const map: Record<string, number> = {}
@@ -497,7 +497,7 @@ export default function ResearcherDashboard() {
                       radius={[4, 4, 0, 0]}
                       isAnimationActive
                       animationDuration={600}
-                      activeShape={{
+                      activeBar={{
                         fill: 'var(--chart-1)',
                         stroke: 'var(--chart-1)',
                         strokeWidth: 2,
@@ -756,7 +756,9 @@ export default function ResearcherDashboard() {
                       'h-full first:rounded-l-full last:rounded-r-full transition-all',
                       STATUS_BAR_COLOR[key],
                     )}
-                    title={`${STATUS_LABELS[key]}: ${count}`}
+                    title={`${
+                      STATUS_LABELS[key as keyof typeof STATUS_LABELS]
+                    }: ${count}`}
                   />
                 )
               })}
